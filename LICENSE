@@ -14,6 +14,9 @@ THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY OF WASHINGTON AND CONTRIBUTORS “AS
 --------------------------------------------------------------------------------
 Third-party notice: Arboretum
 
+Arboretum was created by Ritesh Kanchi, Kaija Frierson, Venkatesh Potluri, Ronald Metoyer, Jennifer Mankoff, Miya Natsuhara, and Matt X. Wang.
+Paper: https://dl.acm.org/doi/10.1145/3772318.3791656
+
 This repository includes Arboretum as a git submodule (vendor/arboretum) and imports
 parts of it (its intermediate representations, tree layout and braille generation), and
 its output designs informed the navigable, table and tactile views for data-structure

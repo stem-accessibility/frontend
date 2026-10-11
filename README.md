@@ -97,12 +97,13 @@ type is stored with the diagram (`flowchart_type`) and decides:
 ### Credits
 
 Tree, list and array support builds on
-[Arboretum](https://github.com/ritesh-kanchi/Arboretum) by Ritesh Kanchi (MIT
-License). It is included as a git submodule at `vendor/arboretum`, kept as a
-reference, and `src/arboretum/vendor.ts` is the only file that imports from it
-(its `lib/` for tree layout and the intermediate representation, and its braille
-generation). The navigable, table and tactile views for data structures follow its
-output designs. See [LICENSE](LICENSE) for the notice.
+[Arboretum](https://github.com/ritesh-kanchi/Arboretum), created by Ritesh Kanchi, Kaija Frierson, Venkatesh Potluri, Ronald Metoyer, Jennifer Mankoff, Miya Natsuhara, and Matt X. Wang (MIT
+License; paper: [dl.acm.org/doi/10.1145/3772318.3791656](https://dl.acm.org/doi/10.1145/3772318.3791656)).
+It is included as a git submodule at `vendor/arboretum`, kept as a reference, and
+`src/arboretum/vendor.ts` is the only file that imports from it (its `lib/` for tree
+layout and the intermediate representation, and its braille generation). The
+navigable, table and tactile views for data structures follow its output designs.
+See [LICENSE](LICENSE) for the notice.
 
 After cloning, fetch it with `git submodule update --init`.
 

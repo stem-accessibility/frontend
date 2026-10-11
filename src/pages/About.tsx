@@ -3,6 +3,8 @@ import React from "react";
 import "./styles/AboutPage.css";
 
 const PAPER_URL = "https://www.briannawimer.com/publications/2026-01-01-CHI-26";
+const ARBORETUM_URL = "https://github.com/ritesh-kanchi/Arboretum";
+const ARBORETUM_PAPER_URL = "https://dl.acm.org/doi/10.1145/3772318.3791656";
 //const BRIANNA_URL = "https://www.briannawimer.com/";
 
 const About: React.FC = () => {
@@ -77,10 +79,10 @@ const About: React.FC = () => {
             The accessible representations produced by STEM-Accessibility are grounded in accessibility research and were
             iteratively designed and evaluated with blind and visually impaired users. These same representations were
             studied and validated in a related research system,{" "}
-            <a className="about__link" href="https://github.com/ritesh-kanchi/Arboretum" target="_blank" rel="noopener noreferrer">
+            <a className="about__link" href={ARBORETUM_URL} target="_blank" rel="noopener noreferrer">
               Arboretum<span className="sr-only"> (opens in a new tab)</span>
-            </a>{" "}
-            by Ritesh Kanchi, whose open-source code STEM-Accessibility now uses for tree, list and array
+            </a>
+            , whose open-source code STEM-Accessibility now uses for tree, list and array
             diagrams—ensuring continuity between research findings and real-world use.
           </p>
 
@@ -88,6 +90,28 @@ const About: React.FC = () => {
             <div className="about__calloutTitle">Publication</div>
             <a className="about__link" href={PAPER_URL} target="_blank" rel="noopener noreferrer">
               Read the published paper
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </div>
+        </section>
+
+        {/* Arboretum */}
+        <section className="about__section" aria-labelledby="arboretum-title">
+          <h2 id="arboretum-title" className="about__h2">
+            Built on Arboretum
+          </h2>
+          <p className="about__p">
+            Support for trees, binary trees, linked lists, and arrays uses code and output designs from{" "}
+            <a className="about__link" href={ARBORETUM_URL} target="_blank" rel="noopener noreferrer">
+              Arboretum<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+            , an open-source tool for authoring accessible data structures, released under the MIT license.
+            Arboretum was created by Ritesh Kanchi, Kaija Frierson, Venkatesh Potluri, Ronald Metoyer, Jennifer Mankoff, Miya Natsuhara, and Matt X. Wang.
+          </p>
+          <div className="about__callout" role="note" aria-label="Arboretum publication">
+            <div className="about__calloutTitle">Arboretum paper</div>
+            <a className="about__link" href={ARBORETUM_PAPER_URL} target="_blank" rel="noopener noreferrer">
+              Read the Arboretum paper (ACM Digital Library)
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </div>

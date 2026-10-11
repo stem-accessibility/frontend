@@ -16,7 +16,8 @@ API contract name the matching backend release.
 - "Describe without AI": deterministic alt text and long description for any diagram type
   (`src/arboretum/autoDescription.ts`).
 - Warnings when a diagram does not look like its chosen type.
-- Credits for Arboretum in the footer, README, LICENSE and About page.
+- Credits for Arboretum and all of its authors in the footer, README, LICENSE and About page, with a
+  link to the Arboretum paper (https://dl.acm.org/doi/10.1145/3772318.3791656).
 
 ### Changed
 - Public and permalink pages share one `RepresentationBrowser`; tactile output uses braille labels
