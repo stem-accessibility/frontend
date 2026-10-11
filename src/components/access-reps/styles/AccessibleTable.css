@@ -1,0 +1,40 @@
+styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0; /* Adds space between the tables */
+    font-size: 1em;
+    font-family: Arial, sans-serif;
+    text-align: left;
+  }
+  
+  .styled-table caption {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  .styled-table th,
+  .styled-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd; /* Adds visible borders */
+  }
+  
+  .styled-table thead tr {
+    background-color: #009879;
+    color: #ffffff;
+  }
+  
+  .styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+  }
+  
+  .styled-table tbody tr:hover {
+    background-color: #e0f7fa;
+  }
+  
+  .diagram-container {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    gap: 2rem; /* Adds space between diagram items */
+  }
+  

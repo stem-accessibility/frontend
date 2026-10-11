@@ -1,0 +1,133 @@
+/* ===== Dashboard Layout ===== */
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.dashboard-top {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dashboard-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 1.75rem;
+  color: var(--teal);
+}
+
+.dashboard-status {
+  font-size: 0.9rem;
+  color: rgba(27, 27, 27, 0.7);
+}
+
+.dashboard-status--error {
+  color: rgba(220, 38, 38, 0.95);
+}
+
+.dashboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-pagesize {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(27, 27, 27, 0.75);
+}
+
+.dashboard-select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: var(--white);
+  font-family: var(--font-body);
+}
+
+.dashboard-select:focus-visible {
+  outline: 3px solid var(--focus, rgba(24, 76, 69, 0.45));
+  outline-offset: 2px;
+}
+
+/* Cards grid */
+.dashboard-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+
+  /* Responsive cards */
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  align-items: start;
+}
+
+
+.dashboard-empty {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  color: rgba(27, 27, 27, 0.8);
+}
+
+/* ===== Pagination ===== */
+
+.dashboard-pagination {
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dashboard-pagination__meta {
+  color: rgba(27, 27, 27, 0.75);
+}
+
+.dashboard-pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Important: if you still have global button styles, consider migrating to .btn classes.
+   This keeps pagination readable even before that migration. */
+.dashboard-pagination button {
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: var(--white);
+  color: var(--black);
+  font-weight: 700;
+}
+
+.dashboard-pagination button:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-pagination button:focus-visible {
+  outline: 3px solid var(--focus, rgba(24, 76, 69, 0.45));
+  outline-offset: 2px;
+}
+
+.dashboard-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,0 +1,18 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+}
+.main-content {
+  flex: 1;
+}
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  color: var(--teal);
+}
+
+p {
+  margin-bottom: 1rem;
+}
+

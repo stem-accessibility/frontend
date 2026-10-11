@@ -1,0 +1,220 @@
+/* src/styles/charts.css */
+
+.charts-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif);
+  color: var(--black, #1b1b1b);
+}
+
+.charts-header {
+  margin-bottom: 1.75rem;
+}
+
+.charts-header h1 {
+  font-family: var(--font-heading, var(--font-body));
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--teal, #184c45);
+}
+
+.charts-header p {
+  margin: 0;
+  max-width: 46rem;
+  line-height: 1.5;
+  color: rgba(27, 27, 27, 0.8);
+}
+
+/* Layout */
+
+.charts-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.charts-left,
+.charts-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Card container (you already use className="card") */
+
+.card {
+  background: var(--cream, #faf3e0);
+  border-radius: 0.85rem;
+  padding: 1rem 1.1rem 1.1rem;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(24, 76, 69, 0.08);
+}
+
+.card h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--teal, #184c45);
+}
+
+/* Error banner */
+
+.error-banner {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #ffe8e6;
+  color: #8f1d1d;
+  border: 1px solid #f5b0ab;
+  font-size: 0.92rem;
+}
+
+/* Buttons inside charts page */
+
+.charts-page button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--deep-orange, #f58025);
+  color: var(--white, #fff);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 10px rgba(245, 128, 37, 0.25);
+}
+
+.charts-page button:hover {
+  background: var(--orange, #ffa726);
+  transform: translateY(-1px);
+}
+
+.charts-page button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Permalink display */
+
+.permalink-display {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.permalink-display code {
+  padding: 0.3rem 0.5rem;
+  background: var(--white, #fff);
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Hint text */
+
+.card .hint {
+  margin-top: 0.45rem;
+  font-size: 0.85rem;
+  color: rgba(27, 27, 27, 0.65);
+}
+
+/* Recharts container inside card */
+
+.card .recharts-wrapper {
+  font-family: inherit;
+}
+
+/* Responsive layout */
+
+@media (max-width: 900px) {
+  .charts-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .charts-page {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .charts-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+.charts-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.chart-type-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.chip {
+  border-radius: 999px;
+  border: 1px solid rgba(24, 76, 69, 0.18);
+  background: var(--white, #fff);
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: rgba(27, 27, 27, 0.8);
+}
+
+.chip--active {
+  background: var(--deep-orange, #f58025);
+  border-color: var(--deep-orange, #f58025);
+  color: var(--white, #fff);
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.preset-card {
+  text-align: left;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--white, #fff);
+  border: 1px solid rgba(24, 76, 69, 0.14);
+  cursor: pointer;
+  transition: border 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.preset-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--teal, #184c45);
+}
+
+.preset-card p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(27, 27, 27, 0.7);
+}
+
+.preset-card--active {
+  border-color: var(--deep-orange, #f58025);
+  box-shadow: 0 0 0 1px rgba(245, 128, 37, 0.4),
+    0 8px 18px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+

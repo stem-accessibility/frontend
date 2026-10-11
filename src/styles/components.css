@@ -1,0 +1,214 @@
+/* App shell */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+}
+
+/* Layout helpers */
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--s-4);
+}
+
+.stack > * + * {
+  margin-top: var(--s-4);
+}
+
+/* Buttons: stop styling ALL buttons globally.
+   Use classes so links and special buttons aren't accidentally themed. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  background: var(--accent);
+  color: white;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.btn--danger {
+  border: 1px solid rgba(220, 38, 38, 0.45);
+  color: rgb(220, 38, 38);
+  background: transparent;
+}
+.btn--danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+.btn--outline:hover {
+  background: rgba(24, 76, 69, 0.08);
+}
+
+/* Button variants */
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn--ghost:hover {
+  background: var(--surface-muted);
+}
+
+.btn--tiny {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.9rem;
+  border-radius: var(--r-sm);
+}
+
+.btn--secondary {
+  background: transparent;
+  color: #0f3d3e;
+  border: 1px solid #d1d5db;
+}
+
+.btn--secondary:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+/* Form controls */
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.input,
+.textarea,
+.select {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(0,0,0,0.18);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-5);
+}
+
+/* Header/Nav (use classes, not header element) */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.app-header__inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 10px var(--s-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.brand {
+  text-decoration: none;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.nav-item {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.nav-item:hover {
+  opacity: 1;
+  background: var(--surface-muted);
+}
+
+.nav-item--active {
+  opacity: 1;
+  background: rgba(0,0,0,0.06);
+}
+
+/* Footer (optional) */
+.app-footer {
+  background: var(--brand);
+  color: white;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.page-loading {
+  padding: 16px;
+}
+/* ===== Thumbnail ===== */
+.thumbnail {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail--loading,
+.thumbnail--empty {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.thumbnail__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnail__label {
+  font-size: 12px;
+  color: rgba(27, 27, 27, 0.65);
+  font-weight: 600;
+}

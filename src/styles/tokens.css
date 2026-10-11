@@ -1,0 +1,48 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
+:root {
+  /* Brand colors (kept as-is) */
+  --white: #fff;
+  --cream: #faf3e0;
+  --orange: #ffa726;
+  --deep-orange: #f58025;
+  --peach: #f4a261;
+  --black: #1b1b1b;
+  --teal: #184c45;
+
+  /* Typography */
+  --font-body: "Inter", sans-serif;
+  --font-heading: "Inter", sans-serif;
+
+  /* Semantic aliases (use these throughout the app) */
+  --bg: var(--white);
+  --text: var(--black);
+  --brand: var(--teal);
+  --accent: var(--deep-orange);
+  --accent-hover: var(--orange);
+
+  /* Neutrals */
+  --border: rgba(0, 0, 0, 0.12);
+  --surface: #ffffff;
+  --surface-muted: rgba(0, 0, 0, 0.03);
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  /* Spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+
+  /* Layout */
+  --container: 1200px;
+
+  /* Focus ring */
+  --focus: rgba(24, 76, 69, 0.45); /* teal-ish focus */
+}

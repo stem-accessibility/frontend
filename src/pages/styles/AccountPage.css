@@ -1,0 +1,52 @@
+.account-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.account-card {
+  width: min(700px, 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
+  background: #fff;
+}
+
+.account-row {
+  margin-top: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.account-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.account-value {
+  font-size: 14px;
+  color: #111827;
+}
+
+.account-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.account-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.account-btn--danger {
+  border-color: #ef4444;
+  color: #ef4444;
+}

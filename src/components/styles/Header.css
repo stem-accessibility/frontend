@@ -1,0 +1,90 @@
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--white);
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.12));
+}
+
+.app-header__inner {
+  max-width: var(--container, 1200px);
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-header__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-header__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand {
+  font-weight: 800;
+  color: var(--black);
+  text-decoration: none;
+}
+
+/* Nav */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--black);
+  opacity: 0.9;
+}
+
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  opacity: 1;
+}
+
+.nav-item:focus-visible {
+  outline: 3px solid rgba(24, 76, 69, 0.45); /* teal focus */
+  outline-offset: 2px;
+}
+
+.nav-item--active {
+  background: rgba(0, 0, 0, 0.06);
+  opacity: 1;
+}
+
+/* Optional: pending route (React Router data routers, etc.) */
+.nav-item--pending {
+  opacity: 0.7;
+}
+
+/* Right-side elements */
+.header-loading {
+  opacity: 0.75;
+}
+
+.user-chip {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.14);
+  font-weight: 600;
+  color: var(--black);
+  background: var(--white);
+}
+

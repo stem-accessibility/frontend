@@ -1,0 +1,68 @@
+.ld-qr-card {
+  margin-top: 1.5rem;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ld-qr-image {
+  flex: 0 0 auto;
+}
+
+.ld-qr-image svg {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.ld-qr-content {
+  flex: 1 1 200px;
+  min-width: 200px;
+}
+
+.ld-qr-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ld-qr-text {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.ld-qr-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--deep-orange, #f58025);
+  color: #ffffff;
+  transition: background-color 0.15s ease, transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+.ld-qr-button:hover {
+  background-color: #e46f14;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.ld-qr-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.ld-qr-button.disabled {
+  opacity: 0.7;
+  cursor: default;
+  box-shadow: none;
+}

@@ -1,0 +1,135 @@
+/* src/pages/styles/AboutPage.css */
+
+.about {
+  --ink: #0f172a;
+  --muted: rgba(15, 23, 42, 0.72);
+  --subtle: rgba(15, 23, 42, 0.58);
+  --border: rgba(15, 23, 42, 0.12);
+  --surface: #ffffff;
+  --surface2: rgba(248, 250, 252, 1);
+  --accent: #0f3d3e;      /* matches your green tone */
+  --accent2: #5b2fbf;     /* matches your purple focus ring vibe */
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.about__hero {
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.85), rgba(255, 255, 255, 1));
+}
+
+.about__heroInner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 44px 18px 30px;
+}
+
+.about__title {
+  margin: 0 0 10px;
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.about__lede {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.08rem;
+  max-width: 70ch;
+}
+
+.about__content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 34px 18px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.about__section {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 22px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+}
+
+.about__h2 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.about__p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 1.03rem;
+}
+
+.about__p:last-child {
+  margin-bottom: 0;
+}
+
+.about__em {
+  font-style: italic;
+  color: var(--ink);
+}
+
+.about__callout {
+  margin-top: 14px;
+  padding: 14px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 61, 62, 0.18);
+  background: rgba(15, 61, 62, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about__calloutTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(15, 61, 62, 0.9);
+}
+
+.about__link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.about__link:hover {
+  text-decoration: none;
+}
+
+.about__link:focus-visible {
+  outline: 3px solid rgba(91, 47, 191, 0.35);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .about__heroInner {
+    padding: 36px 16px 24px;
+  }
+
+  .about__content {
+    padding: 26px 16px 60px;
+  }
+
+  .about__section {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .about__p {
+    font-size: 1rem;
+  }
+}

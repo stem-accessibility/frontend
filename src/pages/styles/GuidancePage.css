@@ -1,0 +1,187 @@
+.guidance-page {
+  background: #ffffff;
+  color: #111;
+}
+
+/* Hero */
+.guidance-hero {
+  padding: 3.5rem 1.5rem 2.5rem;
+  
+}
+
+.guidance-hero-inner {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.guidance-title {
+  font-size: 2.1rem;
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+}
+
+.guidance-subtitle {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: white;
+  max-width: 800px;
+}
+
+/* Sections */
+.guidance-section {
+  padding: 2.25rem 1.5rem;
+}
+
+.guidance-section-inner {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.guidance-section-title {
+  font-size: 1.35rem;
+  margin: 0 0 1rem;
+}
+
+.guidance-section-body p,
+.guidance-section-body li {
+  color: #222;
+  line-height: 1.65;
+}
+
+.guidance-section-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+}
+
+/* Callouts */
+.guidance-callout {
+  margin: 1.25rem 0 0;
+  padding: 1rem 1rem;
+  border-radius: 10px;
+  background: #f5f7fa;
+  color: #222;
+}
+
+.guidance-callout--emphasis {
+  background: #eef5ff;
+  border: 1px solid rgba(0, 95, 204, 0.25);
+}
+
+/* Decision tree */
+.decision-tree-list {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.decision-tree-list > li {
+  margin-bottom: 1rem;
+}
+
+.decision-tree-list ul {
+  margin-top: 0.5rem;
+}
+
+/* Two-part */
+.two-part-list {
+  padding-left: 1.25rem;
+}
+
+.two-part-detail {
+  margin-top: 0.35rem;
+  color: #333;
+}
+
+/* Examples */
+.examples-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.example-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.example-card-img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.example-card-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.example-card-desc {
+  color: #444;
+  margin-bottom: 0.75rem;
+}
+
+.example-card-link {
+  
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.example-card-link:hover,
+.example-card-link:focus {
+  text-decoration: underline;
+}
+
+@media (min-width: 850px) {
+  .examples-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Source note */
+.guidance-source-note {
+  margin-top: 0.75rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* CTA */
+.guidance-cta {
+  padding: 2.5rem 1.5rem 3.5rem;
+  background: #f5f7fa;
+}
+
+.guidance-cta-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.guidance-cta-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+}
+
+.guidance-cta-body {
+  margin: 0 0 1rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+.guidance-cta-button {
+  display: inline-block;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  
+  
+  text-decoration: none;
+  font-weight: 600;
+}

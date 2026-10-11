@@ -1,0 +1,23 @@
+.export-text-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: stretch;
+}
+
+.export-text-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.export-text-card .export-preview {
+  flex: 1;
+}
+
+@media (max-width: 860px) {
+  .export-text-grid {
+    grid-template-columns: 1fr;
+  }
+}
