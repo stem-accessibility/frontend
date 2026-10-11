@@ -11,6 +11,8 @@ API contract name the matching backend release.
   Before, they existed only in the open page and were lost (and regenerated) on every reload.
 
 ### Added
+- Editor toolbar: **Alt text** button (reads "Alt text (missing)" when empty) opens the accessibility
+  editor, where alt text is generated or edited.
 - "Alt text" option in the "Choose a representation" menu (published pages and permalinks): shows
   the short alt text on its own, with a copy button.
 

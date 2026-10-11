@@ -6,6 +6,9 @@ type Props = {
   onReupload: () => void;
   onStartOver: () => void;
 
+  onOpenAltText: () => void;
+  hasAltText: boolean;
+
   onSave: () => void;
   isSaving: boolean;
   disableSave?: boolean;
@@ -25,6 +28,8 @@ export default function EditorToolbar({
   hasImage,
   onViewImage,
   onStartOver,
+  onOpenAltText,
+  hasAltText,
   onSave,
   isSaving,
   disableSave,
@@ -75,6 +80,15 @@ export default function EditorToolbar({
 
         <button type="button" className="canvas-toolbar__btn" onClick={onStartOver}>
           Create a New Diagram
+        </button>
+
+        <button
+          type="button"
+          className="canvas-toolbar__btn"
+          onClick={onOpenAltText}
+          aria-haspopup="dialog"
+        >
+          {hasAltText ? "Alt text" : "Alt text (missing)"}
         </button>
       </div>
 

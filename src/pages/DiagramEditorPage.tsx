@@ -824,6 +824,8 @@ const DiagramEditorPage = () => {
               onViewImage={() => setShowImage(true)}
               onReupload={handleReUpload}
               onStartOver={handleStartOver}
+              onOpenAltText={() => setIsAccessibilityEditorOpen(true)}
+              hasAltText={shortAlt.trim().length > 0}
               onSave={saveToDatabase}
               isSaving={isLoading}
               disableSave={!flowchartData}
