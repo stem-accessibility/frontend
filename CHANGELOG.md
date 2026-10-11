@@ -7,6 +7,8 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Fixed
+- After creating an account, the page switches to the Log in tab and shows the "Check your email"
+  confirmation message there. Before, the message was cleared (or never shown) when the tab changed.
 - Automatically generated alt text and long description are now saved right after generation.
   Before, they existed only in the open page and were lost (and regenerated) on every reload.
 

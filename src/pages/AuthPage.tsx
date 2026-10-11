@@ -42,6 +42,9 @@ export default function AuthPage() {
   const [status, setStatus] = useState<string>("");
   const [statusType, setStatusType] = useState<StatusType>("info");
 
+  // A message to show on the next mode (the mode-change effect otherwise clears status).
+  const carryStatus = useRef<{ message: string; type: StatusType } | null>(null);
+
   const emailRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
 
@@ -57,8 +60,10 @@ export default function AuthPage() {
 
   // When mode changes, clear status and move focus predictably
   useEffect(() => {
-    setStatus("");
-    setStatusType("info");
+    const carried = carryStatus.current;
+    carryStatus.current = null;
+    setStatus(carried?.message ?? "");
+    setStatusType(carried?.type ?? "info");
 
     // Avoid confusing stale values across modes
     if (mode === "reset") {
@@ -70,11 +75,6 @@ export default function AuthPage() {
       emailRef.current?.focus();
     });
   }, [mode]);
-
-  function setInfo(message: string) {
-    setStatusType("info");
-    setStatus(message);
-  }
 
   function setSuccess(message: string) {
     setStatusType("success");
@@ -113,7 +113,12 @@ export default function AuthPage() {
 
   // If email confirmation is enabled, there may be no active session yet.
   if (!userId || !session) {
-    setInfo("Check your email to confirm your account, then log in.");
+    carryStatus.current = {
+      message: `Check your email (${email}) to confirm your account, then log in here.`,
+      type: "success",
+    };
+    setPassword("");
+    setMode("login");
     return;
   }
 
@@ -129,7 +134,8 @@ export default function AuthPage() {
     return;
   }
 
-  setSuccess("Account created. You can log in now.");
+  carryStatus.current = { message: "Account created. You can log in now.", type: "success" };
+  setPassword("");
   setMode("login");
   return;
 }
