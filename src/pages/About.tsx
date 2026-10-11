@@ -76,8 +76,12 @@ const About: React.FC = () => {
           <p className="about__p">
             The accessible representations produced by STEM-Accessibility are grounded in accessibility research and were
             iteratively designed and evaluated with blind and visually impaired users. These same representations were
-            studied and validated in our research system, <span className="about__em">Arboretum</span>, and are now
-            deployed within STEM-Accessibility—ensuring continuity between research findings and real-world use.
+            studied and validated in a related research system,{" "}
+            <a className="about__link" href="https://github.com/ritesh-kanchi/Arboretum" target="_blank" rel="noopener noreferrer">
+              Arboretum<span className="sr-only"> (opens in a new tab)</span>
+            </a>{" "}
+            by Ritesh Kanchi, whose open-source code STEM-Accessibility now uses for tree, list and array
+            diagrams—ensuring continuity between research findings and real-world use.
           </p>
 
           <div className="about__callout" role="note" aria-label="Related publication">

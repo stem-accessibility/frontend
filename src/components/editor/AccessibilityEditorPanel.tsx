@@ -29,6 +29,8 @@ type Props = {
 
   summaryStale: boolean;
   onRegenerate: () => void;
+  /** Fill the fields from the diagram itself, with no AI call. */
+  onAutoDescribe?: () => void;
   isGenerating: boolean;
 
   imageDataUrl?: string | null;
@@ -47,6 +49,7 @@ export default function AccessibilityEditorModal({
   onLongDescriptionSectionToggle,
   summaryStale,
   onRegenerate,
+  onAutoDescribe,
   isGenerating,
   imageDataUrl,
 }: Props) {
@@ -189,6 +192,17 @@ export default function AccessibilityEditorModal({
                       ? "Regenerate"
                       : "Generate / Regenerate"}
                   </button>
+                  {onAutoDescribe ? (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={onAutoDescribe}
+                      disabled={isGenerating}
+                      style={{ marginLeft: 8 }}
+                    >
+                      Describe without AI
+                    </button>
+                  ) : null}
                 </div>
 
                 {summaryStale && (

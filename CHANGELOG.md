@@ -6,6 +6,26 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Added
+- Diagram types: flowchart, tree, binary tree, linked list, array and 2D array, chosen in the editor
+  toolbar and stored as `flowchart_type`. The type decides which representations are offered (and
+  which comes first) and which renderer draws them.
+- Arboretum (https://github.com/ritesh-kanchi/Arboretum, MIT) as a submodule at `vendor/arboretum`,
+  with its tree layout, intermediate representation and braille generation imported through
+  `src/arboretum/vendor.ts`. Navigable, table and tactile views for data structures follow its designs.
+- "Describe without AI": deterministic alt text and long description for any diagram type
+  (`src/arboretum/autoDescription.ts`).
+- Warnings when a diagram does not look like its chosen type.
+- Credits for Arboretum in the footer, README, LICENSE and About page.
+
+### Changed
+- Public and permalink pages share one `RepresentationBrowser`; tactile output uses braille labels
+  for data structures with short labels and the numbered key otherwise.
+- `verbatimModuleSyntax` is off so the vendored library type-checks.
+
+### Fixed
+- The editor no longer crashes on diagrams whose edges have no `id`.
+
 ### Fixed
 - Automatically generated alt text and long description are now saved right after generation.
   Before, they existed only in the open page and were lost (and regenerated) on every reload.

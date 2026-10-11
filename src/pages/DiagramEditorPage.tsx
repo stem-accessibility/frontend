@@ -22,6 +22,9 @@ import {
   buildLongDescriptionMarkdown,
 } from "../services/longDescription";
 import { logResearchEvent } from "../lib/logResearchEvent";
+import { normalizeDiagramType } from "../arboretum/diagramTypes";
+import type { DiagramType } from "../arboretum/diagramTypes";
+import { autoDescribe, checkDiagramType } from "../arboretum/autoDescription";
 
 const createEmptyFlowchart = (): FlowchartData => ({ nodes: [], edges: [] });
 
@@ -32,7 +35,7 @@ function structuralSignature(fc: FlowchartData) {
       label: n.data?.label ?? n.label ?? "",
       type: n.type ?? "",
     }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? "")));
 
   const edges = (fc.edges ?? [])
     .map((e: any) => ({
@@ -42,7 +45,7 @@ function structuralSignature(fc: FlowchartData) {
       label: e.data?.label ?? e.label ?? "",
       type: e.type ?? "",
     }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? "")));
 
   return JSON.stringify({ nodes, edges });
 }
@@ -129,6 +132,7 @@ const DiagramEditorPage = () => {
   const [_saveStatus, setSaveStatus] = useState("");
 
   const [title, setTitle] = useState("");
+  const [diagramType, setDiagramType] = useState<DiagramType>("flowchart");
 
   const [summaryStale, setSummaryStale] = useState(false);
   const [diagramKey, setDiagramKey] = useState(0);
@@ -209,6 +213,7 @@ const DiagramEditorPage = () => {
           json_data: FlowchartData;
           summary: string;
           short_alt?: string | null;
+          flowchart_type?: string | null;
           has_image: boolean;
           image_mime?: string | null;
           is_published?: boolean;
@@ -223,6 +228,7 @@ const DiagramEditorPage = () => {
         setLongDescriptionSections(parseLongDescriptionMarkdown(incomingSummary));
         setShortAlt(fc.short_alt ?? "");
         setTitle(fc.title ?? "");
+        setDiagramType(normalizeDiagramType(fc.flowchart_type));
 
         try {
           const serialized = jsonToMermaid(fc.json_data);
@@ -648,6 +654,38 @@ const DiagramEditorPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flowchartData, summary, shortAlt, isLoading, activeFlowchartId, routeId]);
 
+  const typeProblems = flowchartData ? checkDiagramType(diagramType, flowchartData) : [];
+
+  const describeWithoutAI = () => {
+    if (!flowchartData) return;
+    const result = autoDescribe(diagramType, flowchartData, title);
+    const nextSections = normalizeLongDescriptionSections(result.sections);
+    const nextSummary = buildLongDescriptionMarkdown(nextSections);
+
+    setLongDescriptionSections(nextSections);
+    setSummary(nextSummary);
+    setShortAlt(result.shortAlt);
+    localStorage.setItem("latestSummary", nextSummary);
+    localStorage.setItem("latestShortAlt", result.shortAlt);
+    setSummaryStale(false);
+    setIsDirty(true);
+
+    logResearchEvent({
+      event_type: "Generation_Succeeded",
+      editor_mode: editorMode,
+      flowchart_id: activeFlowchartId ?? undefined,
+      success: true,
+      event_data: {
+        source_page: "DiagramEditorPage",
+        generation_type: "summary",
+        generation_mode: "deterministic",
+        diagram_type: diagramType,
+        node_count: flowchartData.nodes?.length ?? 0,
+        edge_count: flowchartData.edges?.length ?? 0,
+      },
+    });
+  };
+
   const handleApplyMermaid = async () => {
     if (!mermaidText.trim()) return;
 
@@ -696,6 +734,7 @@ const DiagramEditorPage = () => {
         summary: summary ?? "",
         short_alt: shortAlt ?? "",
         title: title ?? "",
+        flowchart_type: diagramType,
         image_data_url: imgContent ?? null,
         image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
       },
@@ -740,6 +779,7 @@ const DiagramEditorPage = () => {
           summary: summary ?? "",
           short_alt: shortAlt ?? "",
           title: title ?? "",
+          flowchart_type: diagramType,
           image_data_url: imgContent ?? null,
           image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
         },
@@ -826,6 +866,11 @@ const DiagramEditorPage = () => {
               onStartOver={handleStartOver}
               onOpenAltText={() => setIsAccessibilityEditorOpen(true)}
               hasAltText={shortAlt.trim().length > 0}
+              diagramType={diagramType}
+              onDiagramTypeChange={(next) => {
+                setDiagramType(next);
+                setIsDirty(true);
+              }}
               onSave={saveToDatabase}
               isSaving={isLoading}
               disableSave={!flowchartData}
@@ -867,6 +912,17 @@ const DiagramEditorPage = () => {
                 setEditorMode(nextMode);
               }}
             />
+
+            {typeProblems.length > 0 && (
+              <div className="summary-warning" role="status">
+                <strong>This does not look like a {diagramType === "bt" ? "binary tree" : diagramType === "ll" ? "linked list" : diagramType === "2arr" ? "2D array" : diagramType}:</strong>
+                <ul>
+                  {typeProblems.map((p) => (
+                    <li key={p}>{p}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <AccessibilityPanel
   title={title}
@@ -969,6 +1025,7 @@ const DiagramEditorPage = () => {
   onLongDescriptionSectionToggle={handleLongDescriptionSectionToggle}
   summaryStale={summaryStale}
   onRegenerate={() => flowchartData && generateSummary(flowchartData)}
+  onAutoDescribe={describeWithoutAI}
   isGenerating={isGeneratingSummary}
   imageDataUrl={imgContent}
   flowchartData={flowchartData}

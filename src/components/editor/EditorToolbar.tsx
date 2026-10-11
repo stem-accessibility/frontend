@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { DIAGRAM_TYPES } from "../../arboretum/diagramTypes";
+import type { DiagramType } from "../../arboretum/diagramTypes";
 export type EditorMode = "visual" | "mermaid";
 type Props = {
   hasImage: boolean;
@@ -8,6 +10,9 @@ type Props = {
 
   onOpenAltText: () => void;
   hasAltText: boolean;
+
+  diagramType: DiagramType;
+  onDiagramTypeChange: (type: DiagramType) => void;
 
   onSave: () => void;
   isSaving: boolean;
@@ -30,6 +35,8 @@ export default function EditorToolbar({
   onStartOver,
   onOpenAltText,
   hasAltText,
+  diagramType,
+  onDiagramTypeChange,
   onSave,
   isSaving,
   disableSave,
@@ -90,6 +97,24 @@ export default function EditorToolbar({
         >
           {hasAltText ? "Alt text" : "Alt text (missing)"}
         </button>
+
+        <label className="canvas-toolbar__type">
+          <span>Diagram type</span>
+          <select
+            value={diagramType}
+            onChange={(e) => onDiagramTypeChange(e.target.value as DiagramType)}
+            aria-describedby="diagram-type-hint"
+          >
+            {DIAGRAM_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span id="diagram-type-hint" className="sr-only">
+          {DIAGRAM_TYPES.find((t) => t.value === diagramType)?.hint}
+        </span>
       </div>
 
       <div className="canvas-toolbar__group" aria-label="Editor mode">

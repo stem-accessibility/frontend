@@ -69,6 +69,43 @@ rewrites all routes to `/` for the SPA. After deploying, add the Vercel URL to
 the backend's `CORS_ORIGINS` and to Supabase → Authentication → URL
 Configuration (Site URL and redirect URLs).
 
+## Diagram types and Arboretum
+
+Each diagram has a type, set from the **Diagram type** menu in the editor toolbar:
+flowchart (the default), tree, binary tree, linked list, array, or 2D array. The
+type is stored with the diagram (`flowchart_type`) and decides:
+
+- **Which representations are offered, and in what order** (`src/arboretum/views.ts`).
+- **Which implementation draws each one.** Where our renderers and Arboretum's
+  both make a view, the type picks the better one:
+
+  | View | Flowchart | Tree / list / array |
+  |---|---|---|
+  | Navigable | our graph walker (arrow by arrow) | Arboretum-style ARIA tree, list or grid |
+  | Table | node and edge tables | parent/child, position, row and column tables |
+  | Tactile | numbered shapes with a key | braille labels on the shapes when every label is 6 characters or fewer, else the numbered key |
+  | Summary, Alt text | same for every type | same for every type |
+
+- **A no-AI description.** *Describe without AI* in the accessibility editor
+  (`src/arboretum/autoDescription.ts`) writes alt text and a long description from
+  the diagram alone: counts, start and end points, decisions and branches, every
+  route, loops, and, for data structures, depth, traversal orders and per-node detail.
+  It works for any flowchart and gives the same text every time.
+- **Warnings** when a diagram does not look like its chosen type (for example a tree
+  with two roots).
+
+### Credits
+
+Tree, list and array support builds on
+[Arboretum](https://github.com/ritesh-kanchi/Arboretum) by Ritesh Kanchi (MIT
+License). It is included as a git submodule at `vendor/arboretum`, kept as a
+reference, and `src/arboretum/vendor.ts` is the only file that imports from it
+(its `lib/` for tree layout and the intermediate representation, and its braille
+generation). The navigable, table and tactile views for data structures follow its
+output designs. See [LICENSE](LICENSE) for the notice.
+
+After cloning, fetch it with `git submodule update --init`.
+
 ## Accessibility
 
 We aim for WCAG 2.2 AA and treat accessibility reports as expertise. See

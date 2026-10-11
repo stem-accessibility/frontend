@@ -1,0 +1,30 @@
+/* Typed data-structure views. Layout and ARIA structure follow Arboretum
+   (https://github.com/ritesh-kanchi/Arboretum, MIT). */
+.typed-scroll { overflow: auto; padding: 16px 0; }
+.typed-tree { position: relative; }
+.typed-tree .arbornode {
+  position: absolute; width: 96px; height: 96px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  border: 2px solid #5b5b5b; border-radius: 50%; background: #fff; color: #111;
+  font-weight: 600; padding: 6px; overflow: hidden; word-break: break-word; font-size: 14px;
+  outline: none;
+}
+.typed-tree .arbornode:focus-visible,
+.typed-tree li[tabindex="0"] > .arbornode,
+.typed-tree .arbornode[tabindex="0"] { outline: 3px solid #0b6b3a; outline-offset: 2px; }
+.typed-tree ul, .typed-tree li { list-style: none; margin: 0; padding: 0; }
+.typed-cells { display: flex; list-style: none; margin: 0; padding: 0; }
+.typed-cell {
+  border: 2px solid #5b5b5b; background: #fff; color: #111; font-weight: 600;
+  min-width: 96px; min-height: 96px; box-sizing: border-box; padding: 6px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.typed-cell:focus-visible { outline: 3px solid #0b6b3a; outline-offset: 2px; }
+.typed-ll .typed-cell { border-radius: 12px; }
+.typed-ll .typed-arrow { align-self: center; padding: 0 6px; font-size: 24px; }
+.typed-hint { color: #444; font-size: 14px; max-width: 70ch; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .typed-tree .arbornode,
+  :root:not([data-theme="light"]) .typed-cell { background: #111; color: #fff; border-color: #bbb; }
+  :root:not([data-theme="light"]) .typed-hint { color: #ccc; }
+}

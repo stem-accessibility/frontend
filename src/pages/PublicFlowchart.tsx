@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import AccessibleTable from "../components/access-reps/AccessibleTable";
-import NavigableList from "../components/access-reps/NavigableList";
-import AccessibleMarkdown from "../components/access-reps/AccessibleMarkdown";
-import Tactile from "../components/access-reps/TactileRenderer";
-import AltTextView from "../components/access-reps/AltTextView";
+import RepresentationBrowser from "../components/access-reps/RepresentationBrowser";
 
-type ViewMode = "summary" | "alt" | "table" | "navigable" | "tactile";
 
 interface PublicFlowchartResponse {
   public_slug: string;
@@ -19,6 +14,7 @@ interface PublicFlowchartResponse {
   published_at?: string | null;
   short_alt?: string;
   title?: string | null;
+  flowchart_type?: string | null;
 }
 
 function formatDateTime(iso?: string | null) {
@@ -34,7 +30,6 @@ function formatDateTime(iso?: string | null) {
   });
 }
 
-const allowedViews = new Set<ViewMode>(["summary", "alt", "table", "navigable", "tactile"]);
 
 const PublicFlowchart: React.FC = () => {
   const { public_slug } = useParams<{ public_slug: string }>();
@@ -43,11 +38,6 @@ const PublicFlowchart: React.FC = () => {
   const [data, setData] = useState<PublicFlowchartResponse | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<ViewMode>(() => {
-  const params = new URLSearchParams(window.location.search);
-  const v = params.get("view") as ViewMode | null;
-  return v && allowedViews.has(v) ? v : "summary";
-});
 
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -118,55 +108,20 @@ const publishedLabel = formatDateTime(data.published_at);
       </div>
     </div>
 
-      <label htmlFor="view-select" style={{ fontWeight: "bold" }}>
-        Choose a representation:
-      </label>
-      <select
-        id="view-select"
-        value={view}
-       onChange={(e) => {
-  const next = e.target.value as ViewMode;
-  setView(next);
-
-  const url = new URL(window.location.href);
-  url.searchParams.set("view", next);
-  window.history.replaceState({}, "", url.toString());
-}}
-        style={{ marginTop: 10, padding: 6 }}
-      >
-        <option value="summary">Summary</option>
-        <option value="alt">Alt text</option>
-        <option value="table">Table</option>
-        <option value="navigable">Navigable List</option>
-        <option value="tactile">Tactile</option>
-      </select>
-
-      <div style={{ marginTop: 24 }}>
-        {view === "summary" && (
-          <AccessibleMarkdown
-            content={data.summary}
-            imageDataUrl={imageDataUrl}
-            imageAlt={data.short_alt}
-            flowchartData={data.json_data}
-          />
-        )}
-
-        {view === "alt" && (
-          <AltTextView shortAlt={data.short_alt} title={data.title} />
-        )}
-
-        {view === "table" && (
-          <AccessibleTable json={data.json_data} />
-        )}
-
-        {view === "navigable" && (
-          <NavigableList jsonData={data.json_data} />
-        )}
-
-        {view === "tactile" && (
-          <Tactile json={data.json_data} />
-        )}
-      </div>
+      <RepresentationBrowser
+        data={data.json_data}
+        diagramType={data.flowchart_type}
+        summary={data.summary}
+        shortAlt={data.short_alt}
+        title={data.title}
+        imageDataUrl={imageDataUrl}
+        initialView={new URLSearchParams(window.location.search).get("view")}
+        onViewChange={(next) => {
+          const url = new URL(window.location.href);
+          url.searchParams.set("view", next);
+          window.history.replaceState({}, "", url.toString());
+        }}
+      />
 
       <div
       style={{

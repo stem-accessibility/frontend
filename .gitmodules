@@ -1,0 +1,3 @@
+[submodule "vendor/arboretum"]
+	path = vendor/arboretum
+	url = https://github.com/ritesh-kanchi/Arboretum

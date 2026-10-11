@@ -24,6 +24,7 @@
     "papaparse": "^5.5.3",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
+    "react-accessible-treeview": "^2.11.2",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.3",
