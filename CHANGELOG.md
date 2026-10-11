@@ -6,6 +6,14 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Fixed
+- Automatically generated alt text and long description are now saved right after generation.
+  Before, they existed only in the open page and were lost (and regenerated) on every reload.
+
+### Added
+- "Alt text" option in the "Choose a representation" menu (published pages and permalinks): shows
+  the short alt text on its own, with a copy button.
+
 ### Added
 - `VITE_AUTH_MODE=dev`: run locally without a Supabase project (pairs with backend `AUTH_MODE=dev`;
   ignored in production builds).

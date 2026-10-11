@@ -5,8 +5,9 @@ import AccessibleTable from "../components/access-reps/AccessibleTable";
 import NavigableList from "../components/access-reps/NavigableList";
 import AccessibleMarkdown from "../components/access-reps/AccessibleMarkdown";
 import Tactile from "../components/access-reps/TactileRenderer";
+import AltTextView from "../components/access-reps/AltTextView";
 
-type ViewMode = "summary" | "table" | "navigable" | "tactile";
+type ViewMode = "summary" | "alt" | "table" | "navigable" | "tactile";
 
 interface PublicFlowchartResponse {
   public_slug: string;
@@ -33,7 +34,7 @@ function formatDateTime(iso?: string | null) {
   });
 }
 
-const allowedViews = new Set<ViewMode>(["summary", "table", "navigable", "tactile"]);
+const allowedViews = new Set<ViewMode>(["summary", "alt", "table", "navigable", "tactile"]);
 
 const PublicFlowchart: React.FC = () => {
   const { public_slug } = useParams<{ public_slug: string }>();
@@ -134,6 +135,7 @@ const publishedLabel = formatDateTime(data.published_at);
         style={{ marginTop: 10, padding: 6 }}
       >
         <option value="summary">Summary</option>
+        <option value="alt">Alt text</option>
         <option value="table">Table</option>
         <option value="navigable">Navigable List</option>
         <option value="tactile">Tactile</option>
@@ -147,6 +149,10 @@ const publishedLabel = formatDateTime(data.published_at);
             imageAlt={data.short_alt}
             flowchartData={data.json_data}
           />
+        )}
+
+        {view === "alt" && (
+          <AltTextView shortAlt={data.short_alt} title={data.title} />
         )}
 
         {view === "table" && (

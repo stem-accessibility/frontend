@@ -4,6 +4,7 @@ import AccessibleTable from './AccessibleTable';
 import NavigableList from './NavigableList';
 import AccessibleMarkdown from './AccessibleMarkdown';
 import Tactile from './TactileRenderer';
+import AltTextView from './AltTextView';
 import { apiFetch } from '../../lib/api';
 
 import type {  PermalinkResponse } from '../../types/types'; // Update path if needed
@@ -15,7 +16,7 @@ const PermalinkContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 
-  const [selectedView, setSelectedView] = useState<'summary' | 'table' | 'navigable' | 'tactile'>('summary');
+  const [selectedView, setSelectedView] = useState<'summary' | 'alt' | 'table' | 'navigable' | 'tactile'>('summary');
 
   // const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
@@ -59,6 +60,7 @@ const PermalinkContent: React.FC = () => {
       >
 
         <option value="summary">Summary</option>
+        <option value="alt">Alt text</option>
         <option value="table">Table</option>
         <option value="navigable">Navigable List</option>
         <option value="tactile">Tactile</option>
@@ -76,6 +78,10 @@ const PermalinkContent: React.FC = () => {
           </div>
         )}
 
+
+        {selectedView === 'alt' && (
+          <AltTextView shortAlt={data.short_alt} />
+        )}
 
         {selectedView === 'table' && (
           <div>
