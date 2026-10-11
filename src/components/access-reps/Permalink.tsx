@@ -33,7 +33,7 @@ const Permalink: React.FC<PermalinkProps> = ({ json, summary, flowchartId }) => 
 
     if (isPublishing) return;
     if (!activeId) {
-  setError("Save this flowchart first, then publish a permalink.");
+  setError("Save this STEM image first, then publish a permalink.");
   return;
 }
 

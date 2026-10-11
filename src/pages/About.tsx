@@ -16,7 +16,7 @@ const About: React.FC = () => {
             About STEM-Accessibility
           </h1>
           <p className="about__lede">
-            STEM-Accessibility is a research-driven platform for making diagrams meaningfully accessible.
+            STEM-Accessibility is a research-driven platform for making STEM images meaningfully accessible.
           </p>
         </div>
       </header>
@@ -28,14 +28,14 @@ const About: React.FC = () => {
             What STEM-Accessibility is
           </h2>
           <p className="about__p">
-            Diagrams—such as flowcharts, decision trees, process maps, and organizational charts—play a central role in
+            STEM images—such as flowcharts, decision trees, process maps, and organizational charts—play a central role in
             how people learn, reason, and communicate. Yet they are still largely treated as static images, leaving many
             people without access to the information they convey.
           </p>
           <p className="about__p">
-            STEM-Accessibility is built on the idea that accessibility improves when diagram structure is made explicit. Instead
-            of asking people to describe images after the fact, we treat diagrams as structured systems made up of
-            nodes, relationships, and meaning. This allows a single diagram to be expressed in multiple accessible
+            STEM-Accessibility is built on the idea that accessibility improves when STEM image structure is made explicit. Instead
+            of asking people to describe images after the fact, we treat STEM images as structured systems made up of
+            nodes, relationships, and meaning. This allows a single STEM image to be expressed in multiple accessible
             forms, including long descriptions, keyboard-navigable views, and tactile or auditory outputs—without losing
             the underlying logic.
           </p>
@@ -47,20 +47,20 @@ const About: React.FC = () => {
             The problem
           </h2>
           <p className="about__p">
-            For many blind and disabled learners, diagrams remain one of the most persistent barriers to understanding
-            course material, documentation, and decision-making tools. When diagrams are inaccessible, access is
+            For many blind and disabled learners, STEM images remain one of the most persistent barriers to understanding
+            course material, documentation, and decision-making tools. When STEM images are inaccessible, access is
             delayed, partial, or missing entirely.
           </p>
           <p className="about__p">
             Today, accessibility often relies on manual, one-off fixes: writing ad-hoc descriptions, retrofitting images,
             or relying on individual expertise without shared tools or structure. This approach doesn’t scale, and it
-            rarely supports deeper understanding of how a diagram actually works.
+            rarely supports deeper understanding of how a STEM image actually works.
           </p>
           <p className="about__p">
-            At the same time, the responsibility for providing accessible diagrams often falls on people who are not
-            accessibility experts—or who did not originally design the diagram and may lack deep domain knowledge of its
-            content. Existing accessibility guidance for diagrams is often fragmented, underspecified, or focused on
-            minimum requirements rather than on what it actually means to understand a diagram. As a result, diagrams
+            At the same time, the responsibility for providing accessible STEM images often falls on people who are not
+            accessibility experts—or who did not originally design the STEM image and may lack deep domain knowledge of its
+            content. Existing accessibility guidance for STEM images is often fragmented, underspecified, or focused on
+            minimum requirements rather than on what it actually means to understand a STEM image. As a result, STEM images
             may technically meet guidelines while still failing to provide real access.
           </p>
         </section>
@@ -71,9 +71,9 @@ const About: React.FC = () => {
             Our approach
           </h2>
           <p className="about__p">
-            STEM-Accessibility extracts diagram structure from images and enables diagrams to be explored, verified, and
+            STEM-Accessibility extracts STEM image structure from images and enables STEM images to be explored, verified, and
             transformed across multiple modalities. This approach supports clearer descriptions, more reliable
-            navigation, and representations that align with how people reason about diagrams—not just how they look.
+            navigation, and representations that align with how people reason about STEM images—not just how they look.
           </p>
           <p className="about__p">
             The accessible representations produced by STEM-Accessibility are grounded in accessibility research and were
@@ -83,7 +83,7 @@ const About: React.FC = () => {
               Arboretum<span className="sr-only"> (opens in a new tab)</span>
             </a>
             , whose open-source code STEM-Accessibility now uses for tree, list and array
-            diagrams—ensuring continuity between research findings and real-world use.
+            STEM images—ensuring continuity between research findings and real-world use.
           </p>
 
           <div className="about__callout" role="note" aria-label="Related publication">
@@ -124,10 +124,10 @@ const About: React.FC = () => {
           </h2>
           <p className="about__p">
             STEM-Accessibility is designed for educators, researchers, instructional designers, and organizations that rely on
-            diagrams to teach, explain, and communicate ideas—and who want those diagrams to be usable by everyone.
+            STEM images to teach, explain, and communicate ideas—and who want those STEM images to be usable by everyone.
           </p>
           <p className="about__p">
-            If you create, maintain, or are responsible for sharing diagrams—and need to provide accessible access to
+            If you create, maintain, or are responsible for sharing STEM images—and need to provide accessible access to
             them without being an accessibility specialist or a domain expert—STEM-Accessibility provides structured support to
             make that possible.
           </p>

@@ -12,7 +12,7 @@ function escapeHtml(value: string): string {
 }
 
 function normalizeFileNameBase(value: string): string {
-  return (value || "diagram")
+  return (value || "stem-image")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -24,7 +24,7 @@ export function sanitizeSvgForAccessibleUse(
 ): string {
   if (!svgMarkup.trim()) return svgMarkup;
 
-  const safeLabel = escapeHtml(shortAlt || "Diagram");
+  const safeLabel = escapeHtml(shortAlt || "STEM image");
 
   let sanitized = svgMarkup
     .replace(/<title[\s\S]*?<\/title>/gi, "")
@@ -204,7 +204,7 @@ export function buildSelfHostedLinkedHtmlSnippet(args: LinkedHtmlArgs): string {
   return `<figure>
   <img src="${escapeHtml(imageUrl || "YOUR_IMAGE_URL")}" alt="${escapeHtml(shortAlt)}" />
   <figcaption>
-    ${escapeHtml(title || "Diagram")}. Full long description can be found <a href="${escapeHtml(
+    ${escapeHtml(title || "STEM image")}. Full long description can be found <a href="${escapeHtml(
       descriptionHref
     )}">here.</a>
   </figcaption>
@@ -217,7 +217,7 @@ export function buildPermalinkLinkedHtmlSnippet(args: LinkedHtmlArgs): string {
   return `<figure>
   <img src="${escapeHtml(imageUrl || "YOUR_IMAGE_URL")}" alt="${escapeHtml(shortAlt)}" />
   <figcaption>
-    ${escapeHtml(title || "Diagram")}. Accessible Diagram Representations can be found <a href="${escapeHtml(
+    ${escapeHtml(title || "STEM image")}. Accessible STEM Image Representations can be found <a href="${escapeHtml(
       descriptionHref
     )}">here.</a>
   </figcaption>
@@ -315,13 +315,13 @@ function buildVisualHtml(args: {
 
   if (imageUrl?.trim()) {
     return `<figure>
-  <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(shortAlt || "Diagram")}" />
+  <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(shortAlt || "STEM image")}" />
   <figcaption>Full long description appears below.</figcaption>
 </figure>`;
   }
 
-  return `<section class="diagram-missing" aria-label="Diagram preview unavailable">
-  <p>No visual diagram preview was available for this export.</p>
+  return `<section class="diagram-missing" aria-label="STEM image preview unavailable">
+  <p>No visual STEM image preview was available for this export.</p>
 </section>`;
 }
 
@@ -336,7 +336,7 @@ export function buildSelfHostedLongDescriptionPageHtml(args: HtmlSnippetArgs): s
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(title || "Diagram long description")}</title>
+  <title>${escapeHtml(title || "STEM image long description")}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -403,7 +403,7 @@ export function buildSelfHostedLongDescriptionPageHtml(args: HtmlSnippetArgs): s
 </head>
 <body>
   <main>
-    <h1>${escapeHtml(title || "Diagram long description")}</h1>
+    <h1>${escapeHtml(title || "STEM image long description")}</h1>
     ${visualHtml}
     <section aria-label="Long description">
     

@@ -70,7 +70,7 @@ export default function PublicRepoPage() {
     <main className="repo-page">
       <header className="repo-hero">
         <div className="repo-hero__inner">
-          <h1 className="repo-hero__title">Public Diagram Repository</h1>
+          <h1 className="repo-hero__title">Public STEM images</h1>
           <p className="repo-hero__subtitle">
             Browse published diagrams that creators opted into sharing as public examples.
           </p>
@@ -86,7 +86,7 @@ export default function PublicRepoPage() {
             </label>
 
             <label className="repo-controls__select">
-              <span className="sr-only">Filter by diagram type</span>
+              <span className="sr-only">Filter by image type</span>
               <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
                 {types.map((t) => (
                   <option key={t} value={t}>
@@ -107,7 +107,7 @@ export default function PublicRepoPage() {
         </div>
       </header>
 
-      <section className="repo-grid" aria-label="Public flowcharts">
+      <section className="repo-grid" aria-label="Public STEM images">
         {filtered.length === 0 ? (
           <div className="repo-empty">
             <div className="repo-empty__title">No results</div>

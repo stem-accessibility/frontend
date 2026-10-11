@@ -3,6 +3,11 @@
 Edit freely. Check items off as they land. Items marked **Q** need a decision before work starts.
 Decisions already made are listed under "Decided".
 
+## Progress
+
+- Batch 1 (wording, nav, route renames, Dashboard placeholder): done on this branch.
+- Next: publish model (backend), Create page, markdown editor, Browse landing, Try it.
+
 ## Decided
 
 - Headline: "Make STEM images accessible."

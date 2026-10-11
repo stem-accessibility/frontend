@@ -13,7 +13,7 @@ const HowItWorks: React.FC = () => (
         </h2>
 
         <p className="home-section__lead">
-          Start from the diagram you already have. STEM-Accessibility converts it into structured data, lets you verify it in a
+          Start from the STEM image you already have. STEM-Accessibility converts it into structured data, lets you verify it in a
           visual editor, and publishes accessible representations via a permanent link.
         </p>
       </header>
@@ -24,7 +24,7 @@ const HowItWorks: React.FC = () => (
         <li className="how-step">
           <div className="how-step__meta">
             <div className="how-step__kicker">Step 1</div>
-            <h3 className="how-step__title">Upload your original diagram</h3>
+            <h3 className="how-step__title">Upload your original STEM image</h3>
             <p className="how-step__desc">
               Bring an existing image or PDF export. We extract the underlying nodes, edges, and labels into a
               structured representation.
@@ -39,7 +39,7 @@ const HowItWorks: React.FC = () => (
                 loading="lazy"
               />
             </div>
-            <figcaption className="how-step__caption">Original diagram (image input)</figcaption>
+            <figcaption className="how-step__caption">Original STEM image (image input)</figcaption>
           </figure>
         </li>
 
@@ -82,7 +82,7 @@ const HowItWorks: React.FC = () => (
             <div className="how-step__kicker">Step 3</div>
             <h3 className="how-step__title">Publish accessible representations</h3>
             <p className="how-step__desc">
-             Share a permalink with a long description, structured data representing the diagram, a keyboard-navigable view, and a tactile graphic ready for printing.
+             Share a permalink with a long description, structured data representing the STEM image, a keyboard-navigable view, and a tactile graphic ready for printing.
 </p>
 
             <a

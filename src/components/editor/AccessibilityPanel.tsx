@@ -28,7 +28,7 @@ export default function AccessibilityPanel({
   return (
     <section
       className="accessibility-summary-bar"
-      aria-label="Diagram accessibility summary"
+      aria-label="STEM image accessibility summary"
     >
       <div className="accessibility-summary-bar__intro">
         <h2 className="accessibility-summary-bar__title">Accessibility</h2>

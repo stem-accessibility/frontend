@@ -99,7 +99,7 @@ export default function EditorToolbar({
         </button>
 
         <label className="canvas-toolbar__type">
-          <span>Diagram type</span>
+          <span>Image type</span>
           <select
             value={diagramType}
             onChange={(e) => onDiagramTypeChange(e.target.value as DiagramType)}

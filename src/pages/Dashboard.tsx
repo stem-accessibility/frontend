@@ -103,7 +103,7 @@ const handleOpenExport = async (flowchartId: string) => {
   } catch (error) {
     console.error("Failed to load flowchart for export:", error);
     setStatusKind("error");
-    setStatus("Failed to load flowchart for export.");
+    setStatus("Failed to load STEM image for export.");
   } finally {
     setIsLoadingExport(false);
   }
@@ -190,7 +190,7 @@ const handleOpenExport = async (flowchartId: string) => {
   });
 
   const confirmed = window.confirm(
-    "Delete this flowchart? This cannot be undone."
+    "Delete this STEM image? This cannot be undone."
   );
 
   if (!confirmed) {
@@ -268,7 +268,7 @@ const handleOpenExport = async (flowchartId: string) => {
       <div className="dashboard-top">
         <div className="dashboard-header">
           <div className="dashboard-heading">
-            <h1 className="dashboard-title">My Flowcharts</h1>
+            <h1 className="dashboard-title">My STEM images</h1>
 
             <div
               className={`dashboard-status ${statusKind === "error" ? "dashboard-status--error" : ""}`}
@@ -325,10 +325,10 @@ const handleOpenExport = async (flowchartId: string) => {
         />
       </div>
 
-      <div className="dashboard-grid" aria-label="Flowchart list">
+      <div className="dashboard-grid" aria-label="STEM image list">
         {pageRows.length === 0 ? (
           <div className="dashboard-empty" role="status" aria-live="polite">
-            No flowcharts match your filters.
+            No STEM images match your filters.
           </div>
         ) : (
           pageRows.map((r) => (
@@ -422,7 +422,7 @@ const handleOpenExport = async (flowchartId: string) => {
         </div>
 
         <div style={{ padding: 24 }}>
-          {isLoadingExport ? "Loading flowchart details…" : "Unable to load export data."}
+          {isLoadingExport ? "Loading STEM image details…" : "Unable to load export data."}
         </div>
       </div>
     </div>

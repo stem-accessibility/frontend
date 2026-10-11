@@ -53,7 +53,7 @@ const PublicFlowchart: React.FC = () => {
         // Fetch public flowchart
         const res = await fetch(`${API_URL}/p/${encodeURIComponent(public_slug)}`);
         if (!res.ok) {
-          throw new Error(`Flowchart not found`);
+          throw new Error(`STEM image not found`);
         }
 
         const fc: PublicFlowchartResponse = await res.json();
@@ -75,7 +75,7 @@ const PublicFlowchart: React.FC = () => {
         }
       } catch (err: any) {
         console.error("Public flowchart load error:", err);
-        setError(err.message || "Failed to load flowchart");
+        setError(err.message || "Failed to load STEM image");
       }
     };
 
@@ -87,7 +87,7 @@ const PublicFlowchart: React.FC = () => {
   }
 
   if (!data) {
-    return <p>Loading public flowchart…</p>;
+    return <p>Loading STEM image…</p>;
   }
 const publishedLabel = formatDateTime(data.published_at);
 

@@ -129,7 +129,7 @@ const NavigableList: React.FC<Props> = ({ jsonData }) => {
   const [canvasSize, setCanvasSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
  
   if (!jsonData) {
-    return <div>Loading flowchart...</div>;
+    return <div>Loading STEM image...</div>;
   }
 
   const { nodes, edges } = jsonData;
@@ -356,7 +356,7 @@ const fallbackCanvas = (() => {
 const effectiveCanvas = layoutReady ? canvasSize : fallbackCanvas;
 
   return (
-    <div className="flowchart-wrapper" aria-label="Flowchart View">
+    <div className="flowchart-wrapper" aria-label="STEM image view">
       <nav className="flowchart-nav" aria-label="Jump to node">
         {nodes.map((node) => (
           <button key={node.id} onClick={() => handleNodeFocus(node.id)}>

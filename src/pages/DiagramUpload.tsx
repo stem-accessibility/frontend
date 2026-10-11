@@ -323,12 +323,12 @@ localStorage.setItem("editorMode", "create");
           upload_job_id:  currentUploadJobId,
         },
       });
-    setStatus("Processing diagram…");
+    setStatus("Processing STEM image…");
 
     const result = await pollJobUntilComplete(createJob.job_id);
 
     if (!result?.mermaid_json) {
-      throw new Error("Failed to process diagram.");
+      throw new Error("Failed to process STEM image.");
     }
 
    
@@ -403,7 +403,7 @@ navigate("/editor");
     },
   });
 
-    setStatus("We couldn’t process that diagram. Please try again.");
+    setStatus("We couldn’t process that STEM image. Please try again.");
     setStatusIsError(true);
   } finally {
     setBusy(false);
@@ -423,7 +423,7 @@ navigate("/editor");
   },
 });
     setBusy(true);
-    setStatus("Generating diagram…");
+    setStatus("Generating STEM image…");
 
     try {
       const res = await fetch(`${API_URL}/parse-mermaid`, {
@@ -459,7 +459,7 @@ localStorage.setItem("editorMode", "edit");
 
       navigate("/editor");
     } catch (e) {
-      setStatus("Failed to generate diagram from Mermaid.");
+      setStatus("Failed to generate a STEM image from Mermaid.");
       logResearchEvent({  event_type: "Mermaid_Parse_Failed",  editor_mode: "mermaid",  success: false,  event_data: {    source_page: "DiagramUploadPage",    mermaid_char_count: mermaidText.length,    error_message: e instanceof Error ? e.message : String(e),  },});
 
     } finally {
@@ -473,14 +473,14 @@ localStorage.setItem("editorMode", "edit");
         return (
           <>
             <label className="field">
-              <span className="label">Diagram type</span>
+              <span className="label">Image type</span>
               <select disabled className="select" value={diagramType} onChange={(e) => setDiagramType(e.target.value)}>
                 <option>Flow chart</option>
               </select>
             </label>
 
             <button className="btn" type="button" onClick={handleGenerateFromImage} disabled={!file || busy}>
-              {busy ? "Processing…" : "Generate diagram"}
+              {busy ? "Processing…" : "Generate STEM image"}
             </button>
           </>
         );
@@ -510,7 +510,7 @@ localStorage.setItem("editorMode", "edit");
       <div className="upload-shell container">
         <header className="upload-header">
           <h1 className="upload-title">Upload</h1>
-          <p className="upload-subtitle">Choose an input method to create or edit a flowchart in STEM-Accessibility.</p>
+          <p className="upload-subtitle">Choose an input method to create or edit a STEM image in STEM-Accessibility.</p>
         </header>
         
            

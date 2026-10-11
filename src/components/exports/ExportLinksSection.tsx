@@ -76,7 +76,7 @@ export default function ExportLinksSection({
 
         {!isPublished ? (
           <p className="export-block__description">
-            This diagram is not currently published publicly.
+            This STEM image is not currently shared publicly.
           </p>
         ) : (
           <textarea

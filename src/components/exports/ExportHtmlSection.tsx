@@ -146,7 +146,7 @@ export default function ExportHtmlSection({
             </div>
             {!hasPublishedPermalink ? (
             <p className="export-block__description">
-              Publish the diagram first to enable a STEM-Accessibility-hosted linked
+              Share the STEM image first to enable a STEM-Accessibility-hosted linked
               snippet.
             </p>
           ) : (

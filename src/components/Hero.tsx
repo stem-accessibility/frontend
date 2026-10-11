@@ -17,29 +17,29 @@ const Hero: React.FC = () => {
        
 
         <h1 id="hero-title" className="hero__title">
-          Make diagrams accessible.
+          Make STEM images accessible.
         </h1>
 
         <p className="hero__subtitle">
-        STEM-Accessibility helps teams generate accessible representations of flowchart diagrams. These representations are grounded in accessibility research and were iteratively designed and evaluated with blind and visually impaired users:  
+        STEM-Accessibility helps teams generate accessible representations of STEM images such as flowcharts, trees, lists, and arrays. These representations are grounded in accessibility research and were iteratively designed and evaluated with blind and visually impaired users:  
         <a href="https://www.briannawimer.com/publications/2026-01-01-CHI-26" className="hero__link"> [see the research]</a>.
       </p>
 
 
         <ul className="hero__bullets" aria-label="Key capabilities">
-          <li>Turn existing diagrams into structured, accessible representations  </li>
-          <li>Explore diagrams through text, keyboard navigation, and touch </li>
+          <li>Turn existing STEM images into structured, accessible representations  </li>
+          <li>Explore STEM images through text, keyboard navigation, and touch </li>
           <li>Share one link that works across different access needs</li>
         </ul>
 
         <div className="hero__actions">
           {user ? (
-            <Link className="btn hero__cta" to="/upload">
-              Upload a diagram
+            <Link className="btn hero__cta" to="/create">
+              Create a STEM image
             </Link>
           ) : (
             <Link className="btn hero__cta" to="/login">
-              Log in or sign up to upload
+              Log in or sign up to create
             </Link>
           )}
           <a
@@ -51,12 +51,15 @@ const Hero: React.FC = () => {
           See what you get
           <span className="sr-only"> (opens in a new tab)</span>
         </a>
+          <Link className="btn btn--outline hero__secondary" to="/browse">
+            Browse public STEM images
+          </Link>
         </div>
 
         <p className="hero__fineprint">
           {user
-            ? "Your diagrams and published pages are listed on your dashboard."
-            : "Free to sign up. Uploads are processed automatically and saved to your account."}
+            ? "Your STEM images and shared pages are listed on your dashboard."
+            : "Free to sign up. Images you upload are processed automatically and saved to your account."}
         </p>
       </div>
 
@@ -77,16 +80,16 @@ const Hero: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                One diagram. Multiple Accessible Representations
+                One STEM image. Multiple accessible representations
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
             
 
-         <div className="hero__reps" role="group" aria-label="Accessible diagram representations">
+         <div className="hero__reps" role="group" aria-label="Accessible STEM image representations">
   {[
-    { src: "/original.jpg", label: "Diagram in its original visual form", alt: "Original flowchart image before accessibility processing" },
+    { src: "/original.jpg", label: "STEM image in its original visual form", alt: "Original flowchart image before accessibility processing" },
     { src: "/description.png", label: "Structured, sectioned explanation", alt: "Long description view presenting a structured textual explanation of a flowchart" },
-    { src: "/keyboard.png", label: "Navigate diagrams with a keyboard", alt: "Keyboard-navigable diagram interface highlighting focused nodes" },
+    { src: "/keyboard.png", label: "Navigate STEM images with a keyboard", alt: "Keyboard-navigable STEM image interface highlighting focused nodes" },
     { src: "/tactile-real.jpeg", label: "Tactile rendering for swell paper", alt: "Tactile flowchart representation designed for braille or swell paper output" },
   ].map((rep) => (
     <figure className="hero__rep" key={rep.src}>

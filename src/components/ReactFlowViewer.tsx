@@ -59,7 +59,7 @@ export function FlowchartViewer({
         borderRadius: 8,
         overflow: 'hidden',
       }}
-      aria-label="Digital flowchart viewer"
+      aria-label="Digital STEM image viewer"
     >
       <ReactFlow
         nodes={nodes}

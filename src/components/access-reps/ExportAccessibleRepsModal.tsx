@@ -216,12 +216,12 @@ const permalinkLinkedSnippet = useMemo(() => {
   },
 });
     if (!flowchartId) {
-      setError("Save the diagram first. Publishing requires a saved diagram ID.");
+      setError("Save the STEM image first. Publishing requires a saved STEM image ID.");
       return;
     }
 
     if (isDirty) {
-      setError("You have unsaved changes. Save the diagram before publishing.");
+      setError("You have unsaved changes. Save the STEM image before publishing.");
       return;
     }
 

@@ -18,8 +18,8 @@ const AccessibleTable: React.FC<Props> = ({ json }) => {
   return (
     <div>
       {/* Nodes Table */}
-      <table className="styled-table" aria-label="Table of flowchart nodes">
-        <caption>Flowchart Nodes</caption>
+      <table className="styled-table" aria-label="Table of nodes">
+        <caption>Nodes</caption>
         <thead>
           <tr>
             <th scope="col">Label</th>
@@ -39,8 +39,8 @@ const AccessibleTable: React.FC<Props> = ({ json }) => {
       <div style={{ height: '1rem' }}></div>
 
       {/* Edges Table */}
-      <table className="styled-table" aria-label="Table of flowchart edges">
-        <caption>Flowchart Edges</caption>
+      <table className="styled-table" aria-label="Table of edges">
+        <caption>Edges</caption>
         <thead>
           <tr>
             <th scope="col">Source (Label)</th>

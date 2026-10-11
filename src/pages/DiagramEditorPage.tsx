@@ -275,7 +275,7 @@ const DiagramEditorPage = () => {
         setIsDirty(false);
       } catch (e: any) {
         console.error(e);
-        setSaveStatus(e?.message || "Failed to load flowchart from database.");
+        setSaveStatus(e?.message || "Failed to load STEM image.");
 
         const empty = createEmptyFlowchart();
         setFlowchartData(empty);
@@ -715,7 +715,7 @@ const DiagramEditorPage = () => {
       setIsDirty(true);
     } catch (err: any) {
       console.error(err);
-      setSaveStatus(err?.message || "Failed to generate diagram from Mermaid.");
+      setSaveStatus(err?.message || "Failed to generate a STEM image from Mermaid.");
     } finally {
       setIsLoading(false);
     }
@@ -837,21 +837,21 @@ const DiagramEditorPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSavePending]);
 
-  const handleReUpload = () => navigate("/upload");
+  const handleReUpload = () => navigate("/create");
   const handleStartOver = () => {
     localStorage.removeItem("latestDiagramJSON");
     localStorage.removeItem("latestDiagramImage");
     localStorage.removeItem("latestSummary");
     localStorage.removeItem("latestShortAlt");
     localStorage.removeItem("latestMermaidCode");
-    navigate("/upload");
+    navigate("/create");
   };
 
   return (
     <div className="diagram-page">
       <div className="diagram-shell">
         <main className="diagram-main" aria-labelledby="diagram-editor-page-heading">
-          <h1 id="diagram-editor-page-heading">Diagram editor</h1>
+          <h1 id="diagram-editor-page-heading">STEM image editor</h1>
 
           
 
@@ -988,7 +988,7 @@ const DiagramEditorPage = () => {
             onClick={handleApplyMermaid}
             disabled={!mermaidText.trim() || isLoading}
           >
-            {isLoading ? "Applying…" : "Apply Mermaid to diagram"}
+            {isLoading ? "Applying…" : "Apply Mermaid to STEM image"}
           </button>
         </div>
       </div>
@@ -1075,7 +1075,7 @@ const DiagramEditorPage = () => {
                 </button>
               </div>
               <div className="image-overlay__body">
-                <img src={imgContent} alt="Uploaded flowchart" />
+                <img src={imgContent} alt="Uploaded STEM image" />
               </div>
             </div>
           </div>

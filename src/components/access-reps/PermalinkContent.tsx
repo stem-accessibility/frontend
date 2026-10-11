@@ -28,7 +28,7 @@ const PermalinkContent: React.FC = () => {
         }
       } catch (err: any) {
         console.error(err);
-        setError(err.message || 'Failed to load flowchart');
+        setError(err.message || 'Failed to load STEM image');
       }
     };
 

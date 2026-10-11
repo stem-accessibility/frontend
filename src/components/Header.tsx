@@ -43,13 +43,17 @@ export default function Header() {
     <header className="app-header">
       <div className="app-header__inner">
         <div className="app-header__left">
-          <Link to="/" className="brand" aria-label="STEM-Accessibility home">
+          <Link
+            to={user ? "/dashboard" : "/"}
+            className="brand"
+            aria-label={user ? "STEM-Accessibility, go to your dashboard" : "STEM-Accessibility home"}
+          >
             STEM-Accessibility
           </Link>
 
           <nav className="app-nav" aria-label="Primary navigation">
-            <NavItem to="/" label="Home" end />
             <NavItem to="/about" label="About" />
+            <NavItem to="/browse" label="Browse" />
           </nav>
         </div>
 
@@ -63,8 +67,9 @@ export default function Header() {
             <>
               <nav className="app-nav" aria-label="Application navigation">
                 <NavItem to="/dashboard" label="Dashboard" />
-                <NavItem to="/upload" label="Upload" />
-               
+                <Link to="/create" className="btn">
+                  Create
+                </Link>
               </nav>
 
               <span className="user-chip" title={userLabel} aria-label={`Signed in as ${userLabel}`}>

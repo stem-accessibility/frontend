@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -45,7 +45,8 @@ export default function AppRoutes() {
       <Route path="/guidance" element={<AltTextGuidancePage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/examples" element={<PublicRepoPage />} />
+      <Route path="/browse" element={<PublicRepoPage />} />
+      <Route path="/examples" element={<Navigate to="/browse" replace />} />
 
       {/* Grafari (public for now) */}
       <Route path="/grafari" element={<GrafariPlaygroundPage />} />
@@ -76,8 +77,9 @@ export default function AppRoutes() {
           </RequireAuth>
         }
       />
+      <Route path="/upload" element={<Navigate to="/create" replace />} />
       <Route
-        path="/upload"
+        path="/create"
         element={
           <RequireAuth>
             <DiagramUploadPage />

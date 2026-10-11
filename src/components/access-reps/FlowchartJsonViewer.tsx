@@ -85,7 +85,7 @@ type FlowchartJsonViewerProps = {
 };
 
 const FlowchartJsonViewer: React.FC<FlowchartJsonViewerProps> = ({
-  title = "Flowchart JSON",
+  title = "STEM image JSON",
   primaryIdLabel,
   primaryIdValue,
   backLabel,
@@ -226,7 +226,7 @@ const FlowchartJsonViewer: React.FC<FlowchartJsonViewerProps> = ({
 
       {/* JSON */}
       <pre
-        aria-label="Flowchart JSON (pretty printed)"
+        aria-label="STEM image JSON (pretty printed)"
         style={{
           marginTop: "16px",
           padding: "12px",

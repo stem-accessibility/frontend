@@ -82,7 +82,7 @@ export default function FlowchartCard({
             </div>
           </div>
 
-          <div className="flowchart-card__actions" aria-label="Flowchart actions">
+          <div className="flowchart-card__actions" aria-label="STEM image actions">
   <Link className="action action--ghost" to={`/editor/${encodeURIComponent(r.flowchart_id)}`}>
     Edit
   </Link>
@@ -104,7 +104,7 @@ export default function FlowchartCard({
     type="button"
     onClick={() => {
       const ok = window.confirm(
-        `Delete this flowchart?\n\n${r.title?.trim() ? r.title : r.flowchart_id}\n\nThis cannot be undone.`
+        `Delete this STEM image?\n\n${r.title?.trim() ? r.title : r.flowchart_id}\n\nThis cannot be undone.`
       );
       if (ok) onDelete(r.flowchart_id);
     }}

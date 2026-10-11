@@ -6,6 +6,15 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Changed
+- Wording: the thing you create and share is now a "STEM image" (headings, buttons, messages, About,
+  exports, README). The type menu is labeled "Image type" (Flowchart, Tree, Binary tree, Linked list,
+  Array, 2D array). Code names and API fields are unchanged.
+- Navigation: signed-in people get Dashboard and a Create button (no Home); the brand link and `/` go to
+  the dashboard. Signed-out visitors get About, Browse, and Log in. `/upload` is now `/create`, and
+  `/examples` is now `/browse`; the old paths redirect.
+- Dashboard search placeholder now says "Title, ID, or public slug" (title was already searched).
+
 ### Added
 - Diagram types: flowchart, tree, binary tree, linked list, array and 2D array, chosen in the editor
   toolbar and stored as `flowchart_type`. The type decides which representations are offered (and

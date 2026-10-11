@@ -72,7 +72,7 @@ export default function ExportTextSection({
                 Long description
               </h3>
               <p className="export-block__description">
-                Best when readers need a fuller explanation of the diagram.
+                Best when readers need a fuller explanation of the STEM image.
               </p>
             </div>
 
