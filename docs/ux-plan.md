@@ -12,6 +12,9 @@ Decisions already made are listed under "Decided".
 - Create: name, type, public (default) or private, then **Upload image** or **Edit markdown**.
 - Markdown editor preview shows the graph, the alt text, and the long description, all visible.
 - Dashboard stays as is, with search by title (plus ID and slug).
+- Three sharing states (Public / Link only / Private), chosen in plain-language terms (section 3), plus a
+  separate switch for whether the source image is shown.
+- Try it has no AI and no image upload, which also limits abuse.
 
 ## 1. Wording
 
@@ -45,31 +48,44 @@ How it works today (backend `models.py`, `routes/api.py`):
 - So someone who sets "public" and never presses Publish gets a diagram that **looks** public to them
   and is invisible to everyone. That is exactly the failure to design out.
 
-Proposal: **one setting, Public or Private, and it does both jobs.**
+Proposal: **one sharing setting that does both jobs, plus one image switch.**
 
-- [ ] Public = published (has a `/p/<slug>` link) and listed. Private = unpublished and unlisted. Owner can
-      always open their own diagrams from the Dashboard.
-- [ ] Backend: one endpoint (extend `POST /research/<id>` or add `POST /flowcharts/<id>/visibility`) that sets
-      `visibility`, `is_published`, `public_slug`, and `published_at` together in one transaction. No code path
-      can leave them out of sync.
-- [ ] `POST /flowcharts` accepts `visibility` and applies the same rule at creation, so Create with "Public"
-      is published immediately, with no second step.
-- [ ] Remove the separate "Publish" button; the editor and Dashboard show a Public/Private toggle that
-      reads "Public: anyone can find and view this" / "Private: only you".
-- [ ] Editing a public diagram updates the public page on save (no "republish" step). Show the public link
-      and a "Last saved" time in the editor so people see that it is live.
-- [ ] Disclosure at the choice point, in plain words next to the radio: "Public diagrams, and the image you
-      upload, can be seen by anyone."
-- [ ] Existing data (one-time, needs your OK because it touches production): rows with `visibility="public"`
-      but `is_published=false` were intended to be public but are invisible; rows with `is_published=true`
-      and `visibility="private"` are "link only". Option A: publish the first group, show the second as
-      "Link only" in the Dashboard. Option B: leave all as is and show a "Public but not published" fix-it
-      banner. Run a read-only count first.
-- **Q** Keep a third state, "Anyone with the link" (published, not listed)? Today's data already has some.
-  Suggest: not offered on Create (only Public/Private), but kept and shown on the Dashboard and in the
-  editor toggle so nothing silently changes.
-- **Q** Public by default also publishes the uploaded image (`/p/<slug>/image`). Is that what you want, or
-  should the image stay private unless the owner opts in? (Copyright and privacy of source images.)
+Names that say what happens (labels, with the description shown under each radio):
+
+| State | Label | Shown under it | Stored as |
+|---|---|---|---|
+| Public | **Public** | "Anyone can find it in Browse and search, and anyone with the link can view it." | `visibility=public`, `is_published=true` |
+| Link only | **Anyone with the link** | "Not listed in Browse or search. Only people you send the link to can view it." | `visibility=private`, `is_published=true` |
+| Private | **Only me** | "Nobody else can see it. You can change this later." | `visibility=private`, `is_published=false` |
+
+- [ ] Default on Create: **Public**. The Dashboard and editor show the same three labels as a select.
+- [ ] Backend: one endpoint (extend `POST /research/<id>` or add `POST /flowcharts/<id>/sharing`) takes
+      `{sharing: "public" | "link" | "private"}` and sets `visibility`, `is_published`, `public_slug`, and
+      `published_at` in one transaction. No other code path touches those fields, so they cannot drift.
+- [ ] `POST /flowcharts` accepts `sharing` and applies the same rule, so Create with "Public" is live
+      immediately with no second step. The separate "Publish" button goes away.
+- [ ] Editing a shared diagram updates the public page on save (no "republish"). The editor shows the page
+      link and "Last saved" time so people can see that it is live.
+- [ ] Unpublishing keeps the slug, so re-sharing restores the same link.
+
+**Source image: its own switch** (only shown when the diagram has an uploaded image):
+
+- [ ] Checkbox "Show the source image on the shared page" with help text: "The image you uploaded stays
+      private unless you check this. Check it only if you have the right to share it."
+- [ ] Default: **off**. (Sharing an uploaded image is the one choice that can't be undone once copied, and
+      the rights to it are often not the uploader's. Public sharing of the generated description and
+      representations works without it.)
+- [ ] Backend: new column `image_public` (boolean, default false) with a migration. `/p/<slug>/image` and
+      `has_image` in the public payload honor it; `/get/<id>/image` for the owner is unchanged.
+- [ ] Existing published diagrams: backfill `image_public=true` so nothing already public changes (you can
+      review and turn individual ones off). Needs your OK, since it is a production data change.
+- [ ] Public pages without a shared image drop the "Original image" view cleanly (no broken link).
+
+**Existing data** (one-time, needs your OK; run a read-only count first):
+
+- Rows with `visibility=public` but `is_published=false` were meant to be public but are invisible.
+  Publish them (they become Public) or surface a "fix" banner on the Dashboard.
+- Rows with `is_published=true` and `visibility=private` map to "Anyone with the link", unchanged.
 
 ## 4. Create page (signed in)
 
@@ -78,7 +94,8 @@ Replaces the tabbed Upload page (`src/pages/DiagramUpload.tsx`).
 1. **Diagram name** (required) → `title`.
 2. **Diagram type** (Flowchart, Tree, Binary tree, Linked list, Array, 2D array; default Flowchart)
    → `flowchart_type`, from `DIAGRAM_TYPES`.
-3. **Visibility**: Public (default) / Private, with the disclosure above.
+3. **Who can see it**: Public (default) / Anyone with the link / Only me (section 3). For image
+   uploads, the "Show the source image" checkbox appears after a file is chosen.
 4. Buttons: **Upload image** and **Edit markdown**.
 
 - [ ] Upload image: file chooser, existing upload job (`UploadJobStatus`) with title, type, visibility, then
@@ -103,6 +120,13 @@ description. Wide screens side by side; narrow screens stacked (editor, then pre
       short alt text as well as the long description; add that output if not.
 - [ ] Alt text and long description are editable text areas under their labels, so the author can adjust
       them before saving. Show "Auto-generated" until edited.
+- [ ] **Say it plainly next to the fields:** "These are generated from the diagram. If you change the
+      diagram, they are regenerated and your edits to them are replaced." (Visible text, not a tooltip,
+      and associated with both fields via `aria-describedby`.)
+- **Q** Should edited text be protected instead? Cheap option: once the author edits a field, stop
+  regenerating it, mark it "Edited by you", and offer **Regenerate (replaces your edits)**. Avoids losing
+  text mid-typing in the editor, where regeneration runs on every parse. Suggest yes, with the notice above
+  kept as the explanation.
 - [ ] Parse error: keep the last good preview, show the error under the editor (`role="alert"`).
 - [ ] Screen reader behavior: the preview region is not a live region (no re-announcing on every
       keystroke). A polite status line says "5 nodes, 6 edges" after each successful parse.
@@ -127,7 +151,7 @@ Same flow as section 5, without an account. The result can be saved as a public 
 stored in the visitor's browser.
 
 - [ ] Route `/try`: the markdown editor from section 5, with a note "No account needed. Nothing here uses AI."
-      Diagram name and type fields as on Create; visibility fixed to Public (stated clearly).
+      Diagram name and type fields as on Create; sharing fixed to Public (stated clearly).
 - [ ] **Where the "cookie" lives:** the backend is on a different site (`run.app`) from the frontend
       (`vercel.app`), so a cookie set by the backend is third-party and increasingly blocked (Safari, Chrome
       settings). Use a random token generated in the browser and kept in first-party storage (a cookie on the
@@ -138,9 +162,11 @@ stored in the visitor's browser.
       Honest note: clearing site data loses access (the diagram stays public).
 - [ ] **Claim on sign-up:** after sign up or login, offer "Add the N diagrams you made here to your
       account" (token proves ownership; rewrites `owner_id`).
-- [ ] Abuse controls (public and anonymous means spam is the main risk): per-IP and per-token rate limits,
-      size caps (nodes, characters), a CAPTCHA (e.g. Cloudflare Turnstile) before first save, a "Report"
-      link on public pages, and a way for you to unpublish by ID. Guest diagrams get a "Guest" badge.
+- [ ] Abuse controls. Public plus anonymous still means spam is the main risk, but with no AI routes and no
+      image upload for guests, there is no cost exposure and no hosted image content. What remains is text:
+      per-IP and per-token rate limits, size caps (nodes, characters), a "Report" link on public pages, and a
+      way for you to unpublish by ID. Guest diagrams get a "Guest" badge. Add a CAPTCHA only if spam shows up.
+- [ ] Guests cannot set "Anyone with the link" or "Only me" (always Public) and have no image switch.
 - **Q** Should guest diagrams appear in the public Browse list immediately, or only be reachable by link until
   you approve them? (Immediately = simplest; spam risk. Link-only = safer; deviates from "saved as a public
   diagram".) Suggest: listed immediately, rate-limited, with report and takedown.
@@ -151,7 +177,8 @@ stored in the visitor's browser.
 
 - [ ] Search already matches title, ID, and slug (`Dashboard.tsx`). Placeholder in `DashboardToolbar.tsx`
       still says "Flowchart ID or public slug": change to "Title, ID, or public slug".
-- [ ] Show each diagram's state as Public / Private / Link only (section 3), with the toggle.
+- [ ] Show each diagram's state with the section 3 labels (Public / Anyone with the link / Only me) as a
+      select, and show whether the source image is shared.
 - [ ] Verify mixed-case and extra-space titles match.
 
 ## Order of work
