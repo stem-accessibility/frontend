@@ -12,25 +12,44 @@ to the backend as a Bearer token (`src/lib/api.ts`).
 
 ```bash
 npm install
-cp .env.example .env.local     # fill in the values below
 npm run dev                    # http://localhost:5173
 ```
 
-Run the backend too (see its README) so uploads and saving work.
+Settings come from `.env.local` in the repository root (git-ignored, never
+commit it). `VITE_*` values are baked in at build time, so restart `npm run dev`
+after changing them. You also need the backend running (see its README).
 
-**No Supabase or Vercel account needed.** For local development set
-`VITE_AUTH_MODE=dev` in `.env.local` and run the backend with `AUTH_MODE=dev`
-(see the backend README). You are signed in as a fixed local user and no
-Supabase call is made. Dev mode is ignored in production builds.
+### Option A: contributor setup (no accounts needed)
+
+Create `.env.local` with:
+
+```
+VITE_AUTH_MODE=dev
+VITE_API_URL=http://localhost:4999
+```
+
+You are signed in as a fixed local user (`dev@localhost`) and the app never
+contacts Supabase. Run the backend with `AUTH_MODE=dev` (its README has the
+matching `.env`). Dev mode is ignored in production builds.
+
+### Option B: your own Supabase project
+
+```
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<sb_publishable_... key>
+VITE_API_URL=http://localhost:4999
+```
 
 | Variable | Value |
 |---|---|
+| `VITE_AUTH_MODE` | `dev` for Option A; leave unset otherwise |
 | `VITE_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | the project's publishable key (`sb_publishable_…`). Never use the secret/service-role key. |
-| `VITE_API_URL` | backend base URL, e.g. `http://localhost:4999` |
+| `VITE_API_URL` | backend base URL, `http://localhost:4999` for a local backend |
 
-Use `.env.local`, which is git-ignored. `VITE_*` values are baked in at build
-time, so changing them in Vercel needs a redeploy.
+For Option B the backend needs `CORS_ORIGINS=http://localhost:5173` (localhost
+is allowed by default) and the same Supabase project's `SUPABASE_URL` and
+`SUPABASE_JWT_ISSUER`.
 
 The `/grafari` chart playground also calls a separate service at
 `http://localhost:5055` (hard-coded in `GrafariOutputsCard.tsx` and
