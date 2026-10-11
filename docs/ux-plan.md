@@ -23,7 +23,7 @@ Decisions already made are listed under "Decided".
 ## 1. Wording (throughout)
 
 The thing a person creates and shares is a **STEM image**. "Flowchart", "tree", and so on remain the names of
-**diagram types** (a STEM image has a type).
+**image types** (a STEM image has a type).
 
 - [ ] Rule: user-visible strings only. Code identifiers, routes' internal names, API fields
       (`flowchart_id`, `flowchart_type`), and the research event names stay as they are.
@@ -31,7 +31,9 @@ The thing a person creates and shares is a **STEM image**. "Flowchart", "tree", 
       empty states, status and error messages, `aria-label`s, and page titles. Examples:
       "Make STEM images accessible", "Create a STEM image", "No STEM images match your filters",
       "Delete this STEM image?", "Your STEM images".
-- [ ] Keep "Diagram type" as the label of the type select (values stay Flowchart, Tree, ...).
+- [ ] The type select's label becomes **"Image type"** (was "Diagram type") on Create, in the editor
+      toolbar, and in mismatch warnings. Values stay Flowchart, Tree, Binary tree, Linked list, Array,
+      2D array.
 - [ ] Files with the most user-visible text (from a grep, includes code identifiers): `DiagramEditorPage.tsx`,
       `DiagramUpload.tsx`, `Dashboard.tsx`, `FlowchartCard.tsx`, `ExportAccessibleRepsModal.tsx`, `About.tsx`,
       `EditorToolbar.tsx`, `Permalink.tsx`, `PublicFlowchart.tsx`, `PublicRepoPage.tsx`, `Hero.tsx`,
@@ -112,7 +114,7 @@ Names that say what happens (labels, with the description shown under each radio
 Replaces the tabbed Upload page (`src/pages/DiagramUpload.tsx`).
 
 1. **Diagram name** (required) → `title`.
-2. **Diagram type** (Flowchart, Tree, Binary tree, Linked list, Array, 2D array; default Flowchart)
+2. **Image type** (Flowchart, Tree, Binary tree, Linked list, Array, 2D array; default Flowchart)
    → `flowchart_type`, from `DIAGRAM_TYPES`.
 3. **Who can see it**: Public (default) / Anyone with the link / Only me (section 3). For image
    uploads, the "Show the source image" checkbox appears after a file is chosen.
@@ -225,5 +227,5 @@ Backend changes (3 and 7) need a Cloud Run redeploy and likely a migration; do b
 ## Out of scope for this pass
 
 - Arboretum Mermaid/Graphviz typed-input parsers, share/embed pages, "ordering" output.
-- Changing how uploads detect diagram type.
+- Changing how uploads detect the image type.
 - Merging to `main` (needs your go-ahead; merging auto-deploys the public site).
