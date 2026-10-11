@@ -15,14 +15,34 @@ Decisions already made are listed under "Decided".
 - Three sharing states (Public / Link only / Private), chosen in plain-language terms (section 3), plus a
   separate switch for whether the source image is shown.
 - Try it has no AI and no image upload, which also limits abuse.
+- Wording change applies throughout the user-visible text (section 1).
+- Guest diagrams appear in Browse immediately, with rate limits, a Report link, and a takedown path.
+- Edited alt text / long description is protected: once edited it stops regenerating, is marked
+  "Edited by you", and offers "Regenerate (replaces your edits)".
 
-## 1. Wording
+## 1. Wording (throughout)
 
-- [ ] `src/components/Hero.tsx`: headline becomes "Make STEM images accessible."
-- [ ] Other "diagram" / "flowchart" wording that should say "STEM image(s)": hero subtitle and bullets,
-      `index.html` title and description, About page, README tagline.
-- **Q** Scope: headline only, or also the body copy and meta tags? (Suggest headline, subtitle, `<title>`,
-  description, README tagline. Leave "diagram type" labels in the editor alone.)
+The thing a person creates and shares is a **STEM image**. "Flowchart", "tree", and so on remain the names of
+**diagram types** (a STEM image has a type).
+
+- [ ] Rule: user-visible strings only. Code identifiers, routes' internal names, API fields
+      (`flowchart_id`, `flowchart_type`), and the research event names stay as they are.
+- [ ] Replace "diagram" / "flowchart" with "STEM image" where it names the user's item: headings, buttons,
+      empty states, status and error messages, `aria-label`s, and page titles. Examples:
+      "Make STEM images accessible", "Create a STEM image", "No STEM images match your filters",
+      "Delete this STEM image?", "Your STEM images".
+- [ ] Keep "Diagram type" as the label of the type select (values stay Flowchart, Tree, ...).
+- [ ] Files with the most user-visible text (from a grep, includes code identifiers): `DiagramEditorPage.tsx`,
+      `DiagramUpload.tsx`, `Dashboard.tsx`, `FlowchartCard.tsx`, `ExportAccessibleRepsModal.tsx`, `About.tsx`,
+      `EditorToolbar.tsx`, `Permalink.tsx`, `PublicFlowchart.tsx`, `PublicRepoPage.tsx`, `Hero.tsx`,
+      `HowItWorks.tsx`, `Guidance.tsx`, `RepoFlowchartCard.tsx`, `AccessibleMarkdown.tsx`, exports text.
+- [ ] Also: `index.html` title and description, README and `ACCESSIBILITY.md` prose, About page, footer,
+      CHANGELOG.
+- [ ] Do the pass in one commit with a before/after list of strings, so it can be reviewed as text rather
+      than as code.
+- [ ] Check: a grep for remaining user-visible "flowchart"/"diagram" outside the type names.
+- Note: exported HTML, `.md`, and permalinks quote this wording too (`export-utils.ts`); update those so
+  shared output matches the app.
 
 ## 2. Navigation
 
@@ -104,8 +124,18 @@ Replaces the tabbed Upload page (`src/pages/DiagramUpload.tsx`).
 - [ ] Both disabled until a name is entered, with a visible message saying why.
 - [ ] Remove Scratch and the unreachable "existing" mode; drop the "Better for screen reader users" note
       (the markdown button replaces it, labeled with what it does).
-- **Q** "Markdown" = the Mermaid text we accept today (`/parse-mermaid`, flowcharts only)? Suggest: Mermaid
-  first, button "Edit markdown (Mermaid)", type-specific input (Arboretum's parsers) as a follow-up.
+- Text format: **Mermaid**. What Arboretum adds (checked in `vendor/arboretum/lib/inputs`):
+  - It parses text **in the browser** (no backend): Mermaid via the `mermaid` package (`getDiagramFromText`),
+    and Graphviz DOT via `ts-graphviz`.
+  - Mermaid works for all five of its structures: binary tree, tree, linked list (`flowchart`), and array and
+    2D array (`block-beta`). Graphviz works for binary tree, tree, and linked list only.
+  - Our `/parse-mermaid` (backend) handles flowcharts only. Arboretum's parser does not do flowcharts, so
+    the two are complementary.
+  - Plan: Flowchart type uses the existing backend parse; Tree, Binary tree, Linked list, Array, and 2D
+    array use Arboretum's in-browser Mermaid parser. Each type gets Arboretum's example text as a starter
+    ("Insert example" button). Graphviz can be added later as a second format for the three types it covers.
+  - Costs: the `mermaid` package is large, so load it only on the editor route (lazy import). Arboretum
+    initializes it with `securityLevel: "loose"`; we would use `"strict"`.
 
 ## 5. Markdown editor with live preview
 
@@ -123,10 +153,12 @@ description. Wide screens side by side; narrow screens stacked (editor, then pre
 - [ ] **Say it plainly next to the fields:** "These are generated from the diagram. If you change the
       diagram, they are regenerated and your edits to them are replaced." (Visible text, not a tooltip,
       and associated with both fields via `aria-describedby`.)
-- **Q** Should edited text be protected instead? Cheap option: once the author edits a field, stop
-  regenerating it, mark it "Edited by you", and offer **Regenerate (replaces your edits)**. Avoids losing
-  text mid-typing in the editor, where regeneration runs on every parse. Suggest yes, with the notice above
-  kept as the explanation.
+- [ ] **Protect edited text** (decided): once the author edits a field it stops regenerating, is marked
+      "Edited by you", and offers **Regenerate (replaces your edits)**. The note above stays as the
+      explanation. Regeneration runs on every parse, so this prevents losing text mid-typing.
+- [ ] Same rule in the main editor: opening an existing STEM image whose text was edited does not
+      overwrite it. Track with a `description_source` flag ("auto" | "edited") stored with the record
+      (backend field or inside `json_data`; decide at implementation time).
 - [ ] Parse error: keep the last good preview, show the error under the editor (`role="alert"`).
 - [ ] Screen reader behavior: the preview region is not a live region (no re-announcing on every
       keystroke). A polite status line says "5 nodes, 6 edges" after each successful parse.
@@ -167,9 +199,6 @@ stored in the visitor's browser.
       per-IP and per-token rate limits, size caps (nodes, characters), a "Report" link on public pages, and a
       way for you to unpublish by ID. Guest diagrams get a "Guest" badge. Add a CAPTCHA only if spam shows up.
 - [ ] Guests cannot set "Anyone with the link" or "Only me" (always Public) and have no image switch.
-- **Q** Should guest diagrams appear in the public Browse list immediately, or only be reachable by link until
-  you approve them? (Immediately = simplest; spam risk. Link-only = safer; deviates from "saved as a public
-  diagram".) Suggest: listed immediately, rate-limited, with report and takedown.
 - **Q** Cookie consent: a functional token is usually exempt, but UW counsel may want a line in the privacy
   note. Needs a short statement on the Try page.
 
