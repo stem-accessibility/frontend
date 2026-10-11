@@ -80,7 +80,10 @@ const PermalinkContent: React.FC = () => {
 
 
         {selectedView === 'alt' && (
-          <AltTextView shortAlt={data.short_alt} />
+          <AltTextView
+            shortAlt={data.short_alt}
+            editPath={id ? `/editor/${encodeURIComponent(id)}` : undefined}
+          />
         )}
 
         {selectedView === 'table' && (

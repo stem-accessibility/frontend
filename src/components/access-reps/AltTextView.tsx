@@ -1,12 +1,15 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 type Props = {
   shortAlt?: string | null;
   title?: string | null;
+  /** Editor route for this diagram, shown to its owner when there is no alt text yet. */
+  editPath?: string;
 };
 
 /** The short alt text on its own, ready to copy into a document or web page. */
-const AltTextView: React.FC<Props> = ({ shortAlt, title }) => {
+const AltTextView: React.FC<Props> = ({ shortAlt, title, editPath }) => {
   const [copied, setCopied] = useState(false);
   const text = (shortAlt ?? "").trim();
 
@@ -41,7 +44,15 @@ const AltTextView: React.FC<Props> = ({ shortAlt, title }) => {
           </p>
         </>
       ) : (
-        <p>No alt text has been written for this diagram yet.</p>
+        <p>
+          No alt text has been written for this diagram yet.
+          {editPath ? (
+            <>
+              {" "}
+              <Link to={editPath}>Open it in the editor</Link> to generate or write it, then save.
+            </>
+          ) : null}
+        </p>
       )}
     </section>
   );
