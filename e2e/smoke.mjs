@@ -155,6 +155,24 @@ try {
   const spread = Math.max(...Object.values(rows)) - Math.min(...Object.values(rows));
   check("Toolbar: sharing, copy link, save, and tabs share one row", spread < 24, JSON.stringify(rows));
 
+  // ---- Autosave waits while the markdown cannot be read
+  const guarded = await make({ title: "Guarded", flowchart_type: "flowchart", sharing: "private" });
+  await page.goto(FRONTEND + "/editor/" + guarded.flowchart_id, { waitUntil: "networkidle0" });
+  await sleep(1200);
+  await (await page.$$(".editor-mode-toggle button"))[1].click();
+  await sleep(500);
+  await endOfTextarea("#mermaid-editor-textarea");
+  await page.type("#mermaid-editor-textarea", "\n  !!! not valid ???");
+  await sleep(3800);
+  const nodesAfterBad = (await api("/get/" + guarded.flowchart_id)).json_data.nodes.length;
+  check("Autosave: held while some text cannot be read", nodesAfterBad === 2 && /Not saved yet/.test(await text(".markdown-split__help")), `nodes=${nodesAfterBad}`);
+  await page.click("#mermaid-editor-textarea", { clickCount: 3 });
+  await page.keyboard.press("Backspace");
+  await page.type("#mermaid-editor-textarea", "flowchart TD\n  A --> B\n  B --> C");
+  await sleep(3800);
+  const nodesAfterFix = (await api("/get/" + guarded.flowchart_id)).json_data.nodes.length;
+  check("Autosave: resumes once the text reads cleanly", nodesAfterFix === 3, `nodes=${nodesAfterFix}`);
+
   // ---- A saved image with no text gets generated text, and it is saved
   const bare = await make({ title: "No text yet", sharing: "private", summary: "", short_alt: "" });
   await page.goto(FRONTEND + "/editor/" + bare.flowchart_id, { waitUntil: "networkidle0" });

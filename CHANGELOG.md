@@ -7,13 +7,14 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Added
-- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (29 browser checks of Create, Markdown mode,
+- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (31 browser checks of Create, Markdown mode,
   autosave, sharing, Browse).
 
 ### Changed
 - Toolbar on one row: sharing, Copy link, Open shared page, and Save sit in the title bar. The source-image
   checkbox moved into the Accessibility region.
-- Autosave: edits to a saved STEM image are written about two seconds after you stop. Save still creates a
+- Autosave: edits to a saved STEM image are written about two seconds after you stop (held while Markdown
+  text has errors or unreadable lines, with a note saying so). Save still creates a
   new image and saves immediately.
 - Accessibility header shows a glimpse of the title and alt text instead of "Added".
 - Alt text and long description are always generated from the diagram itself (no AI call, same diagram gives

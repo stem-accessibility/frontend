@@ -737,16 +737,22 @@ const DiagramEditorPage = () => {
     autosaveBlockedRef.current = false;
   }, [flowchartData, shortAlt, summary, title, diagramType, mermaidText]);
 
+  // In Markdown mode, text that does not read cleanly is not saved: the preview still shows the last
+  // good diagram, and saving it (or a half-typed version with lines dropped) would be misleading.
+  const markdownUnreadable =
+    editorMode === "mermaid" &&
+    (markdownIssues.error !== null || markdownIssues.warnings.length > 0);
+
   useEffect(() => {
     if (!isDirty || !activeFlowchartId || !flowchartData || isLoading) return;
-    if (autosaveBlockedRef.current) return;
+    if (autosaveBlockedRef.current || markdownUnreadable) return;
     const t = window.setTimeout(async () => {
       const ok = await saveToDatabase();
       if (!ok) autosaveBlockedRef.current = true;
     }, 2000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDirty, activeFlowchartId, flowchartData, shortAlt, summary, title, diagramType, mermaidText, isLoading]);
+  }, [isDirty, activeFlowchartId, flowchartData, shortAlt, summary, title, diagramType, mermaidText, isLoading, markdownUnreadable]);
 
   useEffect(() => {
     if (!autoSavePending) return;
@@ -967,6 +973,11 @@ const DiagramEditorPage = () => {
         {markdownIssues.error && (
           <p className="markdown-split__error" role="alert">
             {markdownIssues.error}
+          </p>
+        )}
+        {markdownUnreadable && isDirty && !!activeFlowchartId && (
+          <p className="markdown-split__help" role="status">
+            Not saved yet: some of this text can’t be read, so changes are held until it can.
           </p>
         )}
         {markdownIssues.warnings.length > 0 && (
