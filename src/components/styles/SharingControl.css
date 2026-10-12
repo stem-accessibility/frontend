@@ -16,3 +16,10 @@
 .sharing__msg { margin: 0; font-size: 0.85rem; min-height: 1.1em; color: var(--muted, #555); }
 .sharing__msg--error { color: rgb(180, 30, 30); }
 .sharing--compact .sharing__msg:empty { display: none; }
+.sharing__links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.sharing__url { font-size: 0.8rem; word-break: break-all; }
+.sharing__copy {
+  font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer;
+  border: 1px solid var(--brand, #184c45); border-radius: var(--r-sm, 6px);
+  background: transparent; color: var(--brand, #184c45);
+}

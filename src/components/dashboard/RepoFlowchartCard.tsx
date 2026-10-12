@@ -38,6 +38,7 @@ export default function RepoFlowchartCard({ row: r }: { row: RepoFlowchartRow })
     <article className="repo-card" aria-labelledby={titleId}>
          <FlowchartThumbnail
                 flowchartId={r.flowchart_id}
+                publicSlug={r.public_slug}
                 hasImage={r.has_image}
                 
               />

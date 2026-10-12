@@ -95,9 +95,31 @@ export default function SharingControl({
       )}
 
       {publicPath && sharing !== "private" && (
-        <a className="sharing__link" href={publicPath} target="_blank" rel="noopener noreferrer">
-          Open shared page<span className="sr-only"> (opens in a new tab)</span>
-        </a>
+        <div className="sharing__links">
+          {!compact && (
+            <code className="sharing__url" id={`${id}-url`}>
+              {`${window.location.origin}${publicPath}`}
+            </code>
+          )}
+          <button
+            type="button"
+            className="sharing__copy"
+            aria-describedby={compact ? undefined : `${id}-url`}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
+                setMessage({ kind: "ok", text: "Link copied." });
+              } catch {
+                setMessage({ kind: "error", text: "Could not copy. Select the link and copy it." });
+              }
+            }}
+          >
+            Copy link
+          </button>
+          <a className="sharing__link" href={publicPath} target="_blank" rel="noopener noreferrer">
+            Open shared page<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </div>
       )}
 
       {hint && <p className="sharing__help">{hint}</p>}

@@ -93,7 +93,14 @@ export default function FlowchartCard({
     Edit
   </Link>
 
-  <Link className="action action--ghost" to={`/flowchart/${encodeURIComponent(r.flowchart_id)}`}>
+  <Link
+    className="action action--ghost"
+    to={
+      r.is_published && r.public_slug
+        ? `/p/${encodeURIComponent(r.public_slug)}`
+        : `/flowchart/${encodeURIComponent(r.flowchart_id)}`
+    }
+  >
     Preview
   </Link>
 
