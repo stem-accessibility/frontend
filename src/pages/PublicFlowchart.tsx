@@ -1,4 +1,3 @@
-import ShareToolbar from "../components/access-reps/ShareToolbar";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -108,14 +107,6 @@ const publishedLabel = formatDateTime(data.published_at);
         <a href="/" style={{ textDecoration: "none" }}>STEM-Accessibility</a>
       </div>
     </div>
-
-      <ShareToolbar
-        title={data.title ?? ""}
-        shortAlt={data.short_alt ?? ""}
-        summary={data.summary ?? ""}
-        json={data.json_data}
-        publicUrl={`${window.location.origin}/p/${encodeURIComponent(public_slug ?? "")}`}
-      />
 
       <RepresentationBrowser
         data={data.json_data}

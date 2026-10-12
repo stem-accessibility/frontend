@@ -222,13 +222,24 @@ try {
   const cardButtons = await text("article.flowchart-card .action, article.flowchart-card .sharing__copy");
   check("Dashboard: no Export or Preview; has Copy permalink and Open", !/Export|Preview/.test(cardButtons) && /Copy permalink/.test(cardButtons) && /\bOpen\b/.test(cardButtons), cardButtons.slice(0, 120));
 
-  // ---- Shared page: copy / format / download / QR
   const shared = (await api("/get/" + dash.flowchart_id)).public_slug;
-  await page.goto(FRONTEND + "/p/" + shared, { waitUntil: "networkidle0" });
-  await sleep(800);
+  // ---- Export (in the editor, under Accessibility)
+  await page.goto(FRONTEND + "/editor/" + dash.flowchart_id, { waitUntil: "networkidle0" });
+  await sleep(1000);
+  const exportToggle = await page.$(".share-toolbar__toggle");
+  check("Export: a collapsed section sits in the editor", exportToggle !== null && (await exportToggle.evaluate((e) => e.getAttribute("aria-expanded"))) === "false");
+  const order = await page.evaluate(() => {
+    const a = document.querySelector(".accessibility-summary-bar")?.getBoundingClientRect().top ?? 0;
+    const x = document.querySelector(".share-toolbar")?.getBoundingClientRect().top ?? 0;
+    const c = document.querySelector(".react-flow-wrapper")?.getBoundingClientRect().top ?? 1e9;
+    return a < x && x < c;
+  });
+  check("Export: it is just below Accessibility, above the canvas", order);
+  await exportToggle.click();
+  await sleep(300);
   const toolbarText = await text(".share-toolbar .btn");
-  check("Share page: copy alt text, copy long description, download, embed", /Copy alt text/.test(toolbarText) && /Copy long description/.test(toolbarText) && /Download/.test(toolbarText) && /Copy embed code/.test(toolbarText), toolbarText);
-  check("Share page: format choices are HTML, Markdown, Text", (await text(".share-toolbar__radio")) === "HTML | Markdown | Text");
+  check("Export: copy alt text, copy long description, download, embed", /Copy alt text/.test(toolbarText) && /Copy long description/.test(toolbarText) && /Download/.test(toolbarText) && /Copy embed code/.test(toolbarText), toolbarText);
+  check("Export: labelled 'Export as' with HTML, Markdown, Text", (await text(".share-toolbar__formats legend")) === "Export as" && (await text(".share-toolbar__radio")) === "HTML | Markdown | Text");
   await page.evaluate(() => {
     window.__copied = "";
     Object.defineProperty(navigator, "clipboard", { value: { writeText: async (t) => { window.__copied = t; } }, configurable: true });
@@ -240,19 +251,21 @@ try {
   };
   await clickShare("Copy long description");
   const asText = await page.evaluate(() => window.__copied);
-  check("Share page: Text format copies plain text", asText.length > 0 && !asText.includes("##"), asText.slice(0, 40));
+  check("Export: Text format copies plain text", asText.length > 0 && !asText.includes("##"), asText.slice(0, 40));
   const radios = await page.$$(".share-toolbar__radio input");
   await radios[1].click();
   await clickShare("Copy long description");
-  check("Share page: Markdown format keeps headings", (await page.evaluate(() => window.__copied)).includes("## "));
+  check("Export: Markdown format keeps headings", (await page.evaluate(() => window.__copied)).includes("## "));
   await radios[0].click();
   await clickShare("Copy long description");
-  check("Share page: HTML format copies HTML", /<h2|<p/.test(await page.evaluate(() => window.__copied)));
+  check("Export: HTML format copies HTML", /<h2|<p/.test(await page.evaluate(() => window.__copied)));
   await clickShare("Copy alt text");
-  check("Share page: HTML alt text is a paragraph", /^<p>[^<]+<\/p>$/.test(await page.evaluate(() => window.__copied)), await page.evaluate(() => window.__copied));
+  check("Export: HTML alt text is a paragraph", /^<p>[^<]+<\/p>$/.test(await page.evaluate(() => window.__copied)), await page.evaluate(() => window.__copied));
   await clickShare("Copy embed code");
-  check("Share page: embed code links back to this page", (await page.evaluate(() => window.__copied)).includes("/p/" + shared));
-  check("Share page: has a QR code section", (await page.$(".share-toolbar__qr")) !== null);
+  check("Export: embed code links to the shared page", (await page.evaluate(() => window.__copied)).includes("/p/" + shared));
+  check("Export: has a QR code section", (await page.$(".share-toolbar__qr")) !== null);
+  const sharedPage = await (async () => { await page.goto(FRONTEND + "/p/" + shared, { waitUntil: "networkidle0" }); await sleep(600); return page.$(".share-toolbar"); })();
+  check("Shared page: no export bar there any more", sharedPage === null);
 
 
   // ---- Browse

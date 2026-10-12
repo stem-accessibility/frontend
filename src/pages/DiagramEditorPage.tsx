@@ -9,6 +9,7 @@ import { guestFetch } from "../lib/guest";
 import EditorToolbar, { type EditorMode } from "../components/editor/EditorToolbar";
 import AccessibilityPanel from "../components/editor/AccessibilityPanel";
 import ImageTypeSelect from "../components/editor/ImageTypeSelect";
+import ShareToolbar from "../components/access-reps/ShareToolbar";
 import { jsonToMermaid } from "../services/utils";
 import { structuralSignature } from "../lib/structuralSignature";
 import { parseMermaidText, MARKDOWN_EXAMPLES } from "../lib/mermaidText";
@@ -989,6 +990,20 @@ const DiagramEditorPage = ({ guest = false }: EditorProps) => {
                 flowchartData={flowchartData}
               />
             </AccessibilityPanel>
+
+            {flowchartData && (
+              <ShareToolbar
+                title={title}
+                shortAlt={shortAlt}
+                summary={summary}
+                json={flowchartData}
+                publicUrl={
+                  isPublished && publicSlug
+                    ? `${window.location.origin}/p/${encodeURIComponent(publicSlug)}`
+                    : null
+                }
+              />
+            )}
 
             <div
   className="react-flow-wrapper"

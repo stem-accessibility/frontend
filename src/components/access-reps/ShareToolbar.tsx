@@ -40,14 +40,15 @@ const fileBase = (title: string) =>
   "stem-image";
 
 /**
- * Copy and download the accessible text of a STEM image, plus embed code and a QR code for the
- * shared page. Replaces the old Export dialog; everything it did is here, on the page people see.
+ * Export: copy and download the accessible text of a STEM image in HTML, Markdown, or text, plus
+ * embed code and a QR code for the shared page. Lives in the editor, under Accessibility.
  */
 export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl }: Props) {
   const id = useId();
   const [format, setFormat] = useState<Format>("text");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const say = (msg: string) => setStatus(msg);
 
@@ -95,11 +96,26 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
 
   const hint = FORMATS.find((f) => f.value === format)?.hint;
 
+  const bodyId = `${id}-body`;
+
   return (
-    <section className="share-toolbar" aria-label="Copy, download, and share">
+    <section className={open ? "share-toolbar share-toolbar--open" : "share-toolbar"} aria-label="Export">
+      <h2 className="share-toolbar__title">
+        <button
+          type="button"
+          className="share-toolbar__toggle"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span aria-hidden="true">{open ? "▾" : "▸"}</span> Export
+        </button>
+      </h2>
+
+      <div id={bodyId} className="share-toolbar__body" hidden={!open}>
       <div className="share-toolbar__row">
         <fieldset className="share-toolbar__formats">
-          <legend>Format</legend>
+          <legend>Export as</legend>
           {FORMATS.map((f) => (
             <label key={f.value} className="share-toolbar__radio">
               <input
@@ -164,15 +180,17 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
 
       <p id={`${id}-hint`} className="share-toolbar__hint">
         {hint}
-        {publicUrl ? " Embed code shows your image with its alt text and a link to this page; replace YOUR_IMAGE_URL with where the image is hosted." : ""}
+        {publicUrl ? " Embed code shows your image with its alt text and a link to the shared page; replace YOUR_IMAGE_URL with where the image is hosted." : ""}
       </p>
 
       {publicUrl && (
         <details className="share-toolbar__qr">
-          <summary>QR code for this page</summary>
+          <summary>QR code for the shared page</summary>
           <QRCodeGenerator permalink={publicUrl} />
         </details>
       )}
+
+      </div>
 
       <p className="share-toolbar__status" role="status" aria-live="polite">
         {status}

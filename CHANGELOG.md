@@ -11,10 +11,13 @@ API contract name the matching backend release.
   first-party cookie holding a random token; no uploads and no AI. Signing in moves that image into the
   account (a notice shows on the Dashboard). Guest images show a Guest label in Browse. Needs backend 0.3.0
   (migration 0004).
-- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (45 browser checks of Create, Markdown mode,
+- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (48 browser checks of Create, Markdown mode,
   autosave, sharing, Browse).
 
 ### Changed
+- Export moved from the shared page into the editor, as a collapsible **Export** section just below
+  Accessibility. The format choice is labelled "Export as" (HTML, Markdown, Text). The shared page itself is
+  now just the representations.
 - Export is gone. The shared page (and the owner's Preview) now has a bar at the top: Format (HTML,
   Markdown, Text), Copy alt text, Copy long description, Download (.txt / .md / a standalone .html page),
   Copy embed code (a figure that links back to the page), and a QR code. Dashboard cards lose the Export
