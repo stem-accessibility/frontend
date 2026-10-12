@@ -6,6 +6,10 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-10-11
+
+Requires backend 0.3.0 (sharing endpoint, `image_public`, guest images, reports; migrations 0003 and 0004).
+
 ### Added
 - Try it (`/try`): the same editor with no account. One public STEM image per browser, kept with a
   first-party cookie holding a random token; no uploads and no AI. Signing in moves that image into the
