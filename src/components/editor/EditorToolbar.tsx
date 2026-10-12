@@ -123,7 +123,6 @@ export default function EditorToolbar({
             publicPath={publicPath}
             onSave={onSharingSave}
             showImageOption={false}
-            hint={flowchartId ? undefined : "Applied when you first save."}
           />
 
           {isDirty ? <span className="status-chip status-chip--warn">Unsaved changes</span> : null}

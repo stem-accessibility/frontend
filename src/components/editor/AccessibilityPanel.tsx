@@ -92,19 +92,12 @@ export default function AccessibilityPanel({
           </div>
 
           <div
-            className="accessibility-summary-chip accessibility-summary-chip--text"
+            className="accessibility-summary-chip accessibility-summary-chip--text accessibility-summary-chip--grow"
             title={hasShortAlt ? shortAlt : undefined}
           >
             <span className="accessibility-summary-chip__label">Alt text</span>
             <span className="accessibility-summary-chip__value">
-              {hasShortAlt ? glimpse(shortAlt) : "Missing"}
-            </span>
-          </div>
-
-          <div className="accessibility-summary-chip">
-            <span className="accessibility-summary-chip__label">Long description</span>
-            <span className="accessibility-summary-chip__value">
-              {completedSections} of {totalSections} filled
+              {hasShortAlt ? glimpse(shortAlt, 400) : "Missing"}
             </span>
           </div>
 

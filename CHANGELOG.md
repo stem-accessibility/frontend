@@ -16,7 +16,8 @@ API contract name the matching backend release.
 - Autosave: edits to a saved STEM image are written about two seconds after you stop (held while Markdown
   text has errors or unreadable lines, with a note saying so). Save still creates a
   new image and saves immediately.
-- Accessibility header shows a glimpse of the title and alt text instead of "Added".
+- Accessibility header shows the title and as much of the alt text as fits (to the right edge) instead of
+  "Added" and a section count. The "Applied when you first save" note is gone.
 - Alt text and long description are always generated from the diagram itself (no AI call, same diagram gives
   the same text). One **Regenerate** button replaces the two AI/non-AI buttons. Status reads "Generated.
   Updates whenever you change the diagram." or "Edited. Use Regenerate to replace."

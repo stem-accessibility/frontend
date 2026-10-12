@@ -139,3 +139,10 @@
 
 .accessibility-field-status { margin: 4px 0 0; font-size: 0.9rem; font-weight: 600; color: var(--brand, #184c45); }
 .accessibility-summary-chip__label { white-space: nowrap; }
+
+/* The alt text glimpse takes the rest of the row; the browser cuts it with an ellipsis at the edge. */
+.accessibility-summary-bar__head { flex-wrap: nowrap; }
+.accessibility-summary-bar__stats { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.accessibility-summary-chip--grow { flex: 1 1 24ch; max-width: none; min-width: 0; }
+.accessibility-summary-chip--grow .accessibility-summary-chip__value { flex: 1 1 auto; }
+@media (max-width: 700px) { .accessibility-summary-bar__head { flex-wrap: wrap; } }
