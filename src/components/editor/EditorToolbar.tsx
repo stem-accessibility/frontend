@@ -1,3 +1,5 @@
+// .mode-tab styles for the Visual / Markdown switch live in this file.
+import "../../pages/styles/DiagramUpload.css";
 import { useEffect, useState } from "react";
 import { DIAGRAM_TYPES } from "../../arboretum/diagramTypes";
 import type { DiagramType } from "../../arboretum/diagramTypes";

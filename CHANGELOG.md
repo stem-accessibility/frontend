@@ -6,6 +6,17 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Added
+- Create page (`/create`): name, image type, and who can see it (Public, Anyone with the link, Only me),
+  then **Upload image**, **Markdown editor**, or (flowcharts only) **Visual editor**. Replaces the tabbed
+  Upload page; Scratch is gone.
+- Markdown editor (`/create/markdown`): Mermaid text on the left; on the right a live preview with the
+  graph, alt text, and long description (generated without AI). Edited alt text or description stops
+  regenerating and is marked "Edited by you", with a Regenerate button. Reads Mermaid flowcharts and
+  `block-beta` arrays in the browser (`src/lib/mermaidText.ts`).
+- "Show the source image on the shared page" checkbox for image uploads (needs backend migration 0003 and
+  the `sharing` endpoint).
+
 ### Changed
 - Wording: the thing you create and share is now a "STEM image" (headings, buttons, messages, About,
   exports, README). The type menu is labeled "Image type" (Flowchart, Tree, Binary tree, Linked list,

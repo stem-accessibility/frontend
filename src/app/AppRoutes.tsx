@@ -18,7 +18,8 @@ import PublicRepoPage from "../pages/PublicRepoPage";
 // Private pages
 import Dashboard from "../pages/Dashboard";
 import AccountPage from "../pages/AccountPage";
-import DiagramUploadPage from "../pages/DiagramUpload";
+import CreatePage from "../pages/CreatePage";
+import MarkdownEditorPage from "../pages/MarkdownEditorPage";
 import DiagramEditorPage from "../pages/DiagramEditorPage";
 import PermalinkContent from "../components/access-reps/PermalinkContent";
 import PermalinkJsonPage from "../components/access-reps/PermalinkJsonPage";
@@ -82,7 +83,15 @@ export default function AppRoutes() {
         path="/create"
         element={
           <RequireAuth>
-            <DiagramUploadPage />
+            <CreatePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/create/markdown"
+        element={
+          <RequireAuth>
+            <MarkdownEditorPage />
           </RequireAuth>
         }
       />

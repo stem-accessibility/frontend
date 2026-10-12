@@ -132,7 +132,14 @@ const DiagramEditorPage = () => {
   const [_saveStatus, setSaveStatus] = useState("");
 
   const [title, setTitle] = useState("");
-  const [diagramType, setDiagramType] = useState<DiagramType>("flowchart");
+  const [diagramType, setDiagramType] = useState<DiagramType>(() => {
+    // Set by the Create page when starting a blank canvas; saved records load their own type.
+    try {
+      return normalizeDiagramType(localStorage.getItem("pendingType"));
+    } catch {
+      return "flowchart";
+    }
+  });
 
   const [summaryStale, setSummaryStale] = useState(false);
   const [diagramKey, setDiagramKey] = useState(0);
@@ -737,8 +744,12 @@ const DiagramEditorPage = () => {
         flowchart_type: diagramType,
         image_data_url: imgContent ?? null,
         image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
+        // Chosen on the Create page; without it the record is created private.
+        sharing: localStorage.getItem("pendingSharing") ?? undefined,
       },
     });
+    localStorage.removeItem("pendingSharing");
+    localStorage.removeItem("pendingType");
 
     setActiveFlowchartId(newId);
     localStorage.setItem("activeFlowchartId", newId);

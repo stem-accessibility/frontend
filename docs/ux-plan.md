@@ -6,7 +6,12 @@ Decisions already made are listed under "Decided".
 ## Progress
 
 - Batch 1 (wording, nav, route renames, Dashboard placeholder): done on this branch.
-- Next: publish model (backend), Create page, markdown editor, Browse landing, Try it.
+- Batch 2: backend sharing endpoint + `image_public` (backend commits `ee86eea`, `80f04a5`); Create page and
+  markdown editor with live preview on this branch.
+- Deviation: the markdown editor reads Mermaid in the browser with our own small parser instead of the
+  backend `/parse-mermaid` (which mis-parses chained links and `accTitle`) or Arboretum's `mermaid`
+  package (large). Same text formats; instant preview, no network.
+- Next: sharing control in the editor and Dashboard, Browse polish, Try it.
 
 ## Decided
 
