@@ -220,7 +220,7 @@ try {
   check("Dashboard: sharing select changes who can see it", changed && afterDash.sharing === "public" && afterDash.is_published === true);
   check("Dashboard: card shows a graph sketch when there is no image", (await page.$$(".thumbnail__sketch")).length > 0);
   const cardButtons = await text("article.flowchart-card .action, article.flowchart-card .sharing__copy");
-  check("Dashboard: no Export action; has Copy permalink and Open", !/Export/.test(cardButtons) && /Copy permalink/.test(cardButtons) && /\bOpen\b/.test(cardButtons), cardButtons.slice(0, 120));
+  check("Dashboard: no Export or Preview; has Copy permalink and Open", !/Export|Preview/.test(cardButtons) && /Copy permalink/.test(cardButtons) && /\bOpen\b/.test(cardButtons), cardButtons.slice(0, 120));
 
   // ---- Shared page: copy / format / download / QR
   const shared = (await api("/get/" + dash.flowchart_id)).public_slug;

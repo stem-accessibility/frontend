@@ -14,7 +14,8 @@ API contract name the matching backend release.
 - Export is gone. The shared page (and the owner's Preview) now has a bar at the top: Format (HTML,
   Markdown, Text), Copy alt text, Copy long description, Download (.txt / .md / a standalone .html page),
   Copy embed code (a figure that links back to the page), and a QR code. Dashboard cards lose the Export
-  button; "Open shared page" is now an **Open** button.
+  button; "Open shared page" is now an **Open** button, and Preview is gone (Open covers it; for a private image it
+  opens your own view).
 - Toolbar on one row: sharing, Copy permalink, and Save sit in the title bar (Dashboard cards show just the
   menu, Copy permalink, and Open shared page). The source-image
   checkbox moved into the Accessibility region.

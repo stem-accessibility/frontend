@@ -26,6 +26,8 @@ type Props = {
   alwaysShowCopy?: boolean;
   /** Text of the link that opens the shared page. Default "Open shared page". */
   openLabel?: string;
+  /** Where "Open" goes when nothing is shared yet (the owner's own view of the page). */
+  ownerPath?: string;
   /** Hide the visible "Who can see it" label (it stays available to screen readers). */
   hideLabel?: boolean;
 };
@@ -45,6 +47,7 @@ export default function SharingControl({
   alwaysShowCopy = false,
   hideLabel = false,
   openLabel = "Open shared page",
+  ownerPath,
 }: Props) {
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -113,6 +116,15 @@ export default function SharingControl({
             {!compact && <span className="sharing__help"> — {IMAGE_SHARING_HELP}</span>}
           </span>
         </label>
+      )}
+
+      {ownerPath && !(publicPath && sharing !== "private") && (
+        <div className="sharing__links">
+          <a className="sharing__copy sharing__open" href={ownerPath}>
+            {openLabel}
+            <span className="sr-only"> (only you can see it)</span>
+          </a>
+        </div>
       )}
 
       {alwaysShowCopy && !(publicPath && sharing !== "private") && (

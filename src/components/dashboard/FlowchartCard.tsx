@@ -81,6 +81,7 @@ export default function FlowchartCard({
               hideLabel
               copyLabel="Copy permalink"
               openLabel="Open"
+              ownerPath={`/flowchart/${encodeURIComponent(r.flowchart_id)}`}
               sharing={sharing}
               imagePublic={!!r.image_public}
               hasImage={r.has_image}
@@ -94,16 +95,6 @@ export default function FlowchartCard({
     Edit
   </Link>
 
-  <Link
-    className="action action--ghost"
-    to={
-      r.is_published && r.public_slug
-        ? `/p/${encodeURIComponent(r.public_slug)}`
-        : `/flowchart/${encodeURIComponent(r.flowchart_id)}`
-    }
-  >
-    Preview
-  </Link>
 
 
   <button
