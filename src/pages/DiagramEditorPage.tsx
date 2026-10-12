@@ -5,6 +5,7 @@ import type { FlowchartData } from "../types/types";
 import { ReactFlowProvider } from "@xyflow/react";
 import { UnifiedFlowApp } from "../components/ReactFlow";
 import { apiFetch } from "../lib/api";
+import { guestFetch } from "../lib/guest";
 import EditorToolbar, { type EditorMode } from "../components/editor/EditorToolbar";
 import AccessibilityPanel from "../components/editor/AccessibilityPanel";
 import ImageTypeSelect from "../components/editor/ImageTypeSelect";
@@ -35,7 +36,12 @@ const createEmptyFlowchart = (): FlowchartData => ({ nodes: [], edges: [] });
 const NONVISUAL_EDITING_SUPPORTED = false;
 
 
-const DiagramEditorPage = () => {
+type EditorProps = {
+  /** Try-it mode: no account; one public image saved against this browser's guest token. */
+  guest?: boolean;
+};
+
+const DiagramEditorPage = ({ guest = false }: EditorProps) => {
   const navigate = useNavigate();
   const { id: routeId } = useParams<{ id: string }>();
 
@@ -269,9 +275,74 @@ const DiagramEditorPage = () => {
     })();
   }, [routeId]);
 
+  // Try-it: load this browser's one image, or start a new one from an example.
+  useEffect(() => {
+    if (!guest) return;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const fc = await guestFetch<{
+          flowchart_id: string;
+          json_data: FlowchartData;
+          summary: string;
+          short_alt?: string | null;
+          flowchart_type?: string | null;
+          title?: string | null;
+          public_slug?: string | null;
+          published_at?: string | null;
+        } | null>("/guest/image");
+
+        if (fc) {
+          setFlowchartData(fc.json_data);
+          setOriginalFlowchart(fc.json_data);
+          setSummary(fc.summary ?? "");
+          setLongDescriptionSections(parseLongDescriptionMarkdown(fc.summary ?? ""));
+          setAltEdited(!!(fc.short_alt ?? "").trim());
+          setDescEdited(!!(fc.summary ?? "").trim());
+          setShortAlt(fc.short_alt ?? "");
+          setTitle(fc.title ?? "");
+          setDiagramType(normalizeDiagramType(fc.flowchart_type));
+          try {
+            skipNextMermaidSyncRef.current = true;
+            setMermaidText(jsonToMermaid(fc.json_data));
+          } catch {
+            /* the text box just starts empty */
+          }
+          setActiveFlowchartId(fc.flowchart_id);
+          setIsPublished(true);
+          setSharing("public");
+          setPublicSlug(fc.public_slug ?? null);
+          setPublishedAt(fc.published_at ?? null);
+        } else {
+          const example = MARKDOWN_EXAMPLES.flowchart;
+          const parsed = parseMermaidText(example);
+          setFlowchartData(parsed.error ? createEmptyFlowchart() : parsed.data);
+          setOriginalFlowchart(createEmptyFlowchart());
+          setDiagramType("flowchart");
+          skipNextMermaidSyncRef.current = true;
+          setMermaidText(example);
+          setEditorMode("mermaid");
+          setSharing("public");
+        }
+        setImgContent(null);
+        setSummaryStale(false);
+        setDiagramKey((k) => k + 1);
+        setIsDirty(false);
+      } catch (e: any) {
+        console.error(e);
+        setSaveStatus(e?.message || "Could not load your try-it image.");
+        const empty = createEmptyFlowchart();
+        setFlowchartData(empty);
+        setOriginalFlowchart(empty);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [guest]);
+
   // Load from localStorage if no routeId
   useEffect(() => {
-    if (routeId) return;
+    if (routeId || guest) return;
 
     const storedData = localStorage.getItem("latestDiagramJSON");
     const storedImage = localStorage.getItem("latestDiagramImage");
@@ -664,24 +735,53 @@ const DiagramEditorPage = () => {
     let didSave = false;
 
     try {
-      const id = await ensureDraftExists();
-
-      const updated = await apiFetch<{
+      let id: string;
+      let updated: {
         is_published?: boolean;
         public_slug?: string | null;
         published_at?: string | null;
-      }>(`/flowcharts/${encodeURIComponent(id)}`, {
-        method: "PUT",
-        json: {
-          json_data: flowchartData,
-          summary: summary ?? "",
-          short_alt: shortAlt ?? "",
-          title: title ?? "",
-          flowchart_type: diagramType,
-          image_data_url: imgContent ?? null,
-          image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
-        },
-      });
+      };
+
+      if (guest) {
+        // Try-it: one public image kept against this browser's token.
+        const saved = await guestFetch<{
+          flowchart_id: string;
+          is_published?: boolean;
+          public_slug?: string | null;
+          published_at?: string | null;
+        }>("/guest/image", {
+          method: "PUT",
+          json: {
+            json_data: flowchartData,
+            summary: summary ?? "",
+            short_alt: shortAlt ?? "",
+            title: title ?? "",
+            flowchart_type: diagramType,
+          },
+        });
+        id = saved.flowchart_id;
+        updated = saved;
+        setActiveFlowchartId(saved.flowchart_id);
+        setSharing("public");
+      } else {
+        id = await ensureDraftExists();
+        updated = await apiFetch<{
+          is_published?: boolean;
+          public_slug?: string | null;
+          published_at?: string | null;
+        }>(`/flowcharts/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          json: {
+            json_data: flowchartData,
+            summary: summary ?? "",
+            short_alt: shortAlt ?? "",
+            title: title ?? "",
+            flowchart_type: diagramType,
+            image_data_url: imgContent ?? null,
+            image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
+          },
+        });
+      }
 
       setIsPublished(!!updated.is_published);
       setPublicSlug(updated.public_slug ?? null);
@@ -776,6 +876,7 @@ const DiagramEditorPage = () => {
             className="visual-editor-section"
           >
             <EditorToolbar
+              guest={guest}
               hasImage={!!imgContent}
               onViewImage={() => setShowImage(true)}
               onReupload={handleReUpload}

@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:e2e": "node e2e/smoke.mjs"
+    "test:e2e": "node e2e/smoke.mjs",
+    "test:e2e:try": "node e2e/try.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.32.4",

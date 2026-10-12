@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { diagramTypeLabel, normalizeDiagramType, DIAGRAM_TYPES } from "../arboretum/diagramTypes";
 import RepoFlowchartCard, { type RepoFlowchartRow } from "../components/dashboard/RepoFlowchartCard";
-import { apiFetch } from "../lib/api";
+import { publicFetch } from "../lib/api";
 import "./styles/PublicRepoPage.css";
 
 type StatusKind = "idle" | "info" | "error";
@@ -29,7 +29,7 @@ export default function PublicRepoPage() {
         setStatus("Loading…");
 
         // Public endpoint; should NOT require auth
-        const data = await apiFetch<RepoFlowchartRow[]>("/repo", { method: "GET" });
+        const data = await publicFetch<RepoFlowchartRow[]>("/repo", { method: "GET" });
 
         if (cancelled) return;
         setRows(data);
@@ -119,7 +119,7 @@ export default function PublicRepoPage() {
             <div className="repo-empty">
               <div className="repo-empty__title">Nobody has shared a STEM image yet</div>
               <div className="repo-empty__body">
-                <Link to="/create">Create one</Link>, or <Link to="/about">learn how it works</Link>.
+                <Link to="/try">Try it</Link> or <Link to="/create">create one</Link>, or <Link to="/about">learn how it works</Link>.
               </div>
             </div>
           ) : (

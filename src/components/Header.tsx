@@ -82,6 +82,7 @@ export default function Header() {
             </>
           ) : 
           ( <nav className="app-nav" aria-label="Authentication">
+              <NavItem to="/try" label="Try it" />
               <NavItem to="/login" label="Log in" />
             </nav>
           )

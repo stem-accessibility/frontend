@@ -6,6 +6,8 @@ import type { Sharing } from "../../lib/sharing";
 export type EditorMode = "visual" | "mermaid";
 type Props = {
   hasImage: boolean;
+  /** Try-it: sharing is fixed at public and there is no source image. */
+  guest?: boolean;
   onViewImage: () => void;
   onReupload: () => void;
   onSave: () => void;
@@ -28,6 +30,7 @@ type Props = {
 
 export default function EditorToolbar({
   hasImage,
+  guest = false,
   onViewImage,
   onSave,
   isSaving,
@@ -66,6 +69,7 @@ export default function EditorToolbar({
   return (
     <div className="canvas-toolbar" role="region" aria-label="Canvas actions">
       <div className="canvas-toolbar__group">
+        {!guest && (
         <button
           type="button"
           className="canvas-toolbar__btn"
@@ -75,6 +79,7 @@ export default function EditorToolbar({
         >
           View uploaded image
         </button>
+        )}
       </div>
 
       <div className="canvas-toolbar__group" aria-label="Editor mode">
@@ -126,6 +131,7 @@ export default function EditorToolbar({
             copyLabel="Copy permalink"
             showOpenLink={false}
             alwaysShowCopy
+            disabled={guest}
           />
 
           {isDirty ? <span className="status-chip status-chip--warn">Unsaved changes</span> : null}

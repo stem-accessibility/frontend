@@ -16,7 +16,9 @@ Decisions already made are listed under "Decided".
 - Batch 4: editor layout (expandable Accessibility region), image-upload restriction by type, Browse polish.
 - Batch 5: one editor. `/create/markdown` removed; the editor's Markdown mode has the live preview, examples,
   array support, and protected edits.
-- Next: Try it (guests), merge and tag frontend v0.3.0.
+- Batch 6: Try it (guests): backend `/guest/*`, reports + takedown, `/try`, claim on sign-in. Browse fixed
+  for signed-out visitors.
+- Next: deploy backend 0.3.0 (migration 0004), preview review, merge and tag frontend v0.3.0.
 
 ## Decided
 

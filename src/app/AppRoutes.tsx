@@ -20,6 +20,7 @@ import Dashboard from "../pages/Dashboard";
 import AccountPage from "../pages/AccountPage";
 import CreatePage from "../pages/CreatePage";
 import DiagramEditorPage from "../pages/DiagramEditorPage";
+import TryPage from "../pages/TryPage";
 import PermalinkContent from "../components/access-reps/PermalinkContent";
 import PermalinkJsonPage from "../components/access-reps/PermalinkJsonPage";
 
@@ -46,6 +47,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/browse" element={<PublicRepoPage />} />
+      <Route path="/try" element={<TryPage />} />
       <Route path="/examples" element={<Navigate to="/browse" replace />} />
 
       {/* Grafari (public for now) */}

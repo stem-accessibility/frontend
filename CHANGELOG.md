@@ -7,6 +7,10 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Added
+- Try it (`/try`): the same editor with no account. One public STEM image per browser, kept with a
+  first-party cookie holding a random token; no uploads and no AI. Signing in moves that image into the
+  account (a notice shows on the Dashboard). Guest images show a Guest label in Browse. Needs backend 0.3.0
+  (migration 0004).
 - Tests: `npm test` (35 unit tests) and `npm run test:e2e` (45 browser checks of Create, Markdown mode,
   autosave, sharing, Browse).
 
@@ -49,6 +53,8 @@ API contract name the matching backend release.
   removed.
 
 ### Fixed
+- Browse listed nothing for signed-out visitors (it used the sign-in-required request); it now uses the
+  public one.
 - Opening a saved STEM image no longer shows "Unsaved changes" and "Needs refresh after edits". The change
   check compared edge line styles that the canvas fills in on load. It now compares only nodes, labels,
   shapes, and which node links to which. This also makes re-pointing an arrow count as a change.

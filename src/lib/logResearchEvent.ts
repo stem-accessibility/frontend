@@ -19,6 +19,8 @@ export async function logResearchEvent(payload: ResearchEventPayload) {
       json: payload,
     });
   } catch (err) {
+    // Try-it visitors have no account, so there is nothing to log against.
+    if (err instanceof Error && err.message === "Not authenticated") return;
     console.error("Failed to log research event:", err);
   }
 }

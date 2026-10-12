@@ -13,6 +13,7 @@ export type RepoFlowchartRow = {
   visibility?: "public" | "private" | string;
 
   has_image: boolean;
+  guest?: boolean;
   image_endpoint?: string | null;
 
   is_published?: boolean;
@@ -62,6 +63,11 @@ export default function RepoFlowchartCard({ row: r }: { row: RepoFlowchartRow })
             <span className="repo-chip repo-chip--public" title="Visible in public repository">
               ✓ Public example
             </span>
+            {r.guest && (
+              <span className="repo-chip" title="Made without an account">
+                Guest
+              </span>
+            )}
 
            
 

@@ -31,6 +31,19 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
 
+  const [claimedNotice, setClaimedNotice] = useState(false);
+  // Tell people their try-it image came with them.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("guestClaimed")) {
+        sessionStorage.removeItem("guestClaimed");
+        setClaimedNotice(true);
+      }
+    } catch {
+      /* optional */
+    }
+  }, []);
+
   // Fetch data
   useEffect(() => {
     (async () => {
@@ -212,6 +225,11 @@ export default function Dashboard() {
               {status}
               {filtered.length !== rows.length ? ` • Showing ${filtered.length}` : ""}
             </div>
+      {claimedNotice && (
+        <p className="dashboard-notice" role="status">
+          The STEM image you made while trying it is now in your account.
+        </p>
+      )}
           </div>
 
           <div className="dashboard-controls">
