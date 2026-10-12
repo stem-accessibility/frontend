@@ -22,6 +22,7 @@ import {
   buildLongDescriptionMarkdown,
 } from "../services/longDescription";
 import { logResearchEvent } from "../lib/logResearchEvent";
+import { normalizeSharing, type Sharing } from "../lib/sharing";
 import { normalizeDiagramType } from "../arboretum/diagramTypes";
 import type { DiagramType } from "../arboretum/diagramTypes";
 import { autoDescribe, checkDiagramType } from "../arboretum/autoDescription";
@@ -146,6 +147,15 @@ const DiagramEditorPage = () => {
   const [showPermalink, setShowPermalink] = useState(false);
 
   const [isPublished, setIsPublished] = useState(false);
+  const [sharing, setSharing] = useState<Sharing>(() => {
+    // A blank canvas started from the Create page carries the choice made there.
+    try {
+      return normalizeSharing(localStorage.getItem("pendingSharing"));
+    } catch {
+      return "private";
+    }
+  });
+  const [imagePublic, setImagePublic] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | null>(null);
   const [_publishedAt, setPublishedAt] = useState<string | null>(null);
 
@@ -227,6 +237,8 @@ const DiagramEditorPage = () => {
           public_slug?: string | null;
           published_at?: string | null;
           title?: string | null;
+          sharing?: string | null;
+          image_public?: boolean;
         }>(`/get/${encodeURIComponent(routeId)}`);
         const incomingSummary = fc.summary ?? "";
         setFlowchartData(fc.json_data);
@@ -259,6 +271,8 @@ const DiagramEditorPage = () => {
             has_image: fc.has_image,
           },
         });
+        setSharing(normalizeSharing(fc.sharing));
+        setImagePublic(!!fc.image_public);
         setIsPublished(!!fc.is_published);
         setPublicSlug(fc.public_slug ?? null);
         setPublishedAt(fc.published_at ?? null);
@@ -728,6 +742,48 @@ const DiagramEditorPage = () => {
     }
   };
 
+  /** Change who can see this STEM image. Before the first save it is applied on creation. */
+  const saveSharing = async (next: { sharing: Sharing; imagePublic: boolean }) => {
+    const id = activeFlowchartId || localStorage.getItem("activeFlowchartId");
+    if (!id || id === "undefined") {
+      setSharing(next.sharing);
+      setImagePublic(next.imagePublic);
+      try {
+        localStorage.setItem("pendingSharing", next.sharing);
+        localStorage.setItem("pendingImagePublic", String(next.imagePublic));
+      } catch {
+        /* the choice then applies from the defaults */
+      }
+      return;
+    }
+    const updated = await apiFetch<{
+      sharing: Sharing;
+      image_public: boolean;
+      is_published: boolean;
+      public_slug: string | null;
+      published_at: string | null;
+    }>(`/flowcharts/${encodeURIComponent(id)}/sharing`, {
+      method: "PUT",
+      json: { sharing: next.sharing, image_public: next.imagePublic },
+    });
+    setSharing(updated.sharing);
+    setImagePublic(updated.image_public);
+    setIsPublished(updated.is_published);
+    setPublicSlug(updated.public_slug);
+    setPublishedAt(updated.published_at);
+    logResearchEvent({
+      event_type: updated.sharing === "private" ? "Unpublish_Succeeded" : "Publish_Succeeded",
+      editor_mode: editorMode,
+      flowchart_id: id,
+      success: true,
+      event_data: {
+        source_page: "DiagramEditorPage",
+        sharing: updated.sharing,
+        image_public: updated.image_public,
+      },
+    });
+  };
+
   const ensureDraftExists = async (): Promise<string> => {
     const existingId = activeFlowchartId || localStorage.getItem("activeFlowchartId");
     if (existingId && existingId !== "undefined") return existingId;
@@ -745,10 +801,12 @@ const DiagramEditorPage = () => {
         image_data_url: imgContent ?? null,
         image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
         // Chosen on the Create page; without it the record is created private.
-        sharing: localStorage.getItem("pendingSharing") ?? undefined,
+        sharing,
+        image_public: imagePublic,
       },
     });
     localStorage.removeItem("pendingSharing");
+    localStorage.removeItem("pendingImagePublic");
     localStorage.removeItem("pendingType");
 
     setActiveFlowchartId(newId);
@@ -905,6 +963,10 @@ const DiagramEditorPage = () => {
               }}
               flowchartId={activeFlowchartId}
               isPublished={isPublished}
+              sharing={sharing}
+              imagePublic={imagePublic}
+              publicPath={isPublished && publicSlug ? `/p/${publicSlug}` : null}
+              onSharingSave={saveSharing}
               isDirty={isDirty}
               editorMode={editorMode}
               onEditorModeChange={(nextMode) => {

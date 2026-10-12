@@ -1,6 +1,8 @@
 import { useId } from "react";
 import { Link } from "react-router-dom";
 import FlowchartThumbnail from "./FlowchartThumbnail";
+import SharingControl from "../SharingControl";
+import { normalizeSharing, type Sharing } from "../../lib/sharing";
 import "../../components/dashboard/dashboard.css";
 
 export type FlowchartRow = {
@@ -8,7 +10,9 @@ export type FlowchartRow = {
   summary: string;
   has_image: boolean;
   title?: string | null;
-  visibility?: "public" | "private"; 
+  visibility?: "public" | "private";
+  sharing?: Sharing;
+  image_public?: boolean;
   image_mime?: string | null;
   created_at?: string | null;
   version?: number | null;
@@ -22,7 +26,10 @@ type Props = {
   onOpenExport: (flowchartId: string) => void;
   
   onDelete: (flowchartId: string) => void;
- 
+  onSharingChange: (
+    flowchartId: string,
+    next: { sharing: Sharing; imagePublic: boolean }
+  ) => Promise<void>;
 };
 
 function formatDate(value?: string | null) {
@@ -36,6 +43,7 @@ export default function FlowchartCard({
   row: r,
   onOpenExport,
   onDelete,
+  onSharingChange,
 }: Props) {
     const titleId = useId();
 
@@ -43,7 +51,7 @@ export default function FlowchartCard({
   const displayTitle =
   r.title && r.title.trim().length > 0 ? r.title : r.flowchart_id;
 
-  const statusLabel = r.is_published ? "Published" : "Draft";
+  const sharing = normalizeSharing(r.sharing ?? (r.is_published ? (r.visibility === "public" ? "public" : "link") : "private"));
 
   return (
     <article className="flowchart-card" aria-labelledby={titleId}>
@@ -61,25 +69,23 @@ export default function FlowchartCard({
             </h2>
 
             <div className="flowchart-card__chips">
-              <span
-                className={
-                  r.is_published
-                    ? "flowchart-card__chip flowchart-card__chip--published"
-                    : "flowchart-card__chip flowchart-card__chip--draft"
-                }
-                aria-label={`Status: ${statusLabel}`}
-              >
-                {statusLabel}
-              </span>
-
               {r.version != null && <span className="flowchart-card__muted">v{r.version}</span>}
               {r.created_at && (
                 <span className="flowchart-card__muted">Created {formatDate(r.created_at)}</span>
               )}
               {r.published_at && r.is_published && (
-                <span className="flowchart-card__muted">Published {formatDate(r.published_at)}</span>
+                <span className="flowchart-card__muted">Shared {formatDate(r.published_at)}</span>
               )}
             </div>
+
+            <SharingControl
+              compact
+              sharing={sharing}
+              imagePublic={!!r.image_public}
+              hasImage={r.has_image}
+              publicPath={r.is_published && r.public_slug ? `/p/${r.public_slug}` : null}
+              onSave={(next) => onSharingChange(r.flowchart_id, next)}
+            />
           </div>
 
           <div className="flowchart-card__actions" aria-label="STEM image actions">

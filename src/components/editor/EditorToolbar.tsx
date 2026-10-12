@@ -3,6 +3,8 @@ import "../../pages/styles/DiagramUpload.css";
 import { useEffect, useState } from "react";
 import { DIAGRAM_TYPES } from "../../arboretum/diagramTypes";
 import type { DiagramType } from "../../arboretum/diagramTypes";
+import SharingControl from "../SharingControl";
+import type { Sharing } from "../../lib/sharing";
 export type EditorMode = "visual" | "mermaid";
 type Props = {
   hasImage: boolean;
@@ -25,6 +27,11 @@ type Props = {
   flowchartId: string | null;
   isPublished: boolean;
 
+  sharing: Sharing;
+  imagePublic: boolean;
+  publicPath: string | null;
+  onSharingSave: (next: { sharing: Sharing; imagePublic: boolean }) => Promise<void>;
+
  
   isDirty: boolean;
   editorMode: EditorMode;
@@ -44,7 +51,10 @@ export default function EditorToolbar({
   disableSave,
   onExport,
   flowchartId,
-  isPublished,
+  sharing,
+  imagePublic,
+  publicPath,
+  onSharingSave,
   isDirty,
   editorMode,
   onEditorModeChange,
@@ -88,7 +98,7 @@ export default function EditorToolbar({
         </button>
 
         <button type="button" className="canvas-toolbar__btn" onClick={onStartOver}>
-          Create a New Diagram
+          Create a new STEM image
         </button>
 
         <button
@@ -157,11 +167,15 @@ export default function EditorToolbar({
         style={{ display: "flex", gap: 10, alignItems: "center" }}
       >
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {isPublished ? (
-            <span className="status-chip status-chip--published">Published</span>
-          ) : (
-            <span className="status-chip status-chip--draft">Draft</span>
-          )}
+          <SharingControl
+            compact
+            sharing={sharing}
+            imagePublic={imagePublic}
+            hasImage={hasImage}
+            publicPath={publicPath}
+            onSave={onSharingSave}
+            hint={flowchartId ? undefined : "Applied when you first save."}
+          />
 
           {isDirty ? <span className="status-chip status-chip--warn">Unsaved changes</span> : null}
         </div>

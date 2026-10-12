@@ -11,7 +11,9 @@ Decisions already made are listed under "Decided".
 - Deviation: the markdown editor reads Mermaid in the browser with our own small parser instead of the
   backend `/parse-mermaid` (which mis-parses chained links and `accTitle`) or Arboretum's `mermaid`
   package (large). Same text formats; instant preview, no network.
-- Next: sharing control in the editor and Dashboard, Browse polish, Try it.
+- Batch 3: sharing control on Dashboard cards, editor toolbar, and Export dialog (old Publish buttons and
+  repo checkbox removed). Backend 0.2.0 deployed.
+- Next: Browse polish, Try it, merge and tag frontend v0.3.0.
 
 ## Decided
 

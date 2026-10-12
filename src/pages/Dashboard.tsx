@@ -7,6 +7,7 @@ import "../pages/styles/Dashboard.css";
 import ExportAccessibleRepsModal from "../components/access-reps/ExportAccessibleRepsModal";
 
 import { logResearchEvent } from "../lib/logResearchEvent";
+import type { Sharing } from "../lib/sharing";
 type StatusKind = "info" | "error";
 
 function getErrorMessage(err: unknown) {
@@ -139,6 +140,36 @@ const handleOpenExport = async (flowchartId: string) => {
   }, [safePage]);
 
  
+
+  async function onSharingChange(
+    flowchartId: string,
+    next: { sharing: Sharing; imagePublic: boolean }
+  ) {
+    const updated = await apiFetch<{
+      sharing: Sharing;
+      image_public: boolean;
+      visibility: "public" | "private";
+      is_published: boolean;
+      public_slug: string | null;
+      published_at: string | null;
+    }>(`/flowcharts/${encodeURIComponent(flowchartId)}/sharing`, {
+      method: "PUT",
+      json: { sharing: next.sharing, image_public: next.imagePublic },
+    });
+    setRows((prev) =>
+      prev.map((r) => (r.flowchart_id === flowchartId ? { ...r, ...updated } : r))
+    );
+    logResearchEvent({
+      event_type: updated.sharing === "private" ? "Unpublish_Succeeded" : "Publish_Succeeded",
+      flowchart_id: flowchartId,
+      success: true,
+      event_data: {
+        source_page: "Dashboard",
+        sharing: updated.sharing,
+        image_public: updated.image_public,
+      },
+    });
+  }
 
   async function onSetRepoVisibility(flowchartId: string, makePublic: boolean) {
   try {
@@ -332,6 +363,7 @@ const handleOpenExport = async (flowchartId: string) => {
             row={r}
             onOpenExport={handleOpenExport}
             onDelete={handleDelete}
+            onSharingChange={onSharingChange}
           />
         ))}
       </div>

@@ -6,6 +6,12 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Changed
+- One sharing control ("Who can see it": Public, Anyone with the link, Only me) on each Dashboard card,
+  in the editor toolbar, and in the Export dialog. It replaces the Published/Draft chip, the Publish and
+  Unpublish buttons, and the "Include in public repo" checkbox. Image uploads also get "Show the source
+  image on the shared page". Requires backend 0.2.0 (`PUT /flowcharts/<id>/sharing`).
+
 ### Added
 - Create page (`/create`): name, image type, and who can see it (Public, Anyone with the link, Only me),
   then **Upload image**, **Markdown editor**, or (flowcharts only) **Visual editor**. Replaces the tabbed

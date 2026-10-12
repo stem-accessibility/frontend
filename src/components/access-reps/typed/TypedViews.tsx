@@ -32,7 +32,7 @@ function useDiagram(type: DiagramType, data: FlowchartData, title?: string | nul
   return useMemo(() => toArboretumDiagram(type, data, title ?? ""), [type, data, title]);
 }
 
-const Empty = () => <p>There is nothing to show yet. Add some nodes to the diagram.</p>;
+const Empty = () => <p>There is nothing to show yet. Add some nodes to the STEM image.</p>;
 
 // ================= Navigable =================
 

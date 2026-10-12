@@ -18,24 +18,12 @@ import {
   downloadHtmlFile,
 }  from "../exports/export-utils";
 import type { FlowchartData } from "../../types/types";
+import SharingControl from "../SharingControl";
+import type { Sharing } from "../../lib/sharing";
 import './styles/ExportModal.css'
 import { logResearchEvent } from "../../lib/logResearchEvent";
 
 import { jsonToMermaid } from "../../services/utils";
-
-type PublishResponse = {
-  flowchart_id: string;
-  is_published: boolean;
-  public_slug: string | null;
-  public_url: string | null;
-};
-
-type GetFlowchartResponse = {
-  flowchart_id: string;
-  is_published?: boolean;
-  public_slug?: string | null;
-  published_at?: string | null;
-};
 
 type Props = {
   isOpen: boolean;
@@ -77,19 +65,27 @@ export default function ExportAccessibleRepsModal({
   isPublished = false,
   publicSlug = null,
   repoVisibility = "private",
-  onSetRepoVisibility,
   onPublishedChange,
   isDirty,
   onRequestSave,
 }: Props) {
   const [error, setError] = useState<string | null>(null);
-  const [isTogglingPublish, setIsTogglingPublish] = useState(false);
+  const [sharingOverride, setSharingOverride] = useState<Sharing | null>(null);
 
   const [_copiedPrivateLink, setCopiedPrivateLink] = useState(false);
   const [copiedPublicLink, setCopiedPublicLink] = useState(false);
 
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
+
+  // Reset the local choice when a different STEM image is shown or the dialog reopens.
+  useEffect(() => {
+    setSharingOverride(null);
+  }, [flowchartId, isOpen]);
+
+  const sharing: Sharing =
+    sharingOverride ??
+    (isPublished ? (repoVisibility === "public" ? "public" : "link") : "private");
 
   const publicUrl =
     isPublished && publicSlug
@@ -199,82 +195,76 @@ const permalinkLinkedSnippet = useMemo(() => {
     logExportFailed(exportType, e);
   }
 };
-  const togglePublish = async (publish: boolean) => {
+  /** One setting for who can see this STEM image (same control as the editor and Dashboard). */
+  const saveSharing = async (next: { sharing: Sharing; imagePublic: boolean }) => {
     setError(null);
-
-
-    logResearchEvent({
-  event_type: publish ? "Publish_Clicked" : "Unpublish_Clicked",
-  editor_mode: "visual",
-  flowchart_id: flowchartId ?? undefined,
-  success: true,
-  event_data: {
-    source_page: "ExportAccessibleRepsModal",
-    visibility: publish ? "public" : "private",
-    had_existing_slug: Boolean(publicSlug),
-    is_dirty: isDirty,
-  },
-});
     if (!flowchartId) {
-      setError("Save the STEM image first. Publishing requires a saved STEM image ID.");
-      return;
+      setError("Save the STEM image first. Sharing needs a saved STEM image.");
+      throw new Error("Not saved yet");
     }
-
     if (isDirty) {
-      setError("You have unsaved changes. Save the STEM image before publishing.");
-      return;
+      setError("You have unsaved changes. Save the STEM image before changing sharing.");
+      throw new Error("Unsaved changes");
+    }
+    if (next.sharing !== "private" && !summary?.trim()) {
+      setError("Add or generate the long description before sharing.");
+      throw new Error("No long description");
     }
 
-    if (!summary?.trim()) {
-      setError("Add or generate the long description before publishing.");
-      return;
-    }
+    const publish = next.sharing !== "private";
+    logResearchEvent({
+      event_type: publish ? "Publish_Clicked" : "Unpublish_Clicked",
+      editor_mode: "visual",
+      flowchart_id: flowchartId,
+      success: true,
+      event_data: {
+        source_page: "ExportAccessibleRepsModal",
+        sharing: next.sharing,
+        had_existing_slug: Boolean(publicSlug),
+        is_dirty: isDirty,
+      },
+    });
 
-    setIsTogglingPublish(true);
     try {
-      await apiFetch<PublishResponse>(`/publish/${encodeURIComponent(flowchartId)}`, {
-        method: "POST",
-        json: { publish },
+      const updated = await apiFetch<{
+        sharing: Sharing;
+        is_published: boolean;
+        public_slug: string | null;
+        published_at: string | null;
+      }>(`/flowcharts/${encodeURIComponent(flowchartId)}/sharing`, {
+        method: "PUT",
+        json: { sharing: next.sharing, image_public: next.imagePublic },
       });
-
-      const fc = await apiFetch<GetFlowchartResponse>(
-        `/get/${encodeURIComponent(flowchartId)}`
-      );
-
+      setSharingOverride(updated.sharing);
       onPublishedChange?.({
-        is_published: !!fc.is_published,
-        public_slug: fc.public_slug ?? null,
-        published_at: fc.published_at ?? null,
+        is_published: updated.is_published,
+        public_slug: updated.public_slug,
+        published_at: updated.published_at,
       });
-
       logResearchEvent({
-  event_type: publish ? "Publish_Succeeded" : "Unpublish_Succeeded",
-  editor_mode: "visual",
-  flowchart_id: flowchartId,
-  success: true,
-  event_data: {
-    source_page: "ExportAccessibleRepsModal",
-    visibility: publish ? "public" : "private",
-    public_slug: fc.public_slug ?? null,
-  },
-});
+        event_type: publish ? "Publish_Succeeded" : "Unpublish_Succeeded",
+        editor_mode: "visual",
+        flowchart_id: flowchartId,
+        success: true,
+        event_data: {
+          source_page: "ExportAccessibleRepsModal",
+          sharing: updated.sharing,
+          public_slug: updated.public_slug,
+        },
+      });
     } catch (e: any) {
-  
-      console.error(e);
       logResearchEvent({
-  event_type: publish ? "Publish_Failed" : "Unpublish_Failed",
-  editor_mode: "visual",
-  flowchart_id: flowchartId ?? undefined,
-  success: false,
-  event_data: {
-    source_page: "ExportAccessibleRepsModal",
-    visibility: publish ? "public" : "private",
-    error_message: e?.message || String(e),
-  },
-});
-      setError(e?.message || "Failed to toggle publish.");
-    } finally {
-      setIsTogglingPublish(false);
+        event_type: publish ? "Publish_Failed" : "Unpublish_Failed",
+        editor_mode: "visual",
+        flowchart_id: flowchartId,
+        success: false,
+        event_data: {
+          source_page: "ExportAccessibleRepsModal",
+          sharing: next.sharing,
+          error_message: e?.message || String(e),
+        },
+      });
+      throw e;
     }
   };
 
@@ -520,46 +510,23 @@ const logExportFailed = (exportType: string, error: unknown) => {
                   <div>
                     <h4 className="export-block__title">Public link and QR code</h4>
                     <p className="export-block__description">
-                      Publishing creates a hosted public page for the long description. This is useful for sharing,
+                      Sharing creates a hosted page for the long description. This is useful for sharing,
                       printed materials, and QR-based access, but it is not required to export accessible text or HTML.
                     </p>
                   </div>
 
                   <div className="export-actions">
-                    {isPublished ? (
-                      <button
-                        type="button"
-                        className="btn btn--ghost"
-                        onClick={() => togglePublish(false)}
-                        disabled={isTogglingPublish}
-                      >
-                        {isTogglingPublish ? "Unpublishing…" : "Unpublish"}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn--primary"
-                        onClick={() => togglePublish(true)}
-                        disabled={isTogglingPublish}
-                      >
-                        {isTogglingPublish ? "Publishing…" : "Publish"}
-                      </button>
-                    )}
+                    <SharingControl
+                      sharing={sharing}
+                      imagePublic={false}
+                      hasImage={false}
+                      onSave={saveSharing}
+                    />
                   </div>
                 </div>
 
                 {isPublished && publicUrl ? (
                   <>
-                  <div style={{ marginBottom: 12 }}>
-                    <label className="repo-toggle">
-                      <input
-                        type="checkbox"
-                        checked={repoVisibility === "public"}
-                        onChange={(e) => onSetRepoVisibility?.(e.target.checked)}
-                      />
-                      <span className="repo-toggle__label">Include in public repo</span>
-                    </label>
-                  </div>
                     <div
                       style={{
                         display: "flex",
