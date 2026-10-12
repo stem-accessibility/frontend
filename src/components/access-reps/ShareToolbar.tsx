@@ -27,13 +27,13 @@ type Props = {
 };
 
 const FORMATS: { value: Format; label: string; hint: string }[] = [
-  { value: "html", label: "HTML", hint: "Alt text as an alt=\"\" attribute; long description as HTML." },
+  { value: "html", label: "HTML", hint: "Alt text and long description as HTML paragraphs and headings." },
   { value: "markdown", label: "Markdown", hint: "Plain alt text; long description with headings." },
   { value: "text", label: "Text", hint: "Plain text, no markup." },
 ];
 
-const escapeAttr = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const escapeHtmlText = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const fileBase = (title: string) =>
   (title || "stem-image").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") ||
@@ -51,7 +51,7 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
 
   const say = (msg: string) => setStatus(msg);
 
-  const altFor = (f: Format) => (f === "html" ? `alt="${escapeAttr(shortAlt)}"` : shortAlt);
+  const altFor = (f: Format) => (f === "html" ? `<p>${escapeHtmlText(shortAlt)}</p>` : shortAlt);
   const descriptionFor = (f: Format) =>
     f === "html"
       ? markdownToBasicHtml(summary)

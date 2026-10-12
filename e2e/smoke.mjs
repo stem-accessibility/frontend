@@ -249,7 +249,7 @@ try {
   await clickShare("Copy long description");
   check("Share page: HTML format copies HTML", /<h2|<p/.test(await page.evaluate(() => window.__copied)));
   await clickShare("Copy alt text");
-  check("Share page: HTML alt text is an alt attribute", (await page.evaluate(() => window.__copied)).startsWith('alt="'));
+  check("Share page: HTML alt text is a paragraph", /^<p>[^<]+<\/p>$/.test(await page.evaluate(() => window.__copied)), await page.evaluate(() => window.__copied));
   await clickShare("Copy embed code");
   check("Share page: embed code links back to this page", (await page.evaluate(() => window.__copied)).includes("/p/" + shared));
   check("Share page: has a QR code section", (await page.$(".share-toolbar__qr")) !== null);
