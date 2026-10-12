@@ -326,22 +326,14 @@ const handleOpenExport = async (flowchartId: string) => {
       </div>
 
       <div className="dashboard-grid" aria-label="STEM image list">
-        {pageRows.length === 0 ? (
-          <div className="dashboard-empty" role="status" aria-live="polite">
-            No STEM images match your filters.
-          </div>
-        ) : (
-          pageRows.map((r) => (
-            <FlowchartCard
-              key={r.flowchart_id}
-              row={r}
-              onOpenExport={handleOpenExport}
-
-              onDelete={handleDelete}
-              
-            />
-          ))
-        )}
+        {pageRows.map((r) => (
+          <FlowchartCard
+            key={r.flowchart_id}
+            row={r}
+            onOpenExport={handleOpenExport}
+            onDelete={handleDelete}
+          />
+        ))}
       </div>
 
       {isExportOpen && (

@@ -88,3 +88,10 @@
   background: var(--white);
 }
 
+
+/* Header buttons (Create, Log out) share one size and style */
+.app-header .btn {
+  font-size: 0.875rem;
+  padding: 0.45rem 0.9rem;
+  text-decoration: none;
+}

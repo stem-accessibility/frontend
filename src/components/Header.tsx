@@ -67,7 +67,7 @@ export default function Header() {
             <>
               <nav className="app-nav" aria-label="Application navigation">
                 <NavItem to="/dashboard" label="Dashboard" />
-                <Link to="/create" className="btn">
+                <Link to="/create" className="btn btn--outline">
                   Create
                 </Link>
               </nav>
