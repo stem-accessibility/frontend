@@ -16,6 +16,8 @@ type Props = {
   compact?: boolean;
   /** Page link to show when the image is shared (path such as /p/abc). */
   publicPath?: string | null;
+  /** Show the "source image" checkbox here (the editor shows it elsewhere). Default true. */
+  showImageOption?: boolean;
 };
 
 export default function SharingControl({
@@ -27,6 +29,7 @@ export default function SharingControl({
   disabled,
   compact,
   publicPath,
+  showImageOption = true,
 }: Props) {
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -49,7 +52,7 @@ export default function SharingControl({
   }
 
   const current = SHARING_OPTIONS.find((o) => o.value === sharing) ?? SHARING_OPTIONS[2];
-  const showImage = hasImage && sharing !== "private";
+  const showImage = showImageOption && hasImage && sharing !== "private";
 
   return (
     <div className={compact ? "sharing sharing--compact" : "sharing"}>

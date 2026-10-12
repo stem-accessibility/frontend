@@ -122,6 +122,7 @@ export default function EditorToolbar({
             hasImage={hasImage}
             publicPath={publicPath}
             onSave={onSharingSave}
+            showImageOption={false}
             hint={flowchartId ? undefined : "Applied when you first save."}
           />
 

@@ -30,10 +30,8 @@ type Props = {
   ) => void;
 
   summaryStale: boolean;
+  /** Rewrite the fields from the diagram itself (no AI; the same diagram gives the same text). */
   onRegenerate: () => void;
-  /** Fill the fields from the diagram itself, with no AI call. */
-  onAutoDescribe?: () => void;
-  isGenerating: boolean;
 
   /** True once the author has edited the field; it then stops following the diagram. */
   altEdited?: boolean;
@@ -56,8 +54,6 @@ export default function AccessibilityEditorModal({
   onLongDescriptionSectionToggle,
   summaryStale,
   onRegenerate,
-  onAutoDescribe,
-  isGenerating,
   altEdited,
   descEdited,
   imageDataUrl,
@@ -93,15 +89,6 @@ export default function AccessibilityEditorModal({
 
   const content = (
         <div className="accessibility-modal-body">
-          {(altEdited !== undefined || descEdited !== undefined) && (
-            <p className="accessibility-edit-note" id="accessibility-edit-note">
-              Alt text: <strong>{altEdited ? "Edited by you" : "Auto-generated"}</strong>
-              {" · "}Long description:{" "}
-              <strong>{descEdited ? "Edited by you" : "Auto-generated"}</strong>.
-              {" "}Auto-generated text follows the diagram as you change it. Once you edit a field it
-              stops updating; use Regenerate to replace your edits.
-            </p>
-          )}
           <div className="accessibility-modal-layout">
             <div className="accessibility-modal-authoring">
               <div className="accessibility-modal-section">
@@ -148,6 +135,13 @@ export default function AccessibilityEditorModal({
                     <p className="accessibility-modal-help">
                       A short summary of the diagram’s essential content.
                     </p>
+                    {altEdited !== undefined && (
+                      <p className="accessibility-field-status" id="alt-status">
+                        {altEdited
+                          ? "Edited. Use Regenerate to replace."
+                          : "Generated. Updates whenever you change the diagram."}
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -155,41 +149,20 @@ export default function AccessibilityEditorModal({
                     className="btn"
                     onClick={() => {
                       logResearchEvent({
-                        event_type: summaryStale
-                          ? "Regenerate_Summary_Clicked"
-                          : "Generate_Summary_Clicked",
+                        event_type: "Regenerate_Summary_Clicked",
                         editor_mode: "visual",
                         success: true,
                         event_data: {
                           source_page: "AccessibilityEditorModal",
-                          generation_mode: "hybrid",
-                          model: "gemini-flash-lite-latest",
+                          generation_mode: "deterministic",
+                          replaces_edits: Boolean(altEdited || descEdited),
                         },
                       });
-
                       onRegenerate();
                     }}
-                    disabled={isGenerating}
                   >
-                    {isGenerating
-                      ? "Generating…"
-                      : summaryStale
-                      ? "Regenerate"
-                      : "Generate / Regenerate"}
+                    {altEdited || descEdited ? "Regenerate (replaces your edits)" : "Regenerate"}
                   </button>
-                  {onAutoDescribe ? (
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={onAutoDescribe}
-                      disabled={isGenerating}
-                      style={{ marginLeft: 8 }}
-                    >
-                      {altEdited || descEdited
-                        ? "Regenerate without AI (replaces your edits)"
-                        : "Describe without AI"}
-                    </button>
-                  ) : null}
                 </div>
 
                 {summaryStale && (
@@ -227,6 +200,14 @@ export default function AccessibilityEditorModal({
               </div>
 
               <div className="accessibility-modal-section accessibility-modal-section--longdesc">
+                {descEdited !== undefined && (
+                  <p className="accessibility-field-status" id="description-status">
+                    Long description:{" "}
+                    {descEdited
+                      ? "Edited. Use Regenerate to replace."
+                      : "Generated. Updates whenever you change the diagram."}
+                  </p>
+                )}
                 <LongDescriptionPanel
                   sections={longDescriptionSections}
                   onSectionChange={onLongDescriptionSectionChange}

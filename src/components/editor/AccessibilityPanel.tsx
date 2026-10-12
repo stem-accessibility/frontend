@@ -13,6 +13,13 @@ type Props = {
   children?: ReactNode;
 };
 
+/** First line of some text, cut to about `max` characters with an ellipsis. */
+function glimpse(text: string, max = 90) {
+  const line = (text.split(/\r?\n/).find((l) => l.trim()) ?? "").trim();
+  if (line.length <= max) return line;
+  return `${line.slice(0, max).trimEnd()}…`;
+}
+
 export default function AccessibilityPanel({
   title,
   shortAlt,
@@ -77,17 +84,20 @@ export default function AccessibilityPanel({
         </h2>
 
         <div className="accessibility-summary-bar__stats">
-          <div className="accessibility-summary-chip">
+          <div className="accessibility-summary-chip accessibility-summary-chip--text">
             <span className="accessibility-summary-chip__label">Title</span>
             <span className="accessibility-summary-chip__value">
-              {hasTitle ? "Added" : "Missing"}
+              {hasTitle ? glimpse(title, 40) : "Missing"}
             </span>
           </div>
 
-          <div className="accessibility-summary-chip">
+          <div
+            className="accessibility-summary-chip accessibility-summary-chip--text"
+            title={hasShortAlt ? shortAlt : undefined}
+          >
             <span className="accessibility-summary-chip__label">Alt text</span>
             <span className="accessibility-summary-chip__value">
-              {hasShortAlt ? "Added" : "Missing"}
+              {hasShortAlt ? glimpse(shortAlt) : "Missing"}
             </span>
           </div>
 

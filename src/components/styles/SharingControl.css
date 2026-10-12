@@ -23,3 +23,10 @@
   border: 1px solid var(--brand, #184c45); border-radius: var(--r-sm, 6px);
   background: transparent; color: var(--brand, #184c45);
 }
+
+/* Toolbar layout: everything on one row, wrapping only when the window is narrow */
+.sharing--compact { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.sharing--compact .sharing__row { flex-wrap: nowrap; }
+.sharing--compact .sharing__links { flex-wrap: nowrap; }
+.sharing--compact .sharing__link { white-space: nowrap; }
+.sharing--compact .sharing__msg { margin: 0; white-space: nowrap; }

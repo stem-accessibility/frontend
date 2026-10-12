@@ -6,7 +6,20 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Added
+- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (29 browser checks of Create, Markdown mode,
+  autosave, sharing, Browse).
+
 ### Changed
+- Toolbar on one row: sharing, Copy link, Open shared page, and Save sit in the title bar. The source-image
+  checkbox moved into the Accessibility region.
+- Autosave: edits to a saved STEM image are written about two seconds after you stop. Save still creates a
+  new image and saves immediately.
+- Accessibility header shows a glimpse of the title and alt text instead of "Added".
+- Alt text and long description are always generated from the diagram itself (no AI call, same diagram gives
+  the same text). One **Regenerate** button replaces the two AI/non-AI buttons. Status reads "Generated.
+  Updates whenever you change the diagram." or "Edited. Use Regenerate to replace."
+- Markdown mode says that typing re-lays out the diagram.
 - One editor. The separate markdown page is gone: Create → Markdown editor now opens the editor as a new,
   unsaved STEM image in Markdown mode. The Mermaid tab is now "Markdown": text on the left, a live preview
   on the right (read in the browser, no Apply button), Insert example, array (`block-beta`) support, and

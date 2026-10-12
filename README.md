@@ -116,3 +116,13 @@ expectations, and how to report a barrier.
 ## License
 
 See [LICENSE](LICENSE). Copyright (c) 2025 University of Washington.
+
+## Tests
+
+```bash
+npm test            # unit tests (vitest): Mermaid reader, change detection, types, descriptions
+npm run test:e2e    # browser smoke test of the main flows; needs the local dev stack (see e2e/smoke.mjs)
+```
+
+The browser test creates records in whatever database the backend uses, so run the backend against a
+throwaway SQLite file (`AUTH_MODE=dev`, as in the local-development section).

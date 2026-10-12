@@ -124,3 +124,18 @@
 .markdown-split__error { margin: 0; color: rgb(180, 30, 30); }
 .markdown-split__warnings { margin: 0; padding-left: 18px; font-size: 0.9rem; }
 .markdown-split__preview { display: grid; gap: 8px; align-content: start; min-width: 0; }
+
+.image-share { display: flex; gap: 8px; align-items: flex-start; font-size: 0.95rem; }
+.image-share input { margin-top: 4px; }
+
+/* Accessibility header: show a real glimpse of the text instead of "Added" */
+.accessibility-summary-chip--text { max-width: min(46ch, 100%); }
+.accessibility-summary-chip--text .accessibility-summary-chip__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.accessibility-field-status { margin: 4px 0 0; font-size: 0.9rem; font-weight: 600; color: var(--brand, #184c45); }
+.accessibility-summary-chip__label { white-space: nowrap; }
