@@ -226,7 +226,7 @@ try {
   // ---- Export (in the editor, under Accessibility)
   await page.goto(FRONTEND + "/editor/" + dash.flowchart_id, { waitUntil: "networkidle0" });
   await sleep(1000);
-  const exportToggle = await page.$(".share-toolbar__toggle");
+  const exportToggle = await page.$(".share-toolbar .accessibility-summary-bar__toggle");
   check("Export: a collapsed section sits in the editor", exportToggle !== null && (await exportToggle.evaluate((e) => e.getAttribute("aria-expanded"))) === "false");
   const order = await page.evaluate(() => {
     const a = document.querySelector(".accessibility-summary-bar")?.getBoundingClientRect().top ?? 0;
@@ -237,7 +237,7 @@ try {
   check("Export: it is just below Accessibility, above the canvas", order);
   await exportToggle.click();
   await sleep(300);
-  const toolbarText = await text(".share-toolbar .btn");
+  const toolbarText = await text(".share-toolbar .btn, .share-toolbar .share-chip");
   check("Export: copy alt text, copy long description, download, embed", /Copy alt text/.test(toolbarText) && /Copy long description/.test(toolbarText) && /Download/.test(toolbarText) && /Copy embed code/.test(toolbarText), toolbarText);
   check("Export: labelled 'Export as' with HTML, Markdown, Text", (await text(".share-toolbar__formats legend")) === "Export as" && (await text(".share-toolbar__radio")) === "HTML | Markdown | Text");
   await page.evaluate(() => {
@@ -264,6 +264,17 @@ try {
   await clickShare("Copy embed code");
   check("Export: embed code links to the shared page", (await page.evaluate(() => window.__copied)).includes("/p/" + shared));
   check("Export: has a QR code section", (await page.$(".share-toolbar__qr")) !== null);
+  const chips = await text(".share-toolbar__chips .share-chip");
+  check("Export: Copy alt text and Copy QR code chips are always visible", chips === "Copy alt text | Copy QR code", chips);
+  const heights = await page.evaluate(() => [
+    document.querySelector(".accessibility-summary-bar:not(.share-toolbar)").getBoundingClientRect().height,
+    document.querySelector(".share-toolbar").getBoundingClientRect().height,
+  ]);
+  await (await page.$(".share-toolbar .accessibility-summary-bar__toggle")).click();
+  await sleep(200);
+  const collapsed = await page.evaluate(() => document.querySelector(".share-toolbar").getBoundingClientRect().height);
+  const accH = await page.evaluate(() => document.querySelector(".accessibility-summary-bar:not(.share-toolbar)").getBoundingClientRect().height);
+  check("Export: collapsed height matches the Accessibility header", Math.abs(collapsed - accH) <= 2, `export ${collapsed}, accessibility ${accH}`);
   const sharedPage = await (async () => { await page.goto(FRONTEND + "/p/" + shared, { waitUntil: "networkidle0" }); await sleep(600); return page.$(".share-toolbar"); })();
   check("Shared page: no export bar there any more", sharedPage === null);
 

@@ -1,4 +1,6 @@
 import { useId, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { QRCodeSVG } from "qrcode.react";
 import QRCodeGenerator from "./QRCode";
 import type { FlowchartData } from "../../types/types";
 import { jsonToMermaid } from "../../services/utils";
@@ -69,6 +71,41 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
     }
   }
 
+  /** Put the QR code on the clipboard as a PNG; download it instead where images can't be copied. */
+  async function copyQr() {
+    if (!publicUrl) return;
+    try {
+      const svg = renderToStaticMarkup(
+        <QRCodeSVG value={publicUrl} size={512} marginSize={4} bgColor="#ffffff" fgColor="#000000" />
+      );
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("QR image failed"));
+        img.src = `data:image/svg+xml;base64,${btoa(svg)}`;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, 512, 512);
+      const blob: Blob = await new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("no image"))), "image/png")
+      );
+      if (navigator.clipboard && "write" in navigator.clipboard && typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        say("Copied QR code.");
+      } else {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${fileBase(title)}-qr.png`;
+        a.click();
+        say("Your browser can't copy images, so the QR code was downloaded.");
+      }
+    } catch {
+      say("Could not copy the QR code. Open Export and use Download QR Code.");
+    }
+  }
+
   async function download() {
     const base = fileBase(title);
     if (format === "text") {
@@ -98,21 +135,57 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
 
   const bodyId = `${id}-body`;
 
+  // Same look and height as the Accessibility header, so the two sit together as a pair.
   return (
-    <section className={open ? "share-toolbar share-toolbar--open" : "share-toolbar"} aria-label="Export">
-      <h2 className="share-toolbar__title">
-        <button
-          type="button"
-          className="share-toolbar__toggle"
-          aria-expanded={open}
-          aria-controls={bodyId}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span aria-hidden="true">{open ? "▾" : "▸"}</span> Export
-        </button>
-      </h2>
+    <section
+      className={
+        open
+          ? "accessibility-summary-bar accessibility-summary-bar--open share-toolbar"
+          : "accessibility-summary-bar share-toolbar"
+      }
+      aria-label="Export"
+    >
+      <div className="accessibility-summary-bar__head">
+        <h2 className="accessibility-summary-bar__title">
+          <button
+            type="button"
+            className="accessibility-summary-bar__toggle"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span aria-hidden="true" className="accessibility-summary-bar__chevron">
+              {open ? "▾" : "▸"}
+            </span>
+            Export
+          </button>
+        </h2>
 
-      <div id={bodyId} className="share-toolbar__body" hidden={!open}>
+        <div className="accessibility-summary-bar__stats share-toolbar__chips">
+          <button
+            type="button"
+            className="accessibility-summary-chip share-chip"
+            disabled={!shortAlt.trim()}
+            onClick={() => copy(altFor(format), "alt text")}
+          >
+            Copy alt text
+          </button>
+          <button
+            type="button"
+            className="accessibility-summary-chip share-chip"
+            disabled={!publicUrl}
+            title={publicUrl ? undefined : "Share this STEM image to get a QR code."}
+            onClick={copyQr}
+          >
+            Copy QR code
+          </button>
+          <span className="share-toolbar__status" role="status" aria-live="polite">
+            {status}
+          </span>
+        </div>
+      </div>
+
+      <div id={bodyId} className="accessibility-summary-bar__body share-toolbar__body" hidden={!open}>
       <div className="share-toolbar__row">
         <fieldset className="share-toolbar__formats">
           <legend>Export as</legend>
@@ -132,14 +205,6 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
         </fieldset>
 
         <div className="share-toolbar__actions">
-          <button
-            type="button"
-            className="btn btn--outline"
-            disabled={!shortAlt.trim()}
-            onClick={() => copy(altFor(format), "alt text")}
-          >
-            Copy alt text
-          </button>
           <button
             type="button"
             className="btn btn--outline"
@@ -191,11 +256,6 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
       )}
 
       </div>
-
-      {/* Always in the page so announcements work, but takes no room while empty. */}
-      <p className="share-toolbar__status" role="status" aria-live="polite">
-        {status}
-      </p>
     </section>
   );
 }

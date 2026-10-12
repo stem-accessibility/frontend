@@ -27,9 +27,13 @@
 .share-toolbar__body { display: grid; gap: 8px; }
 .share-toolbar__body[hidden] { display: none; }
 
-/* Collapsed: just the heading's height, with no empty gaps */
-.share-toolbar { gap: 0; padding: 6px 14px; margin: 10px 0; }
-.share-toolbar--open { gap: 8px; padding: 12px 14px; }
-.share-toolbar__status { min-height: 0; }
+/* Export reuses the Accessibility header look; these are just its chip buttons and status */
+.share-toolbar { border: 1px solid var(--border); padding: 16px 18px; margin: 0 0 14px; display: block; gap: 0; }
+.share-chip { font: inherit; font-size: 0.95rem; cursor: pointer; color: var(--brand, #184c45); font-weight: 600; }
+.share-chip:hover:not([disabled]) { background: #eef6f4; }
+.share-chip:focus-visible { outline: 3px solid var(--brand, #184c45); outline-offset: 2px; }
+.share-chip[disabled] { opacity: 0.5; cursor: not-allowed; }
+.share-toolbar__chips { align-items: center; }
+.share-toolbar__status { font-size: 0.9rem; font-weight: 600; color: var(--brand, #184c45); }
 .share-toolbar__status:empty { display: none; }
-.share-toolbar__title { line-height: 1.2; }
+.share-toolbar__body { margin-top: 14px; display: grid; gap: 8px; }
