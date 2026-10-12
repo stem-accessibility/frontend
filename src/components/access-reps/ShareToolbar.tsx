@@ -192,6 +192,7 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
 
       </div>
 
+      {/* Always in the page so announcements work, but takes no room while empty. */}
       <p className="share-toolbar__status" role="status" aria-live="polite">
         {status}
       </p>

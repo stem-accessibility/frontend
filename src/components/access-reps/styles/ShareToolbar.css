@@ -26,3 +26,10 @@
 .share-toolbar__toggle:focus-visible { outline: 3px solid var(--brand, #184c45); outline-offset: 2px; }
 .share-toolbar__body { display: grid; gap: 8px; }
 .share-toolbar__body[hidden] { display: none; }
+
+/* Collapsed: just the heading's height, with no empty gaps */
+.share-toolbar { gap: 0; padding: 6px 14px; margin: 10px 0; }
+.share-toolbar--open { gap: 8px; padding: 12px 14px; }
+.share-toolbar__status { min-height: 0; }
+.share-toolbar__status:empty { display: none; }
+.share-toolbar__title { line-height: 1.2; }
