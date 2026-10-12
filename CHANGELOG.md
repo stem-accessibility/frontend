@@ -15,6 +15,9 @@ API contract name the matching backend release.
   removed.
 
 ### Fixed
+- Opening a saved STEM image no longer shows "Unsaved changes" and "Needs refresh after edits". The change
+  check compared edge line styles that the canvas fills in on load. It now compares only nodes, labels,
+  shapes, and which node links to which. This also makes re-pointing an arrow count as a change.
 - Dashboard cards and Browse show a small sketch of the graph when a STEM image has no uploaded picture
   (before: "No preview"). Browse cards also load through the public endpoints, so they work signed out.
 - The sharing control shows the shareable address (`/p/<slug>`) with Copy link. Preview on the Dashboard
