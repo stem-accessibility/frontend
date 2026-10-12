@@ -7,6 +7,12 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Changed
+- One editor. The separate markdown page is gone: Create → Markdown editor now opens the editor as a new,
+  unsaved STEM image in Markdown mode. The Mermaid tab is now "Markdown": text on the left, a live preview
+  on the right (read in the browser, no Apply button), Insert example, array (`block-beta`) support, and
+  line-level errors that keep the last good preview. Alt text and long description follow the diagram until
+  you edit them, then show "Edited by you" with Regenerate. Saved images keep their existing text.
+- The title chosen on the Create page now carries into the editor (it was dropped for blank canvases).
 - Browse: live "Showing X of N" count; separate empty states for "nobody has shared yet" (with Create and
   About links) and "no matches" (with Clear search and filters); readable type names; search also matches
   the image type; the whole card is one click target (the title is the link), with Copy link still

@@ -19,7 +19,6 @@ import PublicRepoPage from "../pages/PublicRepoPage";
 import Dashboard from "../pages/Dashboard";
 import AccountPage from "../pages/AccountPage";
 import CreatePage from "../pages/CreatePage";
-import MarkdownEditorPage from "../pages/MarkdownEditorPage";
 import DiagramEditorPage from "../pages/DiagramEditorPage";
 import PermalinkContent from "../components/access-reps/PermalinkContent";
 import PermalinkJsonPage from "../components/access-reps/PermalinkJsonPage";
@@ -79,19 +78,12 @@ export default function AppRoutes() {
         }
       />
       <Route path="/upload" element={<Navigate to="/create" replace />} />
+      <Route path="/create/markdown" element={<Navigate to="/create" replace />} />
       <Route
         path="/create"
         element={
           <RequireAuth>
             <CreatePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/create/markdown"
-        element={
-          <RequireAuth>
-            <MarkdownEditorPage />
           </RequireAuth>
         }
       />

@@ -17,6 +17,7 @@ import {
   type Sharing,
 } from "../lib/sharing";
 import { clearLatestDiagramCache } from "../lib/editorCache";
+import { MARKDOWN_EXAMPLES } from "../lib/mermaidText";
 import "./styles/CreatePage.css";
 
 type JobResult = {
@@ -70,9 +71,25 @@ export default function CreatePage() {
   const whyId = `${id}-why`;
 
   function openMarkdown() {
-    navigate("/create/markdown", {
-      state: { title: name.trim(), type, sharing },
+    clearLatestDiagramCache();
+    try {
+      localStorage.setItem("latestTitle", name.trim());
+      localStorage.setItem("latestShortAlt", "");
+      localStorage.setItem("latestSummary", "");
+      localStorage.setItem("editorMode", "mermaid");
+      localStorage.setItem("pendingType", type);
+      localStorage.setItem("pendingSharing", sharing);
+      localStorage.setItem("pendingMarkdown", MARKDOWN_EXAMPLES[type] ?? MARKDOWN_EXAMPLES.flowchart);
+    } catch {
+      /* the editor still opens; it then starts from its defaults */
+    }
+    logResearchEvent({
+      event_type: "Create_Mermaid",
+      editor_mode: "mermaid",
+      success: true,
+      event_data: { source_page: "CreatePage", diagram_type: type, sharing },
     });
+    navigate("/editor");
   }
 
   function openVisualEditor() {

@@ -13,6 +13,7 @@ export function clearLatestDiagramCache() {
     "pendingType",
     "pendingSharing",
     "pendingImagePublic",
+    "pendingMarkdown",
   ]) {
     try {
       localStorage.removeItem(key);

@@ -103,7 +103,7 @@ export default function EditorToolbar({
             }
             onClick={() => onEditorModeChange("mermaid")}
           >
-            Mermaid
+            Markdown
           </button>
         </div>
       </div>

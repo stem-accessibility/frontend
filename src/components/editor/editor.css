@@ -112,3 +112,15 @@
 /* Inline editor: the diagram is on the page, so no separate reference pane */
 .accessibility-inline .accessibility-modal-layout { display: block; }
 .accessibility-inline .accessibility-modal-body { padding: 0; overflow: visible; max-height: none; }
+
+.accessibility-edit-note { margin: 0 0 12px; font-size: 0.9rem; color: var(--muted, #555); }
+
+/* Markdown mode: text on the left, live preview on the right; stacked on narrow screens */
+.markdown-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 12px; }
+@media (max-width: 900px) { .markdown-split { grid-template-columns: minmax(0, 1fr); } }
+.markdown-split__text { display: grid; gap: 8px; align-content: start; }
+.markdown-split__label { font-weight: 700; }
+.markdown-split__help, .markdown-split__count, .markdown-split__empty { margin: 0; font-size: 0.9rem; color: var(--muted, #555); }
+.markdown-split__error { margin: 0; color: rgb(180, 30, 30); }
+.markdown-split__warnings { margin: 0; padding-left: 18px; font-size: 0.9rem; }
+.markdown-split__preview { display: grid; gap: 8px; align-content: start; min-width: 0; }

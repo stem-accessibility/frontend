@@ -35,6 +35,10 @@ type Props = {
   onAutoDescribe?: () => void;
   isGenerating: boolean;
 
+  /** True once the author has edited the field; it then stops following the diagram. */
+  altEdited?: boolean;
+  descEdited?: boolean;
+
   imageDataUrl?: string | null;
   flowchartData?: FlowchartData | null;
 };
@@ -54,6 +58,8 @@ export default function AccessibilityEditorModal({
   onRegenerate,
   onAutoDescribe,
   isGenerating,
+  altEdited,
+  descEdited,
   imageDataUrl,
 }: Props) {
   useEffect(() => {
@@ -87,6 +93,15 @@ export default function AccessibilityEditorModal({
 
   const content = (
         <div className="accessibility-modal-body">
+          {(altEdited !== undefined || descEdited !== undefined) && (
+            <p className="accessibility-edit-note" id="accessibility-edit-note">
+              Alt text: <strong>{altEdited ? "Edited by you" : "Auto-generated"}</strong>
+              {" · "}Long description:{" "}
+              <strong>{descEdited ? "Edited by you" : "Auto-generated"}</strong>.
+              {" "}Auto-generated text follows the diagram as you change it. Once you edit a field it
+              stops updating; use Regenerate to replace your edits.
+            </p>
+          )}
           <div className="accessibility-modal-layout">
             <div className="accessibility-modal-authoring">
               <div className="accessibility-modal-section">
@@ -170,7 +185,9 @@ export default function AccessibilityEditorModal({
                       disabled={isGenerating}
                       style={{ marginLeft: 8 }}
                     >
-                      Describe without AI
+                      {altEdited || descEdited
+                        ? "Regenerate without AI (replaces your edits)"
+                        : "Describe without AI"}
                     </button>
                   ) : null}
                 </div>
