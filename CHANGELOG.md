@@ -11,7 +11,8 @@ API contract name the matching backend release.
   autosave, sharing, Browse).
 
 ### Changed
-- Toolbar on one row: sharing, Copy link, Open shared page, and Save sit in the title bar. The source-image
+- Toolbar on one row: sharing, Copy permalink, and Save sit in the title bar (the Dashboard cards keep
+  Copy link and Open shared page). The source-image
   checkbox moved into the Accessibility region.
 - Autosave: edits to a saved STEM image are written about two seconds after you stop (held while Markdown
   text has errors or unreadable lines, with a note saying so). Save still creates a

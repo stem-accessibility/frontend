@@ -123,6 +123,8 @@ export default function EditorToolbar({
             publicPath={publicPath}
             onSave={onSharingSave}
             showImageOption={false}
+            copyLabel="Copy permalink"
+            showOpenLink={false}
           />
 
           {isDirty ? <span className="status-chip status-chip--warn">Unsaved changes</span> : null}

@@ -18,6 +18,10 @@ type Props = {
   publicPath?: string | null;
   /** Show the "source image" checkbox here (the editor shows it elsewhere). Default true. */
   showImageOption?: boolean;
+  /** Text of the copy button. Default "Copy link". */
+  copyLabel?: string;
+  /** Show "Open shared page" next to it. Default true. */
+  showOpenLink?: boolean;
 };
 
 export default function SharingControl({
@@ -30,6 +34,8 @@ export default function SharingControl({
   compact,
   publicPath,
   showImageOption = true,
+  copyLabel = "Copy link",
+  showOpenLink = true,
 }: Props) {
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -111,17 +117,19 @@ export default function SharingControl({
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
-                setMessage({ kind: "ok", text: "Link copied." });
+                setMessage({ kind: "ok", text: `${copyLabel.replace(/^Copy /, "")[0].toUpperCase()}${copyLabel.replace(/^Copy /, "").slice(1)} copied.` });
               } catch {
                 setMessage({ kind: "error", text: "Could not copy. Select the link and copy it." });
               }
             }}
           >
-            Copy link
+            {copyLabel}
           </button>
-          <a className="sharing__link" href={publicPath} target="_blank" rel="noopener noreferrer">
-            Open shared page<span className="sr-only"> (opens in a new tab)</span>
-          </a>
+          {showOpenLink && (
+            <a className="sharing__link" href={publicPath} target="_blank" rel="noopener noreferrer">
+              Open shared page<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          )}
         </div>
       )}
 
