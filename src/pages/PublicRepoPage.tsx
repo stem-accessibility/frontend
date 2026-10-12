@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { diagramTypeLabel, normalizeDiagramType, DIAGRAM_TYPES } from "../arboretum/diagramTypes";
 import RepoFlowchartCard, { type RepoFlowchartRow } from "../components/dashboard/RepoFlowchartCard";
 import { apiFetch } from "../lib/api";
 import "./styles/PublicRepoPage.css";
@@ -47,24 +49,28 @@ export default function PublicRepoPage() {
   }, []);
 
   const types = useMemo(() => {
-    const s = new Set<string>();
-    rows.forEach((r) => s.add((r.flowchart_type || "unknown").toLowerCase()));
-    return ["all", ...Array.from(s).sort()];
+    const present = new Set(rows.map((r) => normalizeDiagramType(r.flowchart_type)));
+    return ["all", ...DIAGRAM_TYPES.map((t) => t.value).filter((v) => present.has(v))];
   }, [rows]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
-      const title = (r.title || r.flowchart_id || "").toLowerCase();
-      const summary = (r.summary || "").toLowerCase();
-      const type = (r.flowchart_type || "unknown").toLowerCase();
-
-      const matchesQuery = !q || title.includes(q) || summary.includes(q);
+      const type = normalizeDiagramType(r.flowchart_type);
+      const haystack = [r.title || "", r.summary || "", r.short_alt || "", diagramTypeLabel(type)]
+        .join(" ")
+        .toLowerCase();
+      const matchesQuery = !q || haystack.includes(q);
       const matchesType = typeFilter === "all" || type === typeFilter;
-
       return matchesQuery && matchesType;
     });
   }, [rows, query, typeFilter]);
+
+  const loaded = statusKind === "idle";
+  const hasFilters = query.trim() !== "" || typeFilter !== "all";
+  const countText = loaded
+    ? `Showing ${filtered.length} of ${rows.length} STEM ${rows.length === 1 ? "image" : "images"}`
+    : status;
 
   return (
     <main className="repo-page">
@@ -72,7 +78,7 @@ export default function PublicRepoPage() {
         <div className="repo-hero__inner">
           <h1 className="repo-hero__title">Public STEM images</h1>
           <p className="repo-hero__subtitle">
-            Browse published diagrams that creators opted into sharing as public examples.
+            Browse STEM images that their creators chose to share publicly.
           </p>
 
           <div className="repo-controls" role="region" aria-label="Repository filters">
@@ -81,7 +87,7 @@ export default function PublicRepoPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search title or description…"
+                placeholder="Search title, description, or type…"
               />
             </label>
 
@@ -90,7 +96,7 @@ export default function PublicRepoPage() {
               <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
                 {types.map((t) => (
                   <option key={t} value={t}>
-                    {t === "all" ? "All types" : t}
+                    {t === "all" ? "All types" : diagramTypeLabel(normalizeDiagramType(t))}
                   </option>
                 ))}
               </select>
@@ -101,7 +107,7 @@ export default function PublicRepoPage() {
               aria-live="polite"
               aria-atomic="true"
             >
-              {status}
+              {countText}
             </div>
           </div>
         </div>
@@ -109,10 +115,35 @@ export default function PublicRepoPage() {
 
       <section className="repo-grid" aria-label="Public STEM images">
         {filtered.length === 0 ? (
-          <div className="repo-empty">
-            <div className="repo-empty__title">No results</div>
-            <div className="repo-empty__body">Try a different search or type filter.</div>
-          </div>
+          loaded && rows.length === 0 ? (
+            <div className="repo-empty">
+              <div className="repo-empty__title">Nobody has shared a STEM image yet</div>
+              <div className="repo-empty__body">
+                <Link to="/create">Create one</Link>, or <Link to="/about">learn how it works</Link>.
+              </div>
+            </div>
+          ) : (
+            <div className="repo-empty">
+              <div className="repo-empty__title">
+                {query.trim() ? `No matches for “${query.trim()}”` : "No matches"}
+              </div>
+              <div className="repo-empty__body">
+                Try a different search or type.{" "}
+                {hasFilters && (
+                  <button
+                    type="button"
+                    className="action action--ghost"
+                    onClick={() => {
+                      setQuery("");
+                      setTypeFilter("all");
+                    }}
+                  >
+                    Clear search and filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )
         ) : (
           filtered.map((r) => <RepoFlowchartCard key={r.flowchart_id} row={r} />)
         )}

@@ -7,6 +7,10 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Changed
+- Browse: live "Showing X of N" count; separate empty states for "nobody has shared yet" (with Create and
+  About links) and "no matches" (with Clear search and filters); readable type names; search also matches
+  the image type; the whole card is one click target (the title is the link), with Copy link still
+  separate.
 - Create: **Upload image** is available only for types drawn with arrows (flowchart, tree, binary tree,
   linked list). Array and 2D array are written as text; the page says why. The chosen image type is saved
   with the upload.

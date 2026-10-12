@@ -1,5 +1,6 @@
 import { useId } from "react";
 import "./dashboard.css";
+import { Link } from "react-router-dom";
 import FlowchartThumbnail from "./FlowchartThumbnail";
 
 export type RepoFlowchartRow = {
@@ -31,8 +32,8 @@ export default function RepoFlowchartCard({ row: r }: { row: RepoFlowchartRow })
 
   const displayTitle = r.title && r.title.trim().length > 0 ? r.title : r.flowchart_id;
 
-  const publicUrl =
-    r.public_slug ? `${window.location.origin}/p/${encodeURIComponent(r.public_slug)}` : null;
+  const sharedPath = r.public_slug ? `/p/${encodeURIComponent(r.public_slug)}` : null;
+  const publicUrl = sharedPath ? `${window.location.origin}${sharedPath}` : null;
 
   return (
     <article className="repo-card" aria-labelledby={titleId}>
@@ -46,7 +47,15 @@ export default function RepoFlowchartCard({ row: r }: { row: RepoFlowchartRow })
       <div className="repo-card__body">
         <div className="repo-card__top">
           <h2 className="repo-card__title" id={titleId}>
-            {displayTitle}
+            {sharedPath ? (
+              // The link's ::after covers the whole card, so the card is one click target
+              // and one tab stop.
+              <Link className="repo-card__link" to={sharedPath}>
+                {displayTitle}
+              </Link>
+            ) : (
+              displayTitle
+            )}
           </h2>
 
           <div className="repo-card__meta">
@@ -73,9 +82,6 @@ export default function RepoFlowchartCard({ row: r }: { row: RepoFlowchartRow })
         <div className="repo-card__actions">
           {publicUrl ? (
             <>
-              <a className="action action--primary"href={publicUrl} target="_blank" rel="noreferrer">
-                Open
-              </a>
               <button
                 className="action action--ghost"
                 type="button"

@@ -13,7 +13,8 @@ Decisions already made are listed under "Decided".
   package (large). Same text formats; instant preview, no network.
 - Batch 3: sharing control on Dashboard cards, editor toolbar, and Export dialog (old Publish buttons and
   repo checkbox removed). Backend 0.2.0 deployed.
-- Next: Browse polish, Try it, merge and tag frontend v0.3.0.
+- Batch 4: editor layout (expandable Accessibility region), image-upload restriction by type, Browse polish.
+- Next: Try it (guests), merge and tag frontend v0.3.0.
 
 ## Decided
 
