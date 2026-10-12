@@ -39,11 +39,14 @@ const proOptions = { account: 'paid-pro', hideAttribution: true };
 type FlowchartViewerProps = {
   flowchartData: FlowchartData;
   height?: number | string;
+  /** The overview map covers part of small previews; callers can turn it off. */
+  showMiniMap?: boolean;
 };
 
 export function FlowchartViewer({
   flowchartData,
   height = 420,
+  showMiniMap = true,
 }: FlowchartViewerProps) {
   const { nodes, edges } = useMemo(
     () => transformEditorFlowchartData(flowchartData),
@@ -59,7 +62,7 @@ export function FlowchartViewer({
         borderRadius: 8,
         overflow: 'hidden',
       }}
-      aria-label="Digital flowchart viewer"
+      aria-label="Digital STEM image viewer"
     >
       <ReactFlow
         nodes={nodes}
@@ -82,7 +85,7 @@ export function FlowchartViewer({
       >
         <Background />
         <Controls />
-        <MiniMap zoomable draggable nodeComponent={MiniMapNode} />
+        {showMiniMap && <MiniMap zoomable draggable nodeComponent={MiniMapNode} />}
       </ReactFlow>
     </div>
   );

@@ -332,3 +332,10 @@
   color: white;
   border-color: transparent;
 }
+/* Graph sketch used when a STEM image has no uploaded picture */
+.thumbnail__sketch {
+  width: 100%;
+  height: 100%;
+  color: var(--brand, #184c45);
+  display: block;
+}

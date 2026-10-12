@@ -18,7 +18,7 @@ export default function DashboardToolbar({
   
 }: Props) {
   return (
-    <section className="dashboard-toolbar" aria-label="Flowchart Dashboard Controls">
+    <section className="dashboard-toolbar" aria-label="Dashboard controls">
   <div className="dashboard-toolbar-left">
     
 
@@ -29,7 +29,7 @@ export default function DashboardToolbar({
         className="input dashboard-search"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Flowchart ID or public slug"
+        placeholder="Title, ID, or public slug"
         type="search"
         autoComplete="off"
       />

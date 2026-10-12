@@ -1,27 +1,71 @@
 import { useEffect, useRef, useState } from "react";
-import { apiFetch } from "../../lib/api";
-import { thumbCache } from "./thumbCache";
+import { apiFetch, publicFetch } from "../../lib/api";
+import { thumbCache, graphCache } from "./thumbCache";
+import GraphSketch from "./GraphSketch";
+import type { FlowchartData } from "../../types/types";
 
 type Props = {
   flowchartId: string;
+  /** For public listings: load through the public page endpoints (no login needed). */
+  publicSlug?: string | null;
   hasImage: boolean;
   className?: string;
   rootMargin?: string;
 };
 
 export default function FlowchartThumbnail({
-  flowchartId,
+  flowchartId: ownId,
+  publicSlug,
   hasImage,
   className,
   rootMargin = "250px",
 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
+  // Cache key and fetch route: public listings use the slug endpoints.
+  const flowchartId = publicSlug ? `p:${publicSlug}` : ownId;
+  const get = publicSlug ? publicFetch : apiFetch;
+  const base = publicSlug ? `/p/${encodeURIComponent(publicSlug)}` : `/get/${encodeURIComponent(ownId)}`;
 
   const [src, setSrc] = useState<string | null>(() => {
     return thumbCache.has(flowchartId) ? (thumbCache.get(flowchartId) ?? null) : null;
   });
 
   const [loading, setLoading] = useState(false);
+
+  // No uploaded image (for example text-authored STEM images): sketch the graph instead.
+  const [graph, setGraph] = useState<FlowchartData | null>(() =>
+    graphCache.has(flowchartId) ? (graphCache.get(flowchartId) ?? null) : null
+  );
+
+  useEffect(() => {
+    if (hasImage || graphCache.has(flowchartId)) return;
+    const node = ref.current;
+    if (!node) return;
+
+    let cancelled = false;
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        observer.disconnect();
+        try {
+          const fc = await get<{ json_data?: FlowchartData | string | null }>(base);
+          const raw = fc?.json_data;
+          const data = (typeof raw === "string" ? JSON.parse(raw) : raw) as FlowchartData | null;
+          const ok = data && Array.isArray(data.nodes) && data.nodes.length > 0 ? data : null;
+          graphCache.set(flowchartId, ok);
+          if (!cancelled) setGraph(ok);
+        } catch {
+          graphCache.set(flowchartId, null);
+        }
+      },
+      { root: null, rootMargin, threshold: 0.01 }
+    );
+    observer.observe(node);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [flowchartId, hasImage, rootMargin]);
 
   useEffect(() => {
     if (!hasImage) return;
@@ -49,9 +93,7 @@ export default function FlowchartThumbnail({
 
         try {
           setLoading(true);
-          const img = await apiFetch<{ image_data_url?: string | null }>(
-            `/get/${encodeURIComponent(flowchartId)}/image`
-          );
+          const img = await get<{ image_data_url?: string | null }>(`${base}/image`);
 
           const url = img?.image_data_url ?? null;
           thumbCache.set(flowchartId, url);
@@ -77,7 +119,7 @@ export default function FlowchartThumbnail({
   const containerClasses = [
     "thumbnail",
     loading ? "thumbnail--loading" : "",
-    !hasImage ? "thumbnail--empty" : "",
+    !hasImage && !graph ? "thumbnail--empty" : "",
     className ?? "",
   ]
     .filter(Boolean)
@@ -88,9 +130,11 @@ export default function FlowchartThumbnail({
       ref={ref}
       className={containerClasses}
       aria-busy={loading ? "true" : undefined}
-      aria-label={hasImage ? undefined : "No preview available"}
+      aria-label={hasImage || graph ? undefined : "No preview available"}
     >
-      {!hasImage ? (
+      {!hasImage && graph ? (
+        <GraphSketch data={graph} />
+      ) : !hasImage ? (
         <span className="thumbnail__label">No preview</span>
       ) : src ? (
         <img

@@ -1124,3 +1124,23 @@
     padding-right: 16px;
   }
 }
+/* Diagram type selector in the editor toolbar */
+.canvas-toolbar__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.canvas-toolbar__type select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+/* Toolbar: wrap onto a second line instead of overflowing when the window is narrow */
+.canvas-toolbar { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.canvas-toolbar__group { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.markdown-split__text, .markdown-split__preview, .mermaid-editor-panel__textarea { min-width: 0; max-width: 100%; }

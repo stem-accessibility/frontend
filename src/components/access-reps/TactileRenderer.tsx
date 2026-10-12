@@ -34,7 +34,7 @@ const FlowchartLegend: React.FC<FlowchartLegendProps> = ({ nodes, edges }) => {
 
   return (
     <div className="legend" style={{ marginBottom: '2rem' }}>
-      <h2>Flowchart Legend</h2>
+      <h2>Legend</h2>
       <ul>
         {combinedList.map((item, idx) => (
             <li key={item.type === 'node' ? `node-${item.id}` : `edge-${item.label}`}>

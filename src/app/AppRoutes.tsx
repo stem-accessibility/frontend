@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -18,8 +18,9 @@ import PublicRepoPage from "../pages/PublicRepoPage";
 // Private pages
 import Dashboard from "../pages/Dashboard";
 import AccountPage from "../pages/AccountPage";
-import DiagramUploadPage from "../pages/DiagramUpload";
+import CreatePage from "../pages/CreatePage";
 import DiagramEditorPage from "../pages/DiagramEditorPage";
+import TryPage from "../pages/TryPage";
 import PermalinkContent from "../components/access-reps/PermalinkContent";
 import PermalinkJsonPage from "../components/access-reps/PermalinkJsonPage";
 
@@ -45,7 +46,9 @@ export default function AppRoutes() {
       <Route path="/guidance" element={<AltTextGuidancePage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/examples" element={<PublicRepoPage />} />
+      <Route path="/browse" element={<PublicRepoPage />} />
+      <Route path="/try" element={<TryPage />} />
+      <Route path="/examples" element={<Navigate to="/browse" replace />} />
 
       {/* Grafari (public for now) */}
       <Route path="/grafari" element={<GrafariPlaygroundPage />} />
@@ -76,11 +79,13 @@ export default function AppRoutes() {
           </RequireAuth>
         }
       />
+      <Route path="/upload" element={<Navigate to="/create" replace />} />
+      <Route path="/create/markdown" element={<Navigate to="/create" replace />} />
       <Route
-        path="/upload"
+        path="/create"
         element={
           <RequireAuth>
-            <DiagramUploadPage />
+            <CreatePage />
           </RequireAuth>
         }
       />

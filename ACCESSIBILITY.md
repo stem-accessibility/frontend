@@ -50,7 +50,7 @@ You do not need to share anything about your disability.
 
 ### Severity
 
-- **Critical:** prevents you from completing a core task (for example, you cannot upload a diagram or read its description at all).
+- **Critical:** prevents you from completing a core task (for example, you cannot create a STEM image or read its description at all).
 - **Serious:** significant difficulty, but a workaround exists.
 - **Moderate:** an annoyance or inconsistent experience.
 - **Minor:** a small issue with minimal impact on usability.
@@ -86,7 +86,7 @@ We have not systematically tested every combination of browser and assistive tec
 ## Known limitations
 
 - The site has not had a formal accessibility audit, and we expect there are barriers we have not found yet.
-- The visual diagram editor and viewers are the most complex parts of the interface. Text, structure, and keyboard-driven alternatives exist, but they may not cover every action the visual editor offers.
+- The visual editor and viewers are the most complex parts of the interface. Text, structure, and keyboard-driven alternatives exist, but they may not cover every action the visual editor offers.
 - Embedded third-party content may not include captions or transcripts.
 
 If you find a barrier, please [open an issue](https://github.com/stem-accessibility/frontend/issues/new).

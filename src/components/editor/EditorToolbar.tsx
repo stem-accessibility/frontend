@@ -1,22 +1,26 @@
+// .mode-tab styles for the Visual / Markdown switch live in this file.
+import "../../pages/styles/DiagramUpload.css";
 import { useEffect, useState } from "react";
+import SharingControl from "../SharingControl";
+import type { Sharing } from "../../lib/sharing";
 export type EditorMode = "visual" | "mermaid";
 type Props = {
   hasImage: boolean;
+  /** Try-it: sharing is fixed at public and there is no source image. */
+  guest?: boolean;
   onViewImage: () => void;
   onReupload: () => void;
-  onStartOver: () => void;
-
-  onOpenAltText: () => void;
-  hasAltText: boolean;
-
   onSave: () => void;
   isSaving: boolean;
   disableSave?: boolean;
 
-  onExport: () => void;
-
   flowchartId: string | null;
   isPublished: boolean;
+
+  sharing: Sharing;
+  imagePublic: boolean;
+  publicPath: string | null;
+  onSharingSave: (next: { sharing: Sharing; imagePublic: boolean }) => Promise<void>;
 
  
   isDirty: boolean;
@@ -26,16 +30,16 @@ type Props = {
 
 export default function EditorToolbar({
   hasImage,
+  guest = false,
   onViewImage,
-  onStartOver,
-  onOpenAltText,
-  hasAltText,
   onSave,
   isSaving,
   disableSave,
-  onExport,
   flowchartId,
-  isPublished,
+  sharing,
+  imagePublic,
+  publicPath,
+  onSharingSave,
   isDirty,
   editorMode,
   onEditorModeChange,
@@ -62,12 +66,10 @@ export default function EditorToolbar({
         ? "Save changes"
         : "Save";
 
-  // Optional: nudge users to save before export/publish
-  const exportLabel = isDirty ? "Export (save first)" : "Export";
-
   return (
     <div className="canvas-toolbar" role="region" aria-label="Canvas actions">
       <div className="canvas-toolbar__group">
+        {!guest && (
         <button
           type="button"
           className="canvas-toolbar__btn"
@@ -77,19 +79,7 @@ export default function EditorToolbar({
         >
           View uploaded image
         </button>
-
-        <button type="button" className="canvas-toolbar__btn" onClick={onStartOver}>
-          Create a New Diagram
-        </button>
-
-        <button
-          type="button"
-          className="canvas-toolbar__btn"
-          onClick={onOpenAltText}
-          aria-haspopup="dialog"
-        >
-          {hasAltText ? "Alt text" : "Alt text (missing)"}
-        </button>
+        )}
       </div>
 
       <div className="canvas-toolbar__group" aria-label="Editor mode">
@@ -118,7 +108,7 @@ export default function EditorToolbar({
             }
             onClick={() => onEditorModeChange("mermaid")}
           >
-            Mermaid
+            Markdown
           </button>
         </div>
       </div>
@@ -130,11 +120,19 @@ export default function EditorToolbar({
         style={{ display: "flex", gap: 10, alignItems: "center" }}
       >
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {isPublished ? (
-            <span className="status-chip status-chip--published">Published</span>
-          ) : (
-            <span className="status-chip status-chip--draft">Draft</span>
-          )}
+          <SharingControl
+            compact
+            sharing={sharing}
+            imagePublic={imagePublic}
+            hasImage={hasImage}
+            publicPath={publicPath}
+            onSave={onSharingSave}
+            showImageOption={false}
+            copyLabel="Copy permalink"
+            showOpenLink={false}
+            alwaysShowCopy
+            disabled={guest}
+          />
 
           {isDirty ? <span className="status-chip status-chip--warn">Unsaved changes</span> : null}
         </div>
@@ -150,14 +148,6 @@ export default function EditorToolbar({
           disabled={!!disableSave || isSaving}
         >
           {saveLabel}
-        </button>
-
-        <button
-          type="button"
-          className="canvas-toolbar__btn"
-          onClick={onExport}
-        >
-          {exportLabel}
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 # STEM-Accessibility frontend
 
-React + TypeScript + Vite single-page app for making diagrams accessible:
-upload a flowchart image, edit the extracted structure, and publish an
+React + TypeScript + Vite single-page app for making STEM images accessible:
+upload an image or write text, edit the extracted structure, and publish an
 accessible representation (alt text, long description, shareable page).
 
 The API lives in [`stem-accessibility/backend`](https://github.com/stem-accessibility/backend).
@@ -69,6 +69,44 @@ rewrites all routes to `/` for the SPA. After deploying, add the Vercel URL to
 the backend's `CORS_ORIGINS` and to Supabase → Authentication → URL
 Configuration (Site URL and redirect URLs).
 
+## Image types and Arboretum
+
+Each STEM image has a type, set from the **Image type** menu in the editor toolbar:
+flowchart (the default), tree, binary tree, linked list, array, or 2D array. The
+type is stored with the STEM image (`flowchart_type`) and decides:
+
+- **Which representations are offered, and in what order** (`src/arboretum/views.ts`).
+- **Which implementation draws each one.** Where our renderers and Arboretum's
+  both make a view, the type picks the better one:
+
+  | View | Flowchart | Tree / list / array |
+  |---|---|---|
+  | Navigable | our graph walker (arrow by arrow) | Arboretum-style ARIA tree, list or grid |
+  | Table | node and edge tables | parent/child, position, row and column tables |
+  | Tactile | numbered shapes with a key | braille labels on the shapes when every label is 6 characters or fewer, else the numbered key |
+  | Summary, Alt text | same for every type | same for every type |
+
+- **A no-AI description.** *Describe without AI* in the accessibility editor
+  (`src/arboretum/autoDescription.ts`) writes alt text and a long description from
+  the STEM image alone: counts, start and end points, decisions and branches, every
+  route, loops, and, for data structures, depth, traversal orders and per-node detail.
+  It works for any flowchart and gives the same text every time.
+- **Warnings** when a STEM image does not look like its chosen type (for example a tree
+  with two roots).
+
+### Credits
+
+Tree, list and array support builds on
+[Arboretum](https://github.com/ritesh-kanchi/Arboretum), created by Ritesh Kanchi, Kaija Frierson, Venkatesh Potluri, Ronald Metoyer, Jennifer Mankoff, Miya Natsuhara, and Matt X. Wang (MIT
+License; paper: [dl.acm.org/doi/10.1145/3772318.3791656](https://dl.acm.org/doi/10.1145/3772318.3791656)).
+It is included as a git submodule at `vendor/arboretum`, kept as a reference, and
+`src/arboretum/vendor.ts` is the only file that imports from it (its `lib/` for tree
+layout and the intermediate representation, and its braille generation). The
+navigable, table and tactile views for data structures follow its output designs.
+See [LICENSE](LICENSE) for the notice.
+
+After cloning, fetch it with `git submodule update --init`.
+
 ## Accessibility
 
 We aim for WCAG 2.2 AA and treat accessibility reports as expertise. See
@@ -78,3 +116,14 @@ expectations, and how to report a barrier.
 ## License
 
 See [LICENSE](LICENSE). Copyright (c) 2025 University of Washington.
+
+## Tests
+
+```bash
+npm test            # unit tests (vitest): Mermaid reader, change detection, types, descriptions
+npm run test:e2e:try # Try-it (guest) test; the frontend must run without dev auth (see e2e/try.mjs)
+npm run test:e2e    # browser smoke test of the main flows; needs the local dev stack (see e2e/smoke.mjs)
+```
+
+The browser test creates records in whatever database the backend uses, so run the backend against a
+throwaway SQLite file (`AUTH_MODE=dev`, as in the local-development section).

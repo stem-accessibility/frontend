@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../pages/styles/DiagramEditorPage.css";
-import type { FlowchartData,NodeData, EdgeData  } from "../types/types";
+import type { FlowchartData } from "../types/types";
 import { ReactFlowProvider } from "@xyflow/react";
 import { UnifiedFlowApp } from "../components/ReactFlow";
-import ExportAccessibleRepsModal from "../components/access-reps/ExportAccessibleRepsModal";
-import SummaryJobStatus from "../components/editor/SummaryJobStatus";
 import { apiFetch } from "../lib/api";
+import { guestFetch } from "../lib/guest";
 import EditorToolbar, { type EditorMode } from "../components/editor/EditorToolbar";
 import AccessibilityPanel from "../components/editor/AccessibilityPanel";
-import dagre from "dagre";
+import ImageTypeSelect from "../components/editor/ImageTypeSelect";
+import ShareToolbar from "../components/access-reps/ShareToolbar";
 import { jsonToMermaid } from "../services/utils";
+import { structuralSignature } from "../lib/structuralSignature";
+import { parseMermaidText, MARKDOWN_EXAMPLES } from "../lib/mermaidText";
+import { FlowchartViewer } from "../components/ReactFlowViewer";
 import AccessibilityEditorModal from "../components/editor/AccessibilityEditorPanel";
 import type {
   LongDescriptionSections,
@@ -22,93 +25,24 @@ import {
   buildLongDescriptionMarkdown,
 } from "../services/longDescription";
 import { logResearchEvent } from "../lib/logResearchEvent";
+import { normalizeSharing, type Sharing } from "../lib/sharing";
+import { normalizeDiagramType } from "../arboretum/diagramTypes";
+import type { DiagramType } from "../arboretum/diagramTypes";
+import { autoDescribe, checkDiagramType } from "../arboretum/autoDescription";
 
 const createEmptyFlowchart = (): FlowchartData => ({ nodes: [], edges: [] });
 
-function structuralSignature(fc: FlowchartData) {
-  const nodes = (fc.nodes ?? [])
-    .map((n: any) => ({
-      id: n.id,
-      label: n.data?.label ?? n.label ?? "",
-      type: n.type ?? "",
-    }))
-    .sort((a, b) => a.id.localeCompare(b.id));
 
-  const edges = (fc.edges ?? [])
-    .map((e: any) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      label: e.data?.label ?? e.label ?? "",
-      type: e.type ?? "",
-    }))
-    .sort((a, b) => a.id.localeCompare(b.id));
-
-  return JSON.stringify({ nodes, edges });
-}
 
 const NONVISUAL_EDITING_SUPPORTED = false;
 
-type ParsedGraph = {
-  nodes: Array<{ id: string; label: string }>;
-  edges: Array<{ source: string; destination: string; label?: string }>;
+
+type EditorProps = {
+  /** Try-it mode: no account; one public image saved against this browser's guest token. */
+  guest?: boolean;
 };
 
-type SummaryJobResult = {
-  short_alt?: string;
-  long_markdown?: string;
-  long_description_sections?: Partial<Record<LongDescriptionSectionKey, string>>;
-};
-
-const DEFAULT_NODE_W = 180;
-const DEFAULT_NODE_H = 60;
-
-function layoutWithDagre(parsed: ParsedGraph): FlowchartData {
-  const g = new dagre.graphlib.Graph({ multigraph: true });
-  g.setGraph({ rankdir: "TB", nodesep: 40, ranksep: 60, marginx: 20, marginy: 20 });
-  g.setDefaultEdgeLabel(() => ({}));
-
-  for (const n of parsed.nodes) {
-    g.setNode(n.id, { width: DEFAULT_NODE_W, height: DEFAULT_NODE_H, label: n.label });
-  }
-
-  parsed.edges.forEach((e, i) => {
-    g.setEdge(e.source, e.destination, {}, `e${i}`);
-  });
-
-  dagre.layout(g);
-
-  const nodes: NodeData[] = parsed.nodes.map((n) => {
-    const pos = g.node(n.id);
-    const w = pos?.width ?? DEFAULT_NODE_W;
-    const h = pos?.height ?? DEFAULT_NODE_H;
-
-    const x1 = (pos?.x ?? 0) - w / 2;
-    const y1 = (pos?.y ?? 0) - h / 2;
-    const x2 = x1 + w;
-    const y2 = y1 + h;
-
-    return {
-      id: n.id,
-      label: n.label,
-      shape: "rectangle",
-      coordinates: [[x1, y1], [x2, y2]] as [[number, number], [number, number]],
-    };
-  });
-
-  const edges: EdgeData[] = parsed.edges.map((e, idx) => ({
-    id: `edge-${idx}`,
-    source: e.source,
-    destination: e.destination,
-    label: e.label,
-    type: "solid",
-    markerEnd: { type: "arrowclosed" as const },
-  }));
-
-  return { nodes, edges };
-}
-
-const DiagramEditorPage = () => {
+const DiagramEditorPage = ({ guest = false }: EditorProps) => {
   const navigate = useNavigate();
   const { id: routeId } = useParams<{ id: string }>();
 
@@ -129,24 +63,35 @@ const DiagramEditorPage = () => {
   const [_saveStatus, setSaveStatus] = useState("");
 
   const [title, setTitle] = useState("");
+  const [diagramType, setDiagramType] = useState<DiagramType>(() => {
+    // Set by the Create page when starting a blank canvas; saved records load their own type.
+    try {
+      return normalizeDiagramType(localStorage.getItem("pendingType"));
+    } catch {
+      return "flowchart";
+    }
+  });
 
   const [summaryStale, setSummaryStale] = useState(false);
   const [diagramKey, setDiagramKey] = useState(0);
-  const [showPermalink, setShowPermalink] = useState(false);
 
   const [isPublished, setIsPublished] = useState(false);
+  const [sharing, setSharing] = useState<Sharing>(() => {
+    // A blank canvas started from the Create page carries the choice made there.
+    try {
+      return normalizeSharing(localStorage.getItem("pendingSharing"));
+    } catch {
+      return "private";
+    }
+  });
+  const [imagePublic, setImagePublic] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | null>(null);
   const [_publishedAt, setPublishedAt] = useState<string | null>(null);
 
   const [isDirty, setIsDirty] = useState(false);
 
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [summaryJobId, setSummaryJobId] = useState<number | null>(null);
-  const [summaryJobError, setSummaryJobError] = useState<string>("");
 
   const [isAccessibilityEditorOpen, setIsAccessibilityEditorOpen] = useState(false);
-
-  const API_URL = import.meta.env.VITE_API_URL as string;
 
   const [editorMode, setEditorMode] = useState<EditorMode>(() => {
     const saved = localStorage.getItem("editorMode");
@@ -158,9 +103,29 @@ const DiagramEditorPage = () => {
   );
 
   const skipNextMermaidSyncRef = useRef(false);
+  // True once the person has typed in the markdown box; live parsing only runs after that (or for a
+  // brand-new image), so opening a saved image never re-lays it out.
+  const markdownTouchedRef = useRef(false);
+  // Markdown handed over by the Create page. Held in a ref (not read from storage inside the load
+  // effect) so a second effect run, as in React StrictMode, still sees it.
+  const pendingMarkdownRef = useRef<string | null>(
+    (() => {
+      try {
+        return localStorage.getItem("pendingMarkdown");
+      } catch {
+        return null;
+      }
+    })()
+  );
+  const [markdownIssues, setMarkdownIssues] = useState<{ error: string | null; warnings: string[] }>({
+    error: null,
+    warnings: [],
+  });
+  // Alt text / long description follow the diagram until the author edits them.
+  const [altEdited, setAltEdited] = useState(false);
+  const [descEdited, setDescEdited] = useState(false);
   const mermaidTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const editorOpenedLoggedRef = useRef(false);
-  const autoGeneratedForRef = useRef<string | null>(null);
   const [autoSavePending, setAutoSavePending] = useState(false);
 
   useEffect(() => {
@@ -209,20 +174,27 @@ const DiagramEditorPage = () => {
           json_data: FlowchartData;
           summary: string;
           short_alt?: string | null;
+          flowchart_type?: string | null;
           has_image: boolean;
           image_mime?: string | null;
           is_published?: boolean;
           public_slug?: string | null;
           published_at?: string | null;
           title?: string | null;
+          sharing?: string | null;
+          image_public?: boolean;
         }>(`/get/${encodeURIComponent(routeId)}`);
         const incomingSummary = fc.summary ?? "";
         setFlowchartData(fc.json_data);
         setOriginalFlowchart(fc.json_data);
         setSummary(incomingSummary);
         setLongDescriptionSections(parseLongDescriptionMarkdown(incomingSummary));
+        // Existing text is kept as written; only empty fields are filled in automatically.
+        setAltEdited(!!(fc.short_alt ?? "").trim());
+        setDescEdited(!!incomingSummary.trim());
         setShortAlt(fc.short_alt ?? "");
         setTitle(fc.title ?? "");
+        setDiagramType(normalizeDiagramType(fc.flowchart_type));
 
         try {
           const serialized = jsonToMermaid(fc.json_data);
@@ -246,6 +218,8 @@ const DiagramEditorPage = () => {
             has_image: fc.has_image,
           },
         });
+        setSharing(normalizeSharing(fc.sharing));
+        setImagePublic(!!fc.image_public);
         setIsPublished(!!fc.is_published);
         setPublicSlug(fc.public_slug ?? null);
         setPublishedAt(fc.published_at ?? null);
@@ -269,7 +243,7 @@ const DiagramEditorPage = () => {
         setIsDirty(false);
       } catch (e: any) {
         console.error(e);
-        setSaveStatus(e?.message || "Failed to load flowchart from database.");
+        setSaveStatus(e?.message || "Failed to load STEM image.");
 
         const empty = createEmptyFlowchart();
         setFlowchartData(empty);
@@ -302,9 +276,74 @@ const DiagramEditorPage = () => {
     })();
   }, [routeId]);
 
+  // Try-it: load this browser's one image, or start a new one from an example.
+  useEffect(() => {
+    if (!guest) return;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const fc = await guestFetch<{
+          flowchart_id: string;
+          json_data: FlowchartData;
+          summary: string;
+          short_alt?: string | null;
+          flowchart_type?: string | null;
+          title?: string | null;
+          public_slug?: string | null;
+          published_at?: string | null;
+        } | null>("/guest/image");
+
+        if (fc) {
+          setFlowchartData(fc.json_data);
+          setOriginalFlowchart(fc.json_data);
+          setSummary(fc.summary ?? "");
+          setLongDescriptionSections(parseLongDescriptionMarkdown(fc.summary ?? ""));
+          setAltEdited(!!(fc.short_alt ?? "").trim());
+          setDescEdited(!!(fc.summary ?? "").trim());
+          setShortAlt(fc.short_alt ?? "");
+          setTitle(fc.title ?? "");
+          setDiagramType(normalizeDiagramType(fc.flowchart_type));
+          try {
+            skipNextMermaidSyncRef.current = true;
+            setMermaidText(jsonToMermaid(fc.json_data));
+          } catch {
+            /* the text box just starts empty */
+          }
+          setActiveFlowchartId(fc.flowchart_id);
+          setIsPublished(true);
+          setSharing("public");
+          setPublicSlug(fc.public_slug ?? null);
+          setPublishedAt(fc.published_at ?? null);
+        } else {
+          const example = MARKDOWN_EXAMPLES.flowchart;
+          const parsed = parseMermaidText(example);
+          setFlowchartData(parsed.error ? createEmptyFlowchart() : parsed.data);
+          setOriginalFlowchart(createEmptyFlowchart());
+          setDiagramType("flowchart");
+          skipNextMermaidSyncRef.current = true;
+          setMermaidText(example);
+          setEditorMode("mermaid");
+          setSharing("public");
+        }
+        setImgContent(null);
+        setSummaryStale(false);
+        setDiagramKey((k) => k + 1);
+        setIsDirty(false);
+      } catch (e: any) {
+        console.error(e);
+        setSaveStatus(e?.message || "Could not load your try-it image.");
+        const empty = createEmptyFlowchart();
+        setFlowchartData(empty);
+        setOriginalFlowchart(empty);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [guest]);
+
   // Load from localStorage if no routeId
   useEffect(() => {
-    if (routeId) return;
+    if (routeId || guest) return;
 
     const storedData = localStorage.getItem("latestDiagramJSON");
     const storedImage = localStorage.getItem("latestDiagramImage");
@@ -313,26 +352,36 @@ const DiagramEditorPage = () => {
     if (storedActiveId && storedActiveId !== "undefined") setActiveFlowchartId(storedActiveId);
 
     if (!storedData || storedData === "undefined") {
-      const empty = createEmptyFlowchart();
+      // A new image started from the Create page may arrive with markdown to show straight away.
+      const pendingMd = pendingMarkdownRef.current;
+      const fromMd = pendingMd ? parseMermaidText(pendingMd) : null;
+      const initial = fromMd && !fromMd.error ? fromMd.data : createEmptyFlowchart();
+      const empty = initial;
       setFlowchartData(empty);
-      setOriginalFlowchart(empty);
+      setOriginalFlowchart(createEmptyFlowchart());
       setSummary(localStorage.getItem("latestSummary") ?? "");
       setLongDescriptionSections(
         parseLongDescriptionMarkdown(localStorage.getItem("latestSummary") ?? "")
       );
       setShortAlt("");
-      setTitle("");
+      setTitle(localStorage.getItem("latestTitle") || fromMd?.title || "");
       setImgContent(null);
       setSummaryStale(false);
       setDiagramKey((k) => k + 1);
       setIsDirty(false);
 
-      try {
-        const serialized = jsonToMermaid(empty);
+      if (pendingMd) {
         skipNextMermaidSyncRef.current = true;
-        setMermaidText(serialized);
-      } catch {
-        setMermaidText("");
+        setMermaidText(pendingMd);
+        localStorage.removeItem("pendingMarkdown");
+      } else {
+        try {
+          const serialized = jsonToMermaid(empty);
+          skipNextMermaidSyncRef.current = true;
+          setMermaidText(serialized);
+        } catch {
+          setMermaidText("");
+        }
       }
 
       return;
@@ -433,30 +482,8 @@ const DiagramEditorPage = () => {
     if (changed) setIsDirty(true);
   }, [flowchartData, originalFlowchart]);
 
-  const pollJobUntilComplete = async (jobId: number) => {
-  while (true) {
-    const job = await apiFetch<{
-      job_id: number;
-      type: string;
-      status: "queued" | "running" | "done" | "failed";
-      result: SummaryJobResult | null;
-      error: string | null;
-    }>(`/jobs/${jobId}`);
 
-    if (job.status === "done") {
-      return job.result;
-    }
-
-    if (job.status === "failed") {
-      throw new Error(job.error || "Summary generation failed.");
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  }
-};
-
-
-    const handleLongDescriptionSectionChange = (
+  const handleLongDescriptionSectionChange = (
     section: LongDescriptionSectionKey,
     nextText: string
   ) => {
@@ -533,154 +560,128 @@ const DiagramEditorPage = () => {
   };
 };
 
-  const generateSummary = async (data: FlowchartData) => {
-  setIsGeneratingSummary(true);
-  setSummaryJobError("");
-  setSummaryJobId(null);
-  const generationStartedAt = performance.now();
 
-  try {
-    const createJobResponse = await apiFetch<{
-      job_id: number;
-      status: "queued" | "running" | "done" | "failed";
-    }>(`/jobs/generate-summary`, {
-      method: "POST",
-      json: {
-        diagram: data,
-        model: "gemini-flash-lite-latest",
-      },
-    });
+  const typeProblems = flowchartData ? checkDiagramType(diagramType, flowchartData) : [];
 
-    setSummaryJobId(createJobResponse.job_id);
+  // Describe the diagram from its own structure (deterministic: same diagram, same text, no AI).
+  const describeWithoutAI = () => {
+    if (!flowchartData) return;
+    const result = autoDescribe(diagramType, flowchartData, title);
+    const nextSections = normalizeLongDescriptionSections(result.sections);
+    const nextSummary = buildLongDescriptionMarkdown(nextSections);
 
-    const result = await pollJobUntilComplete(createJobResponse.job_id);
-    
-    if (result?.long_description_sections) {
-      const nextSections = normalizeLongDescriptionSections(
-        result.long_description_sections
-      );
-      setLongDescriptionSections(nextSections);
-
-      const nextSummary =
-        typeof result.long_markdown === "string"
-          ? result.long_markdown
-          : buildLongDescriptionMarkdown(nextSections);
-
-      setSummary(nextSummary);
-      localStorage.setItem("latestSummary", nextSummary);
-    } else if (typeof result?.long_markdown === "string") {
-      setSummary(result.long_markdown);
-      setLongDescriptionSections(
-        parseLongDescriptionMarkdown(result.long_markdown)
-      );
-      localStorage.setItem("latestSummary", result.long_markdown);
-    } else {
-      setLongDescriptionSections(createEmptyLongDescriptionSections());
-      setSummary("");
-      localStorage.setItem("latestSummary", "");
-    }
-
-    if (typeof result?.short_alt === "string") {
-      setShortAlt(result.short_alt);
-      localStorage.setItem("latestShortAlt", result.short_alt);
-    }
-
-    setOriginalFlowchart(data);
+    setAltEdited(false);
+    setDescEdited(false);
+    setLongDescriptionSections(nextSections);
+    setSummary(nextSummary);
+    setShortAlt(result.shortAlt);
+    localStorage.setItem("latestSummary", nextSummary);
+    localStorage.setItem("latestShortAlt", result.shortAlt);
     setSummaryStale(false);
     setIsDirty(true);
 
     logResearchEvent({
-  event_type: "Generation_Succeeded",
-  editor_mode: editorMode,
-  flowchart_id: activeFlowchartId ?? undefined,
-  success: true,
-  event_data: {
-    source_page: "DiagramEditorPage",
-    generation_type: "summary",
-    generation_mode: "hybrid",
-    model: "gemini-flash-lite-latest",
-    job_id: createJobResponse.job_id,
-    latency_ms: Math.round(performance.now() - generationStartedAt),
-    node_count: data.nodes?.length ?? 0,
-    edge_count: data.edges?.length ?? 0,
-    generated_short_alt: typeof result?.short_alt === "string",
-    generated_long_description: Boolean(
-      result?.long_markdown || result?.long_description_sections
-    ),
-  },
-});
-  } catch (err: any) {
-    console.error("Summary generation job error:", err);
-    setSummaryJobError(err?.message || "Failed to generate summary.");
-    logResearchEvent({
-  event_type: "Generation_Failed",
-  editor_mode: editorMode,
-  flowchart_id: activeFlowchartId ?? undefined,
-  success: false,
-  event_data: {
-    source_page: "DiagramEditorPage",
-    generation_type: "summary",
-    generation_mode: "hybrid",
-    model: "gemini-flash-lite-latest",
-    latency_ms: Math.round(performance.now() - generationStartedAt),
-    node_count: data.nodes?.length ?? 0,
-    edge_count: data.edges?.length ?? 0,
-    error_message: err?.message || String(err),
-  },
-});
-  } finally {
-    setIsGeneratingSummary(false);
-  }
-};
+      event_type: "Generation_Succeeded",
+      editor_mode: editorMode,
+      flowchart_id: activeFlowchartId ?? undefined,
+      success: true,
+      event_data: {
+        source_page: "DiagramEditorPage",
+        generation_type: "summary",
+        generation_mode: "deterministic",
+        diagram_type: diagramType,
+        node_count: flowchartData.nodes?.length ?? 0,
+        edge_count: flowchartData.edges?.length ?? 0,
+      },
+    });
+  };
 
-  // A diagram with structure but no alt text or description gets one automatic
-  // generation per diagram, so a fresh upload doesn't open with empty fields.
+  // Markdown mode: the preview follows the text as you type (read in the browser, no network).
   useEffect(() => {
-    if (isLoading || isGeneratingSummary || !flowchartData) return;
-    if (!flowchartData.nodes?.length) return;
-    if (summary.trim() || shortAlt.trim()) return;
+    if (editorMode !== "mermaid") return;
+    const needsFirstParse =
+      !!mermaidText.trim() && (flowchartData?.nodes?.length ?? 0) === 0 && !routeId;
+    if (!markdownTouchedRef.current && !needsFirstParse) return;
 
-    const key = activeFlowchartId ?? routeId ?? "local";
-    if (autoGeneratedForRef.current === key) return;
-    autoGeneratedForRef.current = key;
-
-    void generateSummary(flowchartData).then(() => setAutoSavePending(true));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowchartData, summary, shortAlt, isLoading, activeFlowchartId, routeId]);
-
-  const handleApplyMermaid = async () => {
-    if (!mermaidText.trim()) return;
-
-    setIsLoading(true);
-    setSaveStatus("");
-
-    try {
-      const res = await fetch(`${API_URL}/parse-mermaid`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mermaid: mermaidText }),
-      });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || "Failed to parse Mermaid");
-      }
-
-      const parsed: ParsedGraph = await res.json();
-      const nextFlowchartData = layoutWithDagre(parsed);
-
+    const t = window.setTimeout(() => {
+      const r = parseMermaidText(mermaidText);
+      setMarkdownIssues({ error: r.error, warnings: r.warnings });
+      if (r.error) return; // keep the last good preview
       skipNextMermaidSyncRef.current = true;
-      setFlowchartData(nextFlowchartData);
-      setMermaidText(mermaidText);
+      setFlowchartData(r.data);
       setDiagramKey((k) => k + 1);
       setSummaryStale(true);
-      setIsDirty(true);
-    } catch (err: any) {
-      console.error(err);
-      setSaveStatus(err?.message || "Failed to generate diagram from Mermaid.");
-    } finally {
-      setIsLoading(false);
+      if (r.title && !title.trim()) setTitle(r.title);
+    }, 300);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mermaidText, editorMode]);
+
+  // Keep alt text and long description in step with the diagram until the author edits them.
+  useEffect(() => {
+    if (!flowchartData || flowchartData.nodes.length === 0) return;
+    if (altEdited && descEdited) return;
+    const result = autoDescribe(diagramType, flowchartData, title);
+    let changed = false;
+    if (!altEdited) {
+      if (result.shortAlt !== shortAlt) changed = true;
+      setShortAlt(result.shortAlt);
+      localStorage.setItem("latestShortAlt", result.shortAlt);
     }
+    if (!descEdited) {
+      const nextSections = normalizeLongDescriptionSections(result.sections);
+      const md = buildLongDescriptionMarkdown(nextSections);
+      if (md !== summary) changed = true;
+      setLongDescriptionSections(nextSections);
+      setSummary(md);
+      localStorage.setItem("latestSummary", md);
+      setSummaryStale(false);
+    }
+    // Generated text is part of the saved record, so it is saved (autosave) like any other edit.
+    if (changed) setIsDirty(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowchartData, diagramType, title, altEdited, descEdited]);
+
+  /** Change who can see this STEM image. Before the first save it is applied on creation. */
+  const saveSharing = async (next: { sharing: Sharing; imagePublic: boolean }) => {
+    const id = activeFlowchartId || localStorage.getItem("activeFlowchartId");
+    if (!id || id === "undefined") {
+      setSharing(next.sharing);
+      setImagePublic(next.imagePublic);
+      try {
+        localStorage.setItem("pendingSharing", next.sharing);
+        localStorage.setItem("pendingImagePublic", String(next.imagePublic));
+      } catch {
+        /* the choice then applies from the defaults */
+      }
+      return;
+    }
+    const updated = await apiFetch<{
+      sharing: Sharing;
+      image_public: boolean;
+      is_published: boolean;
+      public_slug: string | null;
+      published_at: string | null;
+    }>(`/flowcharts/${encodeURIComponent(id)}/sharing`, {
+      method: "PUT",
+      json: { sharing: next.sharing, image_public: next.imagePublic },
+    });
+    setSharing(updated.sharing);
+    setImagePublic(updated.image_public);
+    setIsPublished(updated.is_published);
+    setPublicSlug(updated.public_slug);
+    setPublishedAt(updated.published_at);
+    logResearchEvent({
+      event_type: updated.sharing === "private" ? "Unpublish_Succeeded" : "Publish_Succeeded",
+      editor_mode: editorMode,
+      flowchart_id: id,
+      success: true,
+      event_data: {
+        source_page: "DiagramEditorPage",
+        sharing: updated.sharing,
+        image_public: updated.image_public,
+      },
+    });
   };
 
   const ensureDraftExists = async (): Promise<string> => {
@@ -696,10 +697,17 @@ const DiagramEditorPage = () => {
         summary: summary ?? "",
         short_alt: shortAlt ?? "",
         title: title ?? "",
+        flowchart_type: diagramType,
         image_data_url: imgContent ?? null,
         image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
+        // Chosen on the Create page; without it the record is created private.
+        sharing,
+        image_public: imagePublic,
       },
     });
+    localStorage.removeItem("pendingSharing");
+    localStorage.removeItem("pendingImagePublic");
+    localStorage.removeItem("pendingType");
 
     setActiveFlowchartId(newId);
     localStorage.setItem("activeFlowchartId", newId);
@@ -708,8 +716,8 @@ const DiagramEditorPage = () => {
     return newId;
   };
 
-  const saveToDatabase = async () => {
-    if (!flowchartData) return;
+  const saveToDatabase = async (): Promise<boolean> => {
+    if (!flowchartData) return false;
 
     logResearchEvent({
   event_type: "Save_Clicked",
@@ -725,25 +733,56 @@ const DiagramEditorPage = () => {
 });
     setIsLoading(true);
     setSaveStatus("");
+    let didSave = false;
 
     try {
-      const id = await ensureDraftExists();
-
-      const updated = await apiFetch<{
+      let id: string;
+      let updated: {
         is_published?: boolean;
         public_slug?: string | null;
         published_at?: string | null;
-      }>(`/flowcharts/${encodeURIComponent(id)}`, {
-        method: "PUT",
-        json: {
-          json_data: flowchartData,
-          summary: summary ?? "",
-          short_alt: shortAlt ?? "",
-          title: title ?? "",
-          image_data_url: imgContent ?? null,
-          image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
-        },
-      });
+      };
+
+      if (guest) {
+        // Try-it: one public image kept against this browser's token.
+        const saved = await guestFetch<{
+          flowchart_id: string;
+          is_published?: boolean;
+          public_slug?: string | null;
+          published_at?: string | null;
+        }>("/guest/image", {
+          method: "PUT",
+          json: {
+            json_data: flowchartData,
+            summary: summary ?? "",
+            short_alt: shortAlt ?? "",
+            title: title ?? "",
+            flowchart_type: diagramType,
+          },
+        });
+        id = saved.flowchart_id;
+        updated = saved;
+        setActiveFlowchartId(saved.flowchart_id);
+        setSharing("public");
+      } else {
+        id = await ensureDraftExists();
+        updated = await apiFetch<{
+          is_published?: boolean;
+          public_slug?: string | null;
+          published_at?: string | null;
+        }>(`/flowcharts/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          json: {
+            json_data: flowchartData,
+            summary: summary ?? "",
+            short_alt: shortAlt ?? "",
+            title: title ?? "",
+            flowchart_type: diagramType,
+            image_data_url: imgContent ?? null,
+            image_mime: localStorage.getItem("latestDiagramImageMime") ?? null,
+          },
+        });
+      }
 
       setIsPublished(!!updated.is_published);
       setPublicSlug(updated.public_slug ?? null);
@@ -758,6 +797,7 @@ const DiagramEditorPage = () => {
       setOriginalFlowchart(flowchartData);
 
       setSaveStatus(`Saved ${id}`);
+      didSave = true;
 
       logResearchEvent({
           event_type: "Save_Succeeded",
@@ -787,9 +827,34 @@ const DiagramEditorPage = () => {
     } finally {
       setIsLoading(false);
     }
+    return didSave;
   };
 
   // Persist an automatic generation, so alt text isn't lost when the page is reloaded.
+  // Autosave: once an image has been saved, edits are written a couple of seconds after you stop.
+  // A failed save is not retried until something changes again, so an offline tab does not loop.
+  const autosaveBlockedRef = useRef(false);
+  useEffect(() => {
+    autosaveBlockedRef.current = false;
+  }, [flowchartData, shortAlt, summary, title, diagramType, mermaidText]);
+
+  // In Markdown mode, text that does not read cleanly is not saved: the preview still shows the last
+  // good diagram, and saving it (or a half-typed version with lines dropped) would be misleading.
+  const markdownUnreadable =
+    editorMode === "mermaid" &&
+    (markdownIssues.error !== null || markdownIssues.warnings.length > 0);
+
+  useEffect(() => {
+    if (!isDirty || !activeFlowchartId || !flowchartData || isLoading) return;
+    if (autosaveBlockedRef.current || markdownUnreadable) return;
+    const t = window.setTimeout(async () => {
+      const ok = await saveToDatabase();
+      if (!ok) autosaveBlockedRef.current = true;
+    }, 2000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDirty, activeFlowchartId, flowchartData, shortAlt, summary, title, diagramType, mermaidText, isLoading, markdownUnreadable]);
+
   useEffect(() => {
     if (!autoSavePending) return;
     setAutoSavePending(false);
@@ -797,21 +862,13 @@ const DiagramEditorPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSavePending]);
 
-  const handleReUpload = () => navigate("/upload");
-  const handleStartOver = () => {
-    localStorage.removeItem("latestDiagramJSON");
-    localStorage.removeItem("latestDiagramImage");
-    localStorage.removeItem("latestSummary");
-    localStorage.removeItem("latestShortAlt");
-    localStorage.removeItem("latestMermaidCode");
-    navigate("/upload");
-  };
+  const handleReUpload = () => navigate("/create");
 
   return (
     <div className="diagram-page">
       <div className="diagram-shell">
         <main className="diagram-main" aria-labelledby="diagram-editor-page-heading">
-          <h1 id="diagram-editor-page-heading">Diagram editor</h1>
+          <h1 id="diagram-editor-page-heading">STEM image editor</h1>
 
           
 
@@ -820,35 +877,19 @@ const DiagramEditorPage = () => {
             className="visual-editor-section"
           >
             <EditorToolbar
+              guest={guest}
               hasImage={!!imgContent}
               onViewImage={() => setShowImage(true)}
               onReupload={handleReUpload}
-              onStartOver={handleStartOver}
-              onOpenAltText={() => setIsAccessibilityEditorOpen(true)}
-              hasAltText={shortAlt.trim().length > 0}
               onSave={saveToDatabase}
               isSaving={isLoading}
               disableSave={!flowchartData}
-              onExport={() => {
-                logResearchEvent({
-                  event_type: "Export_Clicked",
-                  editor_mode: editorMode,
-                  flowchart_id: activeFlowchartId ?? undefined,
-                  success: true,
-                  event_data: {
-                    source_page: "DiagramEditorPage",
-                    is_dirty: isDirty,
-                    has_short_alt: !!shortAlt,
-                    has_long_description: !!summary,
-                    node_count: flowchartData?.nodes?.length ?? 0,
-                    edge_count: flowchartData?.edges?.length ?? 0,
-                  },
-                });
-
-                setShowPermalink(true);
-              }}
               flowchartId={activeFlowchartId}
               isPublished={isPublished}
+              sharing={sharing}
+              imagePublic={imagePublic}
+              publicPath={isPublished && publicSlug ? `/p/${publicSlug}` : null}
+              onSharingSave={saveSharing}
               isDirty={isDirty}
               editorMode={editorMode}
               onEditorModeChange={(nextMode) => {
@@ -868,13 +909,101 @@ const DiagramEditorPage = () => {
               }}
             />
 
+            {typeProblems.length > 0 && (
+              <div className="summary-warning" role="status">
+                <strong>This does not look like a {diagramType === "bt" ? "binary tree" : diagramType === "ll" ? "linked list" : diagramType === "2arr" ? "2D array" : diagramType}:</strong>
+                <ul>
+                  {typeProblems.map((p) => (
+                    <li key={p}>{p}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <AccessibilityPanel
-  title={title}
-  shortAlt={shortAlt}
-  longDescriptionSections={longDescriptionSections}
-  summaryStale={summaryStale}
-  onOpenAccessibilityEditor={() => setIsAccessibilityEditorOpen(true)}
-/>
+              title={title}
+              shortAlt={shortAlt}
+              longDescriptionSections={longDescriptionSections}
+              summaryStale={summaryStale}
+              expanded={isAccessibilityEditorOpen}
+              onToggle={setIsAccessibilityEditorOpen}
+            >
+              <ImageTypeSelect
+                value={diagramType}
+                onChange={(next) => {
+                  setDiagramType(next);
+                  setIsDirty(true);
+                }}
+              />
+              {imgContent && sharing !== "private" && (
+                <label className="image-share">
+                  <input
+                    type="checkbox"
+                    checked={imagePublic}
+                    onChange={(e) =>
+                      void saveSharing({ sharing, imagePublic: e.target.checked }).catch((err) =>
+                        setSaveStatus(err?.message || "Could not update sharing.")
+                      )
+                    }
+                  />
+                  <span>
+                    Show the source image on the shared page
+                    <span className="image-type__hint">
+                      {" "}
+                      — Check if you want to share the source image alongside the accessible version
+                      (and have the right to do so).
+                    </span>
+                  </span>
+                </label>
+              )}
+              <AccessibilityEditorModal
+                inline
+                isOpen={isAccessibilityEditorOpen}
+                onClose={() => setIsAccessibilityEditorOpen(false)}
+                title={title}
+                onTitleChange={(next: string) => {
+                  setTitle(next);
+                  localStorage.setItem("latestTitle", next);
+                  setIsDirty(true);
+                }}
+                shortAlt={shortAlt}
+                onShortAltChange={(next: string) => {
+                  setAltEdited(true);
+                  setShortAlt(next);
+                  localStorage.setItem("latestShortAlt", next);
+                  setIsDirty(true);
+                }}
+                longDescriptionSections={longDescriptionSections}
+                onLongDescriptionSectionChange={(k, t) => {
+                  setDescEdited(true);
+                  handleLongDescriptionSectionChange(k, t);
+                }}
+                onLongDescriptionSectionToggle={(k, inc) => {
+                  setDescEdited(true);
+                  handleLongDescriptionSectionToggle(k, inc);
+                }}
+                altEdited={altEdited}
+                descEdited={descEdited}
+                summaryStale={summaryStale}
+                onRegenerate={describeWithoutAI}
+                imageDataUrl={imgContent}
+                flowchartData={flowchartData}
+              />
+            </AccessibilityPanel>
+
+            {flowchartData && (
+              <ShareToolbar
+                title={title}
+                shortAlt={shortAlt}
+                summary={summary}
+                json={flowchartData}
+                publicUrl={
+                  isPublished && publicSlug
+                    ? `${window.location.origin}/p/${encodeURIComponent(publicSlug)}`
+                    : null
+                }
+              />
+            )}
 
             <div
   className="react-flow-wrapper"
@@ -904,37 +1033,89 @@ const DiagramEditorPage = () => {
       </ReactFlowProvider>
     </div>
   ) : (
-    <div className="react-flow-canvas-host">
-      <div className="mermaid-editor-panel">
-        <label htmlFor="mermaid-editor-textarea" className="sr-only">
-          Mermaid diagram code
+    <div className="markdown-split">
+      <div className="mermaid-editor-panel markdown-split__text">
+        <label htmlFor="mermaid-editor-textarea" className="markdown-split__label">
+          Markdown (Mermaid)
         </label>
 
         <textarea
-        ref={mermaidTextareaRef}
-        id="mermaid-editor-textarea"
-        value={mermaidText}
-        onChange={(e) => {
-          setMermaidText(e.target.value);
-          setIsDirty(true);
-        }}
-        rows={20}
-        spellCheck={false}
-        className="mermaid-editor-panel__textarea"
-        placeholder={`flowchart TD
+          ref={mermaidTextareaRef}
+          id="mermaid-editor-textarea"
+          value={mermaidText}
+          onChange={(e) => {
+            markdownTouchedRef.current = true;
+            setMermaidText(e.target.value);
+            setIsDirty(true);
+          }}
+          rows={20}
+          spellCheck={false}
+          className="mermaid-editor-panel__textarea"
+          aria-describedby="markdown-help markdown-layout-note"
+          placeholder={`flowchart TD
       A[Start] --> B[Next step]`}
-      />
+        />
+
+        <p id="markdown-help" className="markdown-split__help">
+          Write the STEM image as Mermaid text; the preview updates as you type.{" "}
+          <a
+            href="https://mermaid.js.org/syntax/flowchart.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Mermaid syntax<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          . Arrays use <code>block-beta</code>.
+        </p>
+        <p id="markdown-layout-note" className="markdown-split__help">
+          Typing here lays the diagram out again, so positions you set by dragging in the Visual
+          editor are replaced. Switching tabs without typing keeps them.
+        </p>
 
         <div className="mermaid-editor-panel__actions">
           <button
             type="button"
-            className="canvas-toolbar__btn canvas-toolbar__btn--primary"
-            onClick={handleApplyMermaid}
-            disabled={!mermaidText.trim() || isLoading}
+            className="canvas-toolbar__btn"
+            onClick={() => {
+              markdownTouchedRef.current = true;
+              setMermaidText(MARKDOWN_EXAMPLES[diagramType] ?? MARKDOWN_EXAMPLES.flowchart);
+              setIsDirty(true);
+            }}
           >
-            {isLoading ? "Applying…" : "Apply Mermaid to diagram"}
+            Insert example
           </button>
         </div>
+
+        {markdownIssues.error && (
+          <p className="markdown-split__error" role="alert">
+            {markdownIssues.error}
+          </p>
+        )}
+        {markdownUnreadable && isDirty && !!activeFlowchartId && (
+          <p className="markdown-split__help" role="status">
+            Not saved yet: some of this text can’t be read, so changes are held until it can.
+          </p>
+        )}
+        {markdownIssues.warnings.length > 0 && (
+          <ul className="markdown-split__warnings" aria-label="Lines that could not be read">
+            {markdownIssues.warnings.slice(0, 5).map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="markdown-split__preview">
+        <p className="markdown-split__count" role="status" aria-live="polite">
+          {flowchartData
+            ? `${flowchartData.nodes.length} ${flowchartData.nodes.length === 1 ? "node" : "nodes"}, ${flowchartData.edges.length} ${flowchartData.edges.length === 1 ? "edge" : "edges"}`
+            : ""}
+        </p>
+        {flowchartData && flowchartData.nodes.length > 0 ? (
+          <FlowchartViewer flowchartData={flowchartData} height={420} showMiniMap={false} />
+        ) : (
+          <p className="markdown-split__empty">Nothing to show yet.</p>
+        )}
       </div>
     </div>
   )}
@@ -942,59 +1123,7 @@ const DiagramEditorPage = () => {
           </section>
         </main>
 
-        <SummaryJobStatus
-          isGenerating={isGeneratingSummary}
-          jobId={summaryJobId}
-          error={summaryJobError}
-        />
-
        
-       <AccessibilityEditorModal
-  isOpen={isAccessibilityEditorOpen}
-  onClose={() => setIsAccessibilityEditorOpen(false)}
-  title={title}
-  onTitleChange={(next: string) => {
-    setTitle(next);
-    localStorage.setItem("latestTitle", next);
-    setIsDirty(true);
-  }}
-  shortAlt={shortAlt}
-  onShortAltChange={(next: string) => {
-    setShortAlt(next);
-    localStorage.setItem("latestShortAlt", next);
-    setIsDirty(true);
-  }}
-  longDescriptionSections={longDescriptionSections}
-  onLongDescriptionSectionChange={handleLongDescriptionSectionChange}
-  onLongDescriptionSectionToggle={handleLongDescriptionSectionToggle}
-  summaryStale={summaryStale}
-  onRegenerate={() => flowchartData && generateSummary(flowchartData)}
-  isGenerating={isGeneratingSummary}
-  imageDataUrl={imgContent}
-  flowchartData={flowchartData}
-/>
-
-        {showPermalink && flowchartData && (
-          <ExportAccessibleRepsModal
-            isOpen={showPermalink}
-            onClose={() => setShowPermalink(false)}
-            flowchartId={activeFlowchartId}
-            json={flowchartData}
-            shortAlt={shortAlt}
-            summary={summary}
-            isPublished={isPublished}
-            publicSlug={publicSlug}
-            isDirty={isDirty}
-            onRequestSave={saveToDatabase}
-            onPublishedChange={(next) => {
-              setIsPublished(next.is_published);
-              setPublicSlug(next.public_slug);
-              setPublishedAt(next.published_at ?? null);
-            }}
-           title={title}
-           imageUrl={null}
-          />
-        )}
 
         {showImage && imgContent && (
           <div
@@ -1018,7 +1147,7 @@ const DiagramEditorPage = () => {
                 </button>
               </div>
               <div className="image-overlay__body">
-                <img src={imgContent} alt="Uploaded flowchart" />
+                <img src={imgContent} alt="Uploaded STEM image" />
               </div>
             </div>
           </div>

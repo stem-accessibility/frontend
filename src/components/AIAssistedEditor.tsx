@@ -13,11 +13,11 @@ const AIAssistedEditor: React.FC = () => {
 
   return (
     <div>
-      <h3>AI Assisted Flowchart Creation</h3>
+      <h3>AI-assisted STEM image creation</h3>
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe your flowchart..."
+        placeholder="Describe your STEM image..."
         rows={6}
         style={{ width: '100%' }}
       />

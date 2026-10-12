@@ -38,13 +38,13 @@ const PublicFlowchartJsonPage: React.FC = () => {
       try {
         setError(null);
         const res = await fetch(`${API_URL}/p/${encodeURIComponent(public_slug)}`);
-        if (!res.ok) throw new Error("Flowchart not found");
+        if (!res.ok) throw new Error("STEM image not found");
         const payload: PublicFlowchartResponse = await res.json();
         if ((payload as any).error) throw new Error((payload as any).error);
         setData(payload);
       } catch (e: any) {
         console.error(e);
-        setError(e?.message || "Failed to load published flowchart JSON");
+        setError(e?.message || "Failed to load published STEM image JSON");
       }
     })();
   }, [public_slug, API_URL]);
@@ -71,9 +71,9 @@ const PublicFlowchartJsonPage: React.FC = () => {
       }}
     >
       <div>
-        <h2 style={{ margin: 0 }}>Published Flowchart JSON</h2>
+        <h2 style={{ margin: 0 }}>Published STEM image JSON</h2>
         <div style={{ marginTop: 6 }}>
-          <Link to={`/p/${public_slug}`}>Back to published flowchart</Link>
+          <Link to={`/p/${public_slug}`}>Back to published STEM image</Link>
         </div>
       </div>
 
@@ -88,17 +88,17 @@ const PublicFlowchartJsonPage: React.FC = () => {
     </div>
 
     <FlowchartJsonViewer
-      title="Published Flowchart JSON"
+      title="Published STEM image JSON"
       primaryIdLabel="Public slug"
       primaryIdValue={public_slug}
-      backLabel="Back to published flowchart"
+      backLabel="Back to published STEM image"
       backTo={`/p/${public_slug}`}
       jsonValue={jsonValue}
       defaultFileBase={`published-flowchart-${public_slug}`}
       copyItems={[
         { label: "URL (no /json)", value: contentUrl },
         { label: "JSON URL", value: jsonUrl },
-        ...(data.flowchart_id ? [{ label: "Private Flowchart ID", value: data.flowchart_id }] : []),
+        ...(data.flowchart_id ? [{ label: "Private STEM image ID", value: data.flowchart_id }] : []),
       ]}
     />
   </div>

@@ -88,3 +88,15 @@
   background: var(--white);
 }
 
+
+/* Header buttons (Create, Log out) share one size and style */
+.app-header .btn {
+  font-size: 0.875rem;
+  padding: 0.45rem 0.9rem;
+  text-decoration: none;
+}
+
+/* Narrow windows: let the header wrap instead of pushing the page wider than the screen */
+.app-header__inner { flex-wrap: wrap; }
+.app-header__left, .app-header__right { flex-wrap: wrap; min-width: 0; }
+.user-chip { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

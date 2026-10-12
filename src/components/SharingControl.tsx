@@ -1,0 +1,194 @@
+import { useId, useState } from "react";
+import { IMAGE_SHARING_HELP, SHARING_OPTIONS, type Sharing } from "../lib/sharing";
+import "./styles/SharingControl.css";
+
+type Props = {
+  sharing: Sharing;
+  imagePublic: boolean;
+  /** Whether there is an uploaded source image to share. */
+  hasImage: boolean;
+  /** Save the new setting; reject to show an error and keep the old value. */
+  onSave: (next: { sharing: Sharing; imagePublic: boolean }) => Promise<void>;
+  /** A short note shown under the control, e.g. "Saved with the next save". */
+  hint?: string;
+  disabled?: boolean;
+  /** Smaller layout for toolbars and cards (no per-option description). */
+  compact?: boolean;
+  /** Page link to show when the image is shared (path such as /p/abc). */
+  publicPath?: string | null;
+  /** Show the "source image" checkbox here (the editor shows it elsewhere). Default true. */
+  showImageOption?: boolean;
+  /** Text of the copy button. Default "Copy link". */
+  copyLabel?: string;
+  /** Show "Open shared page" next to it. Default true. */
+  showOpenLink?: boolean;
+  /** Keep the copy button visible (disabled, with a reason) when there is no shared page yet. */
+  alwaysShowCopy?: boolean;
+  /** Text of the link that opens the shared page. Default "Open shared page". */
+  openLabel?: string;
+  /** Where "Open" goes when nothing is shared yet (the owner's own view of the page). */
+  ownerPath?: string;
+  /** Hide the visible "Who can see it" label (it stays available to screen readers). */
+  hideLabel?: boolean;
+};
+
+export default function SharingControl({
+  sharing,
+  imagePublic,
+  hasImage,
+  onSave,
+  hint,
+  disabled,
+  compact,
+  publicPath,
+  showImageOption = true,
+  copyLabel = "Copy link",
+  showOpenLink = true,
+  alwaysShowCopy = false,
+  hideLabel = false,
+  openLabel = "Open shared page",
+  ownerPath,
+}: Props) {
+  const id = useId();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+
+  async function commit(next: { sharing: Sharing; imagePublic: boolean }) {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await onSave(next);
+      setMessage({ kind: "ok", text: "Saved." });
+    } catch (e) {
+      setMessage({
+        kind: "error",
+        text: `Could not update sharing: ${e instanceof Error ? e.message : "try again"}`,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const current = SHARING_OPTIONS.find((o) => o.value === sharing) ?? SHARING_OPTIONS[2];
+  const showImage = showImageOption && hasImage && sharing !== "private";
+
+  return (
+    <div className={compact ? "sharing sharing--compact" : "sharing"}>
+      <div className="sharing__row">
+        <label
+          className={hideLabel ? "sharing__label sr-only" : "sharing__label"}
+          htmlFor={`${id}-select`}
+        >
+          Who can see it
+        </label>
+        <select
+          id={`${id}-select`}
+          className="sharing__select"
+          value={sharing}
+          disabled={disabled || busy}
+          aria-describedby={compact ? undefined : `${id}-help`}
+          onChange={(e) => commit({ sharing: e.target.value as Sharing, imagePublic })}
+        >
+          {SHARING_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {!compact && (
+        <p id={`${id}-help`} className="sharing__help">
+          {current.help}
+        </p>
+      )}
+
+      {showImage && (
+        <label className="sharing__check">
+          <input
+            type="checkbox"
+            checked={imagePublic}
+            disabled={disabled || busy}
+            onChange={(e) => commit({ sharing, imagePublic: e.target.checked })}
+          />
+          <span>
+            Show the source image on the shared page
+            {!compact && <span className="sharing__help"> — {IMAGE_SHARING_HELP}</span>}
+          </span>
+        </label>
+      )}
+
+      {ownerPath && !(publicPath && sharing !== "private") && (
+        <div className="sharing__links">
+          <a className="sharing__copy sharing__open" href={ownerPath}>
+            {openLabel}
+            <span className="sr-only"> (only you can see it)</span>
+          </a>
+        </div>
+      )}
+
+      {alwaysShowCopy && !(publicPath && sharing !== "private") && (
+        <div className="sharing__links">
+          <button
+            type="button"
+            className="sharing__copy"
+            disabled
+            title="Choose who can see it, and save, to get a permalink."
+            aria-describedby={`${id}-nolink`}
+          >
+            {copyLabel}
+          </button>
+          <span id={`${id}-nolink`} className="sr-only">
+            Not available yet: this STEM image is private or not saved.
+          </span>
+        </div>
+      )}
+
+      {publicPath && sharing !== "private" && (
+        <div className="sharing__links">
+          {!compact && (
+            <code className="sharing__url" id={`${id}-url`}>
+              {`${window.location.origin}${publicPath}`}
+            </code>
+          )}
+          <button
+            type="button"
+            className="sharing__copy"
+            aria-describedby={compact ? undefined : `${id}-url`}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
+                setMessage({ kind: "ok", text: `${copyLabel.replace(/^Copy /, "")[0].toUpperCase()}${copyLabel.replace(/^Copy /, "").slice(1)} copied.` });
+              } catch {
+                setMessage({ kind: "error", text: "Could not copy. Select the link and copy it." });
+              }
+            }}
+          >
+            {copyLabel}
+          </button>
+          {showOpenLink && (
+            <a
+              className={openLabel === "Open shared page" ? "sharing__link" : "sharing__copy sharing__open"}
+              href={publicPath}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {openLabel}
+              <span className="sr-only"> shared page (opens in a new tab)</span>
+            </a>
+          )}
+        </div>
+      )}
+
+      {hint && <p className="sharing__help">{hint}</p>}
+
+      <p
+        className={message?.kind === "error" ? "sharing__msg sharing__msg--error" : "sharing__msg"}
+        role={message?.kind === "error" ? "alert" : "status"}
+        aria-live="polite"
+      >
+        {message?.text ?? ""}
+      </p>
+    </div>
+  );
+}

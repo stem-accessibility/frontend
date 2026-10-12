@@ -115,3 +115,8 @@
   background: #0b2d2e;
   border-color: #0b2d2e;
 }
+
+.site-footer__credit {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+}

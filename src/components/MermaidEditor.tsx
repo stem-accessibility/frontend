@@ -6,7 +6,7 @@ const MermaidEditor: React.FC = () => {
 
   return (
     <div>
-      <h3>Mermaid Diagram Editor</h3>
+      <h3>Mermaid STEM Image Editor</h3>
       <textarea
         value={code}
         onChange={(e) => setCode(e.target.value)}

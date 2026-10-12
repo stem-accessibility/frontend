@@ -4,9 +4,9 @@ import { apiFetch } from "../lib/api";
 import FlowchartCard, { type FlowchartRow } from "../components/dashboard/FlowchartCard";
 import DashboardToolbar from "../components/dashboard/DashboardToolbar";
 import "../pages/styles/Dashboard.css";
-import ExportAccessibleRepsModal from "../components/access-reps/ExportAccessibleRepsModal";
 
 import { logResearchEvent } from "../lib/logResearchEvent";
+import type { Sharing } from "../lib/sharing";
 type StatusKind = "info" | "error";
 
 function getErrorMessage(err: unknown) {
@@ -30,10 +30,19 @@ export default function Dashboard() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
-  const [_exportFlowchartId, setExportFlowchartId] = useState<string | null>(null);
-const [exportFlowchart, setExportFlowchart] = useState<any | null>(null);
-const [isExportOpen, setIsExportOpen] = useState(false);
-const [isLoadingExport, setIsLoadingExport] = useState(false);
+
+  const [claimedNotice, setClaimedNotice] = useState(false);
+  // Tell people their try-it image came with them.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("guestClaimed")) {
+        sessionStorage.removeItem("guestClaimed");
+        setClaimedNotice(true);
+      }
+    } catch {
+      /* optional */
+    }
+  }, []);
 
   // Fetch data
   useEffect(() => {
@@ -51,63 +60,6 @@ const [isLoadingExport, setIsLoadingExport] = useState(false);
     })();
   }, []);
 
-function parseFlowchartJsonData(value: unknown) {
-  if (!value) return null;
-  if (typeof value === "string") return JSON.parse(value);
-  if (typeof value === "object") return value;
-  return null;
-}
-
-const handleOpenExport = async (flowchartId: string) => {
-  logResearchEvent({
-  event_type: "Export_Clicked",
-  editor_mode: "dashboard",
-  flowchart_id: flowchartId,
-  success: true,
-  event_data: {
-    source_page: "Dashboard",
-    export_entry: "card_action",
-  },
-});
-  setIsLoadingExport(true);
-  setExportFlowchartId(flowchartId);
-  setExportFlowchart(null);
-
-
-  try {
-    const fc = await apiFetch<{
-      flowchart_id: string;
-      json_data: string | Record<string, unknown> | null;
-      summary: string;
-      short_alt?: string | null;
-      title?: string | null;
-      is_published?: boolean;
-      public_slug?: string | null;
-      published_at?: string | null;
-      visibility?: "public" | "private";
-    }>(`/get/${encodeURIComponent(flowchartId)}`);
-
-    setExportFlowchart({
-      flowchart_id: fc.flowchart_id,
-      json: parseFlowchartJsonData(fc.json_data),
-      summary: fc.summary ?? "",
-      shortAlt: fc.short_alt ?? "",
-      title: fc.title ?? "",
-      is_published: !!fc.is_published,
-      public_slug: fc.public_slug ?? null,
-      published_at: fc.published_at ?? null,
-      visibility: fc.visibility ?? "private",
-    });
-    setIsExportOpen(true);
-
-  } catch (error) {
-    console.error("Failed to load flowchart for export:", error);
-    setStatusKind("error");
-    setStatus("Failed to load flowchart for export.");
-  } finally {
-    setIsLoadingExport(false);
-  }
-};
   // Filter
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -140,41 +92,36 @@ const handleOpenExport = async (flowchartId: string) => {
 
  
 
-  async function onSetRepoVisibility(flowchartId: string, makePublic: boolean) {
-  try {
-    setStatusKind("info");
-    setStatus("Updating repo visibility…");
-
-    const visibility = makePublic ? "public" : "private";
-
+  async function onSharingChange(
+    flowchartId: string,
+    next: { sharing: Sharing; imagePublic: boolean }
+  ) {
     const updated = await apiFetch<{
-      flowchart_id: string;
+      sharing: Sharing;
+      image_public: boolean;
       visibility: "public" | "private";
-    }>(`/research/${flowchartId}`, {
-      method: "POST",
-      json: { visibility },
+      is_published: boolean;
+      public_slug: string | null;
+      published_at: string | null;
+    }>(`/flowcharts/${encodeURIComponent(flowchartId)}/sharing`, {
+      method: "PUT",
+      json: { sharing: next.sharing, image_public: next.imagePublic },
     });
-
     setRows((prev) =>
-      prev.map((r) =>
-        r.flowchart_id === updated.flowchart_id
-          ? { ...r, visibility: updated.visibility }
-          : r
-      )
+      prev.map((r) => (r.flowchart_id === flowchartId ? { ...r, ...updated } : r))
     );
-    setExportFlowchart((prev: any) =>
-      prev && prev.flowchart_id === updated.flowchart_id
-        ? { ...prev, visibility: updated.visibility }
-        : prev
-    );
-    
-    setStatus("Updated.");
-    window.setTimeout(() => setStatus(`Loaded ${rows.length}`), 1200);
-  } catch (e: unknown) {
-    setStatusKind("error");
-    setStatus(getErrorMessage(e));
+    logResearchEvent({
+      event_type: updated.sharing === "private" ? "Unpublish_Succeeded" : "Publish_Succeeded",
+      flowchart_id: flowchartId,
+      success: true,
+      event_data: {
+        source_page: "Dashboard",
+        sharing: updated.sharing,
+        image_public: updated.image_public,
+      },
+    });
   }
-}
+
 
 
  const handleDelete = async (flowchartId: string) => {
@@ -190,7 +137,7 @@ const handleOpenExport = async (flowchartId: string) => {
   });
 
   const confirmed = window.confirm(
-    "Delete this flowchart? This cannot be undone."
+    "Delete this STEM image? This cannot be undone."
   );
 
   if (!confirmed) {
@@ -268,7 +215,7 @@ const handleOpenExport = async (flowchartId: string) => {
       <div className="dashboard-top">
         <div className="dashboard-header">
           <div className="dashboard-heading">
-            <h1 className="dashboard-title">My Flowcharts</h1>
+            <h1 className="dashboard-title">My STEM images</h1>
 
             <div
               className={`dashboard-status ${statusKind === "error" ? "dashboard-status--error" : ""}`}
@@ -278,6 +225,11 @@ const handleOpenExport = async (flowchartId: string) => {
               {status}
               {filtered.length !== rows.length ? ` • Showing ${filtered.length}` : ""}
             </div>
+      {claimedNotice && (
+        <p className="dashboard-notice" role="status">
+          The STEM image you made while trying it is now in your account.
+        </p>
+      )}
           </div>
 
           <div className="dashboard-controls">
@@ -325,138 +277,16 @@ const handleOpenExport = async (flowchartId: string) => {
         />
       </div>
 
-      <div className="dashboard-grid" aria-label="Flowchart list">
-        {pageRows.length === 0 ? (
-          <div className="dashboard-empty" role="status" aria-live="polite">
-            No flowcharts match your filters.
-          </div>
-        ) : (
-          pageRows.map((r) => (
-            <FlowchartCard
-              key={r.flowchart_id}
-              row={r}
-              onOpenExport={handleOpenExport}
-
-              onDelete={handleDelete}
-              
-            />
-          ))
-        )}
+      <div className="dashboard-grid" aria-label="STEM image list">
+        {pageRows.map((r) => (
+          <FlowchartCard
+            key={r.flowchart_id}
+            row={r}
+            onDelete={handleDelete}
+            onSharingChange={onSharingChange}
+          />
+        ))}
       </div>
-
-      {isExportOpen && (
-  exportFlowchart && exportFlowchart.json ? (
-  <ExportAccessibleRepsModal
-    isOpen={isExportOpen}
-    onClose={() => {
-      setIsExportOpen(false);
-      setExportFlowchartId(null);
-      setExportFlowchart(null);
-    }}
-    flowchartId={exportFlowchart.flowchart_id}
-    json={exportFlowchart.json}
-    title={exportFlowchart.title}
-    shortAlt={exportFlowchart.shortAlt}
-    summary={exportFlowchart.summary}
-    imageUrl={
-      exportFlowchart.flowchart_id
-        ? `${window.location.origin}/get/${encodeURIComponent(exportFlowchart.flowchart_id)}/image`
-        : null
-    }
-    isPublished={exportFlowchart.is_published}
-    publicSlug={exportFlowchart.public_slug}
-    repoVisibility={exportFlowchart.visibility ?? "private"}
-    onSetRepoVisibility={(makePublic) =>
-    onSetRepoVisibility(exportFlowchart.flowchart_id, makePublic)
-  }
-    isDirty={false}
-    onRequestSave={() => {}}
-    onPublishedChange={(next) => {
-      setExportFlowchart((prev: any) =>
-        prev
-          ? {
-              ...prev,
-              is_published: next.is_published,
-              public_slug: next.public_slug,
-              published_at: next.published_at ?? null,
-            }
-          : prev
-      );
-
-      setRows((prevRows) =>
-        prevRows.map((row) =>
-          row.flowchart_id === exportFlowchart.flowchart_id
-            ? {
-                ...row,
-                is_published: next.is_published,
-                public_slug: next.public_slug,
-                published_at: next.published_at ?? null,
-              }
-            : row
-        )
-      );
-    }}
-  /> ) : (
-    <div className="modal-overlay" role="presentation">
-      <div
-        className="modal-card export-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="export-loading-title"
-      >
-        <div className="modal-header">
-          <h2 id="export-loading-title" className="modal-title">
-            Preparing exports…
-          </h2>
-          <button
-            type="button"
-            className="canvas-toolbar__btn"
-            onClick={() => {
-              setIsExportOpen(false);
-              setExportFlowchartId(null);
-              setExportFlowchart(null);
-            }}
-          >
-            Close
-          </button>
-        </div>
-
-        <div style={{ padding: 24 }}>
-          {isLoadingExport ? "Loading flowchart details…" : "Unable to load export data."}
-        </div>
-      </div>
-    </div>
-  )
-)}
-
-      <nav className="dashboard-pagination" aria-label="Pagination">
-        <div className="dashboard-pagination__meta">
-          Page {safePage} of {totalPages}
-        </div>
-
-        <div className="dashboard-pagination-buttons">
-          <button type="button" onClick={() => setPage(1)} disabled={safePage === 1}>
-            First
-          </button>
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-          >
-            Prev
-          </button>
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-          >
-            Next
-          </button>
-          <button type="button" onClick={() => setPage(totalPages)} disabled={safePage === totalPages}>
-            Last
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }

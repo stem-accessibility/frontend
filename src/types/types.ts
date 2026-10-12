@@ -36,6 +36,10 @@ export type PermalinkResponse = {
   json_data: FlowchartData;
   error?: string;
   short_alt: string;
+  flowchart_type?: string | null;
+  title?: string | null;
+  is_published?: boolean;
+  public_slug?: string | null;
   // NEW (from /get)
   has_image?: boolean;
   image_mime?: string | null;

@@ -100,7 +100,7 @@ export default function MermaidUploadEditor({
       onGenerate(flowchartData, value);
     } catch (e: any) {
       console.error(e);
-      setError(e?.message ?? "Failed to generate diagram from Mermaid.");
+      setError(e?.message ?? "Failed to generate a STEM image from Mermaid.");
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +121,7 @@ export default function MermaidUploadEditor({
       {error && <div style={{ fontSize: 12 }}>{error}</div>}
 
       <button onClick={handleGenerate} disabled={isEmpty || isLoading}>
-        {isLoading ? "Generating..." : "Generate diagram from Mermaid"}
+        {isLoading ? "Generating..." : "Generate STEM image from Mermaid"}
       </button>
     </div>
   );

@@ -75,3 +75,95 @@
     justify-content: flex-start;
   }
 }
+/* Accessibility region: a disclosure that holds the title, alt text, and long description editors */
+.accessibility-summary-bar { display: block; }
+.accessibility-summary-bar__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.accessibility-summary-bar__title { margin: 0; }
+.accessibility-summary-bar__toggle {
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand, #184c45);
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border-radius: var(--r-sm, 6px);
+}
+.accessibility-summary-bar__toggle:focus-visible { outline: 3px solid var(--brand, #184c45); outline-offset: 2px; }
+.accessibility-summary-bar__chevron { width: 1em; display: inline-block; }
+.accessibility-summary-bar__body { margin-top: 14px; display: grid; gap: 14px; }
+.accessibility-summary-bar__body[hidden] { display: none; }
+
+.image-type { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.image-type__label { font-weight: 600; }
+.image-type__select {
+  font: inherit;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border, rgba(0,0,0,0.3));
+  border-radius: var(--r-sm, 6px);
+  background: var(--white, #fff);
+}
+.image-type__hint { font-size: 0.9rem; color: var(--muted, #555); }
+
+/* Inline editor: the diagram is on the page, so no separate reference pane */
+.accessibility-inline .accessibility-modal-layout { display: block; }
+.accessibility-inline .accessibility-modal-body { padding: 0; overflow: visible; max-height: none; }
+
+.accessibility-edit-note { margin: 0 0 12px; font-size: 0.9rem; color: var(--muted, #555); }
+
+/* Markdown mode: text on the left, live preview on the right; stacked on narrow screens */
+.markdown-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 12px; }
+@media (max-width: 900px) { .markdown-split { grid-template-columns: minmax(0, 1fr); } }
+.markdown-split__text { display: grid; gap: 8px; align-content: start; }
+.markdown-split__label { font-weight: 700; }
+.markdown-split__help, .markdown-split__count, .markdown-split__empty { margin: 0; font-size: 0.9rem; color: var(--muted, #555); }
+.markdown-split__error { margin: 0; color: rgb(180, 30, 30); }
+.markdown-split__warnings { margin: 0; padding-left: 18px; font-size: 0.9rem; }
+.markdown-split__preview { display: grid; gap: 8px; align-content: start; min-width: 0; }
+
+.image-share { display: flex; gap: 8px; align-items: flex-start; font-size: 0.95rem; }
+.image-share input { margin-top: 4px; }
+
+/* Accessibility header: show a real glimpse of the text instead of "Added" */
+.accessibility-summary-chip--text { max-width: min(46ch, 100%); }
+.accessibility-summary-chip--text .accessibility-summary-chip__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.accessibility-field-status { margin: 4px 0 0; font-size: 0.9rem; font-weight: 600; color: var(--brand, #184c45); }
+.accessibility-summary-chip__label { white-space: nowrap; }
+
+/* The alt text glimpse takes the rest of the row; the browser cuts it with an ellipsis at the edge. */
+.accessibility-summary-bar__head { flex-wrap: nowrap; }
+.accessibility-summary-bar__stats { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.accessibility-summary-chip--grow { flex: 1 1 24ch; max-width: none; min-width: 0; }
+.accessibility-summary-chip--grow .accessibility-summary-chip__value { flex: 1 1 auto; }
+@media (max-width: 700px) { .accessibility-summary-bar__head { flex-wrap: wrap; } }
+
+/* ---- Resizing: nothing in the editor may force the page wider than the window ---- */
+.visual-editor-section,
+.visual-editor-section > *,
+.accessibility-summary-bar,
+.accessibility-summary-bar__head,
+.accessibility-summary-bar__body { min-width: 0; max-width: 100%; }
+.accessibility-summary-bar { overflow: hidden; }
+.accessibility-summary-chip { min-width: 0; max-width: 100%; overflow: hidden; }
+.accessibility-summary-chip--text { max-width: 100%; }
+.accessibility-summary-chip--text .accessibility-summary-chip__label { flex: 0 0 auto; }
+.accessibility-summary-chip--text .accessibility-summary-chip__value {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.accessibility-summary-bar__head { flex-wrap: wrap; }
+.accessibility-summary-bar__stats { flex: 1 1 260px; min-width: 0; }
+.accessibility-summary-chip--grow { flex: 1 1 180px; }
