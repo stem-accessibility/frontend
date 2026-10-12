@@ -7,10 +7,14 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Added
-- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (31 browser checks of Create, Markdown mode,
+- Tests: `npm test` (35 unit tests) and `npm run test:e2e` (45 browser checks of Create, Markdown mode,
   autosave, sharing, Browse).
 
 ### Changed
+- Export is gone. The shared page (and the owner's Preview) now has a bar at the top: Format (HTML,
+  Markdown, Text), Copy alt text, Copy long description, Download (.txt / .md / a standalone .html page),
+  Copy embed code (a figure that links back to the page), and a QR code. Dashboard cards lose the Export
+  button; "Open shared page" is now an **Open** button.
 - Toolbar on one row: sharing, Copy permalink, and Save sit in the title bar (Dashboard cards show just the
   menu, Copy permalink, and Open shared page). The source-image
   checkbox moved into the Accessibility region.

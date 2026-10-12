@@ -23,7 +23,6 @@ export type FlowchartRow = {
 
 type Props = {
   row: FlowchartRow;
-  onOpenExport: (flowchartId: string) => void;
   
   onDelete: (flowchartId: string) => void;
   onSharingChange: (
@@ -41,7 +40,6 @@ function formatDate(value?: string | null) {
 
 export default function FlowchartCard({
   row: r,
-  onOpenExport,
   onDelete,
   onSharingChange,
 }: Props) {
@@ -82,6 +80,7 @@ export default function FlowchartCard({
               compact
               hideLabel
               copyLabel="Copy permalink"
+              openLabel="Open"
               sharing={sharing}
               imagePublic={!!r.image_public}
               hasImage={r.has_image}
@@ -106,13 +105,6 @@ export default function FlowchartCard({
     Preview
   </Link>
 
-  <button
-  className="action action--primary"
-  type="button"
-  onClick={() => onOpenExport(r.flowchart_id)}
->
-  Export
-</button>
 
   <button
     className="action action--danger"

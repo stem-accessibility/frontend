@@ -24,6 +24,8 @@ type Props = {
   showOpenLink?: boolean;
   /** Keep the copy button visible (disabled, with a reason) when there is no shared page yet. */
   alwaysShowCopy?: boolean;
+  /** Text of the link that opens the shared page. Default "Open shared page". */
+  openLabel?: string;
   /** Hide the visible "Who can see it" label (it stays available to screen readers). */
   hideLabel?: boolean;
 };
@@ -42,6 +44,7 @@ export default function SharingControl({
   showOpenLink = true,
   alwaysShowCopy = false,
   hideLabel = false,
+  openLabel = "Open shared page",
 }: Props) {
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -152,8 +155,14 @@ export default function SharingControl({
             {copyLabel}
           </button>
           {showOpenLink && (
-            <a className="sharing__link" href={publicPath} target="_blank" rel="noopener noreferrer">
-              Open shared page<span className="sr-only"> (opens in a new tab)</span>
+            <a
+              className={openLabel === "Open shared page" ? "sharing__link" : "sharing__copy sharing__open"}
+              href={publicPath}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {openLabel}
+              <span className="sr-only"> shared page (opens in a new tab)</span>
             </a>
           )}
         </div>

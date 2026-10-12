@@ -31,3 +31,4 @@
 .sharing--compact .sharing__link { white-space: nowrap; }
 .sharing--compact .sharing__msg { margin: 0; white-space: nowrap; }
 .sharing__copy[disabled] { opacity: 0.5; cursor: not-allowed; }
+.sharing__open { text-decoration: none; display: inline-block; }

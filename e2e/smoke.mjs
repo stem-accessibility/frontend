@@ -219,6 +219,41 @@ try {
   const afterDash = await api("/get/" + dash.flowchart_id);
   check("Dashboard: sharing select changes who can see it", changed && afterDash.sharing === "public" && afterDash.is_published === true);
   check("Dashboard: card shows a graph sketch when there is no image", (await page.$$(".thumbnail__sketch")).length > 0);
+  const cardButtons = await text("article.flowchart-card .action, article.flowchart-card .sharing__copy");
+  check("Dashboard: no Export action; has Copy permalink and Open", !/Export/.test(cardButtons) && /Copy permalink/.test(cardButtons) && /\bOpen\b/.test(cardButtons), cardButtons.slice(0, 120));
+
+  // ---- Shared page: copy / format / download / QR
+  const shared = (await api("/get/" + dash.flowchart_id)).public_slug;
+  await page.goto(FRONTEND + "/p/" + shared, { waitUntil: "networkidle0" });
+  await sleep(800);
+  const toolbarText = await text(".share-toolbar .btn");
+  check("Share page: copy alt text, copy long description, download, embed", /Copy alt text/.test(toolbarText) && /Copy long description/.test(toolbarText) && /Download/.test(toolbarText) && /Copy embed code/.test(toolbarText), toolbarText);
+  check("Share page: format choices are HTML, Markdown, Text", (await text(".share-toolbar__radio")) === "HTML | Markdown | Text");
+  await page.evaluate(() => {
+    window.__copied = "";
+    Object.defineProperty(navigator, "clipboard", { value: { writeText: async (t) => { window.__copied = t; } }, configurable: true });
+  });
+  const clickShare = async (label) => {
+    const [h] = await page.$$(`xpath/.//section[contains(@class,'share-toolbar')]//button[normalize-space()='${label}']`);
+    await h.click();
+    await sleep(300);
+  };
+  await clickShare("Copy long description");
+  const asText = await page.evaluate(() => window.__copied);
+  check("Share page: Text format copies plain text", asText.length > 0 && !asText.includes("##"), asText.slice(0, 40));
+  const radios = await page.$$(".share-toolbar__radio input");
+  await radios[1].click();
+  await clickShare("Copy long description");
+  check("Share page: Markdown format keeps headings", (await page.evaluate(() => window.__copied)).includes("## "));
+  await radios[0].click();
+  await clickShare("Copy long description");
+  check("Share page: HTML format copies HTML", /<h2|<p/.test(await page.evaluate(() => window.__copied)));
+  await clickShare("Copy alt text");
+  check("Share page: HTML alt text is an alt attribute", (await page.evaluate(() => window.__copied)).startsWith('alt="'));
+  await clickShare("Copy embed code");
+  check("Share page: embed code links back to this page", (await page.evaluate(() => window.__copied)).includes("/p/" + shared));
+  check("Share page: has a QR code section", (await page.$(".share-toolbar__qr")) !== null);
+
 
   // ---- Browse
   await page.goto(FRONTEND + "/browse", { waitUntil: "networkidle0" });

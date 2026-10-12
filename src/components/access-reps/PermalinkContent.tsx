@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import RepresentationBrowser from './RepresentationBrowser';
+import ShareToolbar from './ShareToolbar';
 import { apiFetch } from '../../lib/api';
 
 import type { PermalinkResponse } from '../../types/types';
@@ -40,6 +41,18 @@ const PermalinkContent: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <ShareToolbar
+        title={data.title ?? ""}
+        shortAlt={data.short_alt ?? ""}
+        summary={data.summary ?? ""}
+        json={data.json_data}
+        publicUrl={
+          data.is_published && data.public_slug
+            ? `${window.location.origin}/p/${encodeURIComponent(data.public_slug)}`
+            : null
+        }
+      />
+
       <RepresentationBrowser
         data={data.json_data}
         diagramType={data.flowchart_type}
