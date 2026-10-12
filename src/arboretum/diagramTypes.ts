@@ -50,6 +50,13 @@ export function diagramTypeLabel(type: DiagramType): string {
   return DIAGRAM_TYPES.find((t) => t.value === type)?.label ?? "Flowchart";
 }
 
+/**
+ * Uploaded pictures are read into nodes and arrows, so only types that are drawn that way can start
+ * from an image. Arrays and 2D arrays are grids of values with no arrows; write those as text.
+ */
+export const supportsImageUpload = (type: DiagramType) =>
+  type === "flowchart" || type === "tree" || type === "bt" || type === "ll";
+
 export const isDataStructure = (type: DiagramType) => type !== "flowchart";
 export const isTreeType = (type: DiagramType) => type === "tree" || type === "bt";
 export const isArrayType = (type: DiagramType) => type === "arr" || type === "2arr";

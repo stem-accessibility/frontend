@@ -7,6 +7,9 @@ API contract name the matching backend release.
 ## [Unreleased]
 
 ### Changed
+- Create: **Upload image** is available only for types drawn with arrows (flowchart, tree, binary tree,
+  linked list). Array and 2D array are written as text; the page says why. The chosen image type is saved
+  with the upload.
 - Editor layout: the toolbar now has only View uploaded image, Visual/Mermaid, sharing, and Save.
   "Create a new STEM image", "Alt text", and Export are gone (Create is in the header, Export is on the
   Dashboard cards).

@@ -4,7 +4,11 @@ import { apiFetch, apiUpload } from "../lib/api";
 import type { FlowchartData } from "../types/types";
 import UploadJobStatus from "../components/upload/UploadJobStatus";
 import { logResearchEvent } from "../lib/logResearchEvent";
-import { DIAGRAM_TYPES, normalizeDiagramType } from "../arboretum/diagramTypes";
+import {
+  DIAGRAM_TYPES,
+  normalizeDiagramType,
+  supportsImageUpload,
+} from "../arboretum/diagramTypes";
 import type { DiagramType } from "../arboretum/diagramTypes";
 import {
   DEFAULT_SHARING,
@@ -62,6 +66,7 @@ export default function CreatePage() {
   const [jobId, setJobId] = useState<number | null>(null);
 
   const hasName = name.trim().length > 0;
+  const canUpload = supportsImageUpload(type);
   const whyId = `${id}-why`;
 
   function openMarkdown() {
@@ -210,7 +215,11 @@ export default function CreatePage() {
               id={`${id}-type`}
               className="create-select"
               value={type}
-              onChange={(e) => setType(normalizeDiagramType(e.target.value))}
+              onChange={(e) => {
+                const next = normalizeDiagramType(e.target.value);
+                setType(next);
+                if (!supportsImageUpload(next)) setShowUpload(false);
+              }}
               aria-describedby={`${id}-type-hint`}
             >
               {DIAGRAM_TYPES.map((t) => (
@@ -245,8 +254,8 @@ export default function CreatePage() {
             <button
               type="button"
               className="btn"
-              disabled={!hasName || busy}
-              aria-describedby={hasName ? undefined : whyId}
+              disabled={!hasName || !canUpload || busy}
+              aria-describedby={!hasName ? whyId : !canUpload ? `${id}-noupload` : undefined}
               aria-expanded={showUpload}
               onClick={() => setShowUpload((v) => !v)}
             >
@@ -278,8 +287,15 @@ export default function CreatePage() {
               Enter a name to enable these buttons.
             </p>
           )}
+          {!canUpload && (
+            <p id={`${id}-noupload`} className="create-why">
+              Uploading an image is available for flowcharts, trees, binary trees, and linked lists.
+              {` ${DIAGRAM_TYPES.find((t) => t.value === type)?.label ?? "This type"}`} images are
+              written as text: use the Markdown editor.
+            </p>
+          )}
 
-          {showUpload && (
+          {showUpload && canUpload && (
             <section className="create-panel" aria-label="Upload an image">
               <div className="create-field">
                 <label className="create-label" htmlFor={`${id}-file`}>
