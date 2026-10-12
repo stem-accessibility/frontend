@@ -125,6 +125,7 @@ export default function EditorToolbar({
             showImageOption={false}
             copyLabel="Copy permalink"
             showOpenLink={false}
+            alwaysShowCopy
           />
 
           {isDirty ? <span className="status-chip status-chip--warn">Unsaved changes</span> : null}

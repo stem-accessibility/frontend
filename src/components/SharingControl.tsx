@@ -22,6 +22,10 @@ type Props = {
   copyLabel?: string;
   /** Show "Open shared page" next to it. Default true. */
   showOpenLink?: boolean;
+  /** Keep the copy button visible (disabled, with a reason) when there is no shared page yet. */
+  alwaysShowCopy?: boolean;
+  /** Hide the visible "Who can see it" label (it stays available to screen readers). */
+  hideLabel?: boolean;
 };
 
 export default function SharingControl({
@@ -36,6 +40,8 @@ export default function SharingControl({
   showImageOption = true,
   copyLabel = "Copy link",
   showOpenLink = true,
+  alwaysShowCopy = false,
+  hideLabel = false,
 }: Props) {
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -63,7 +69,10 @@ export default function SharingControl({
   return (
     <div className={compact ? "sharing sharing--compact" : "sharing"}>
       <div className="sharing__row">
-        <label className="sharing__label" htmlFor={`${id}-select`}>
+        <label
+          className={hideLabel ? "sharing__label sr-only" : "sharing__label"}
+          htmlFor={`${id}-select`}
+        >
           Who can see it
         </label>
         <select
@@ -101,6 +110,23 @@ export default function SharingControl({
             {!compact && <span className="sharing__help"> — {IMAGE_SHARING_HELP}</span>}
           </span>
         </label>
+      )}
+
+      {alwaysShowCopy && !(publicPath && sharing !== "private") && (
+        <div className="sharing__links">
+          <button
+            type="button"
+            className="sharing__copy"
+            disabled
+            title="Choose who can see it, and save, to get a permalink."
+            aria-describedby={`${id}-nolink`}
+          >
+            {copyLabel}
+          </button>
+          <span id={`${id}-nolink`} className="sr-only">
+            Not available yet: this STEM image is private or not saved.
+          </span>
+        </div>
       )}
 
       {publicPath && sharing !== "private" && (

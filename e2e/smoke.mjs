@@ -180,6 +180,29 @@ try {
   const filled = await api("/get/" + bare.flowchart_id);
   check("Generated text: an image with none gets it, without AI, and it is saved", (filled.short_alt || "").length > 10 && (filled.summary || "").includes("## "), JSON.stringify({ a: (filled.short_alt || "").slice(0, 30) }));
 
+  // ---- Narrow windows: nothing may make the page wider than the window
+  for (const w of [900, 520, 380]) {
+    await page.setViewport({ width: w, height: 900 });
+    await page.goto(FRONTEND + "/editor/" + placed.flowchart_id, { waitUntil: "networkidle0" });
+    await sleep(600);
+    const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    check(`Resize: no horizontal overflow at ${w}px`, sw <= 1, `${sw}px too wide`);
+  }
+  await page.setViewport({ width: 1400, height: 1000 });
+
+  // ---- Copy permalink: present for a shared image, visible-but-disabled for a private one
+  await page.goto(FRONTEND + "/editor/" + placed.flowchart_id, { waitUntil: "networkidle0" }); // private
+  await sleep(800);
+  check("Permalink: private image shows a disabled Copy permalink", (await page.$eval(".canvas-toolbar .sharing__copy", (e) => e.disabled)) === true);
+  const pub = await make({ title: "Shared one", sharing: "public" });
+  await page.goto(FRONTEND + "/editor/" + pub.flowchart_id, { waitUntil: "networkidle0" });
+  await sleep(800);
+  check(
+    "Permalink: shared image has an enabled Copy permalink and no Open link in the editor",
+    (await page.$eval(".canvas-toolbar .sharing__copy", (e) => [e.disabled, e.textContent.trim()])).join() === "false,Copy permalink" &&
+      (await page.$(".canvas-toolbar .sharing__link")) === null
+  );
+
   // ---- Dashboard sharing control
   const dash = await make({ title: "Dash card", sharing: "private" });
   await page.goto(FRONTEND + "/dashboard", { waitUntil: "networkidle0" });

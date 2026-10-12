@@ -146,3 +146,24 @@
 .accessibility-summary-chip--grow { flex: 1 1 24ch; max-width: none; min-width: 0; }
 .accessibility-summary-chip--grow .accessibility-summary-chip__value { flex: 1 1 auto; }
 @media (max-width: 700px) { .accessibility-summary-bar__head { flex-wrap: wrap; } }
+
+/* ---- Resizing: nothing in the editor may force the page wider than the window ---- */
+.visual-editor-section,
+.visual-editor-section > *,
+.accessibility-summary-bar,
+.accessibility-summary-bar__head,
+.accessibility-summary-bar__body { min-width: 0; max-width: 100%; }
+.accessibility-summary-bar { overflow: hidden; }
+.accessibility-summary-chip { min-width: 0; max-width: 100%; overflow: hidden; }
+.accessibility-summary-chip--text { max-width: 100%; }
+.accessibility-summary-chip--text .accessibility-summary-chip__label { flex: 0 0 auto; }
+.accessibility-summary-chip--text .accessibility-summary-chip__value {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.accessibility-summary-bar__head { flex-wrap: wrap; }
+.accessibility-summary-bar__stats { flex: 1 1 260px; min-width: 0; }
+.accessibility-summary-chip--grow { flex: 1 1 180px; }

@@ -80,6 +80,8 @@ export default function FlowchartCard({
 
             <SharingControl
               compact
+              hideLabel
+              copyLabel="Copy permalink"
               sharing={sharing}
               imagePublic={!!r.image_public}
               hasImage={r.has_image}

@@ -1139,3 +1139,8 @@
   color: inherit;
   font: inherit;
 }
+
+/* Toolbar: wrap onto a second line instead of overflowing when the window is narrow */
+.canvas-toolbar { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.canvas-toolbar__group { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.markdown-split__text, .markdown-split__preview, .mermaid-editor-panel__textarea { min-width: 0; max-width: 100%; }
