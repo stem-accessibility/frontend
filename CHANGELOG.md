@@ -6,6 +6,14 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Changed
+- Editor layout: the toolbar now has only View uploaded image, Visual/Mermaid, sharing, and Save.
+  "Create a new STEM image", "Alt text", and Export are gone (Create is in the header, Export is on the
+  Dashboard cards).
+- The Accessibility section opens and closes in place and holds the image type, title, alt text, and long
+  description editors. The separate "Accessibility editor" dialog and "Open accessibility editor" button are
+  removed.
+
 ### Fixed
 - Dashboard cards and Browse show a small sketch of the graph when a STEM image has no uploaded picture
   (before: "No preview"). Browse cards also load through the public endpoints, so they work signed out.

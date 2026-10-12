@@ -75,3 +75,40 @@
     justify-content: flex-start;
   }
 }
+/* Accessibility region: a disclosure that holds the title, alt text, and long description editors */
+.accessibility-summary-bar { display: block; }
+.accessibility-summary-bar__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.accessibility-summary-bar__title { margin: 0; }
+.accessibility-summary-bar__toggle {
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand, #184c45);
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border-radius: var(--r-sm, 6px);
+}
+.accessibility-summary-bar__toggle:focus-visible { outline: 3px solid var(--brand, #184c45); outline-offset: 2px; }
+.accessibility-summary-bar__chevron { width: 1em; display: inline-block; }
+.accessibility-summary-bar__body { margin-top: 14px; display: grid; gap: 14px; }
+.accessibility-summary-bar__body[hidden] { display: none; }
+
+.image-type { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.image-type__label { font-weight: 600; }
+.image-type__select {
+  font: inherit;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border, rgba(0,0,0,0.3));
+  border-radius: var(--r-sm, 6px);
+  background: var(--white, #fff);
+}
+.image-type__hint { font-size: 0.9rem; color: var(--muted, #555); }
+
+/* Inline editor: the diagram is on the page, so no separate reference pane */
+.accessibility-inline .accessibility-modal-layout { display: block; }
+.accessibility-inline .accessibility-modal-body { padding: 0; overflow: visible; max-height: none; }

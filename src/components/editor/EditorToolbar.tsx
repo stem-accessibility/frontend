@@ -1,8 +1,6 @@
 // .mode-tab styles for the Visual / Markdown switch live in this file.
 import "../../pages/styles/DiagramUpload.css";
 import { useEffect, useState } from "react";
-import { DIAGRAM_TYPES } from "../../arboretum/diagramTypes";
-import type { DiagramType } from "../../arboretum/diagramTypes";
 import SharingControl from "../SharingControl";
 import type { Sharing } from "../../lib/sharing";
 export type EditorMode = "visual" | "mermaid";
@@ -10,19 +8,9 @@ type Props = {
   hasImage: boolean;
   onViewImage: () => void;
   onReupload: () => void;
-  onStartOver: () => void;
-
-  onOpenAltText: () => void;
-  hasAltText: boolean;
-
-  diagramType: DiagramType;
-  onDiagramTypeChange: (type: DiagramType) => void;
-
   onSave: () => void;
   isSaving: boolean;
   disableSave?: boolean;
-
-  onExport: () => void;
 
   flowchartId: string | null;
   isPublished: boolean;
@@ -41,15 +29,9 @@ type Props = {
 export default function EditorToolbar({
   hasImage,
   onViewImage,
-  onStartOver,
-  onOpenAltText,
-  hasAltText,
-  diagramType,
-  onDiagramTypeChange,
   onSave,
   isSaving,
   disableSave,
-  onExport,
   flowchartId,
   sharing,
   imagePublic,
@@ -81,9 +63,6 @@ export default function EditorToolbar({
         ? "Save changes"
         : "Save";
 
-  // Optional: nudge users to save before export/publish
-  const exportLabel = isDirty ? "Export (save first)" : "Export";
-
   return (
     <div className="canvas-toolbar" role="region" aria-label="Canvas actions">
       <div className="canvas-toolbar__group">
@@ -96,37 +75,6 @@ export default function EditorToolbar({
         >
           View uploaded image
         </button>
-
-        <button type="button" className="canvas-toolbar__btn" onClick={onStartOver}>
-          Create a new STEM image
-        </button>
-
-        <button
-          type="button"
-          className="canvas-toolbar__btn"
-          onClick={onOpenAltText}
-          aria-haspopup="dialog"
-        >
-          {hasAltText ? "Alt text" : "Alt text (missing)"}
-        </button>
-
-        <label className="canvas-toolbar__type">
-          <span>Image type</span>
-          <select
-            value={diagramType}
-            onChange={(e) => onDiagramTypeChange(e.target.value as DiagramType)}
-            aria-describedby="diagram-type-hint"
-          >
-            {DIAGRAM_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <span id="diagram-type-hint" className="sr-only">
-          {DIAGRAM_TYPES.find((t) => t.value === diagramType)?.hint}
-        </span>
       </div>
 
       <div className="canvas-toolbar__group" aria-label="Editor mode">
@@ -191,14 +139,6 @@ export default function EditorToolbar({
           disabled={!!disableSave || isSaving}
         >
           {saveLabel}
-        </button>
-
-        <button
-          type="button"
-          className="canvas-toolbar__btn"
-          onClick={onExport}
-        >
-          {exportLabel}
         </button>
       </div>
     </div>

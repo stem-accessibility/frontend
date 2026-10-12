@@ -10,6 +10,8 @@ import { logResearchEvent } from "../../lib/logResearchEvent";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  /** Render in the page (inside the Accessibility region) instead of as a dialog. */
+  inline?: boolean;
 
   title: string;
   onTitleChange: (next: string) => void;
@@ -40,6 +42,7 @@ type Props = {
 export default function AccessibilityEditorModal({
   isOpen,
   onClose,
+  inline = false,
   title,
   onTitleChange,
   shortAlt,
@@ -65,6 +68,8 @@ export default function AccessibilityEditorModal({
       },
     });
 
+    if (inline) return;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -76,46 +81,11 @@ export default function AccessibilityEditorModal({
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, inline]);
 
   if (!isOpen) return null;
 
-  return (
-    <div
-      className="accessibility-modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="accessibility-modal-title"
-      onClick={onClose}
-    >
-      <div
-        className="accessibility-modal-card"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="accessibility-modal-header">
-          <div>
-            <h2
-              id="accessibility-modal-title"
-              className="accessibility-modal-title"
-            >
-              Accessibility editor
-            </h2>
-            <p className="accessibility-modal-subtitle">
-              Refine the title, short alt text, and long description with the
-              diagram visible for reference.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="accessibility-modal-close"
-            onClick={onClose}
-            aria-label="Close accessibility editor"
-          >
-            ×
-          </button>
-        </div>
-
+  const content = (
         <div className="accessibility-modal-body">
           <div className="accessibility-modal-layout">
             <div className="accessibility-modal-authoring">
@@ -248,6 +218,7 @@ export default function AccessibilityEditorModal({
               </div>
             </div>
 
+            {!inline && (
             <div className="accessibility-modal-visual">
               <div className="accessibility-modal-visual__header">
                 <h3 className="accessibility-modal-section__title">
@@ -273,8 +244,50 @@ export default function AccessibilityEditorModal({
                 )}
               </div>
             </div>
+            )}
           </div>
         </div>
+  );
+
+  if (inline) return <div className="accessibility-inline">{content}</div>;
+
+  return (
+    <div
+      className="accessibility-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="accessibility-modal-title"
+      onClick={onClose}
+    >
+      <div
+        className="accessibility-modal-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="accessibility-modal-header">
+          <div>
+            <h2
+              id="accessibility-modal-title"
+              className="accessibility-modal-title"
+            >
+              Accessibility editor
+            </h2>
+            <p className="accessibility-modal-subtitle">
+              Refine the title, short alt text, and long description with the
+              diagram visible for reference.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="accessibility-modal-close"
+            onClick={onClose}
+            aria-label="Close accessibility editor"
+          >
+            ×
+          </button>
+        </div>
+
+        {content}
 
         <div className="accessibility-modal-footer">
           <button type="button" className="btn" onClick={onClose}>

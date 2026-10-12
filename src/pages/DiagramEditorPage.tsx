@@ -4,11 +4,11 @@ import "../pages/styles/DiagramEditorPage.css";
 import type { FlowchartData,NodeData, EdgeData  } from "../types/types";
 import { ReactFlowProvider } from "@xyflow/react";
 import { UnifiedFlowApp } from "../components/ReactFlow";
-import ExportAccessibleRepsModal from "../components/access-reps/ExportAccessibleRepsModal";
 import SummaryJobStatus from "../components/editor/SummaryJobStatus";
 import { apiFetch } from "../lib/api";
 import EditorToolbar, { type EditorMode } from "../components/editor/EditorToolbar";
 import AccessibilityPanel from "../components/editor/AccessibilityPanel";
+import ImageTypeSelect from "../components/editor/ImageTypeSelect";
 import dagre from "dagre";
 import { jsonToMermaid } from "../services/utils";
 import AccessibilityEditorModal from "../components/editor/AccessibilityEditorPanel";
@@ -144,7 +144,6 @@ const DiagramEditorPage = () => {
 
   const [summaryStale, setSummaryStale] = useState(false);
   const [diagramKey, setDiagramKey] = useState(0);
-  const [showPermalink, setShowPermalink] = useState(false);
 
   const [isPublished, setIsPublished] = useState(false);
   const [sharing, setSharing] = useState<Sharing>(() => {
@@ -907,14 +906,6 @@ const DiagramEditorPage = () => {
   }, [autoSavePending]);
 
   const handleReUpload = () => navigate("/create");
-  const handleStartOver = () => {
-    localStorage.removeItem("latestDiagramJSON");
-    localStorage.removeItem("latestDiagramImage");
-    localStorage.removeItem("latestSummary");
-    localStorage.removeItem("latestShortAlt");
-    localStorage.removeItem("latestMermaidCode");
-    navigate("/create");
-  };
 
   return (
     <div className="diagram-page">
@@ -932,35 +923,9 @@ const DiagramEditorPage = () => {
               hasImage={!!imgContent}
               onViewImage={() => setShowImage(true)}
               onReupload={handleReUpload}
-              onStartOver={handleStartOver}
-              onOpenAltText={() => setIsAccessibilityEditorOpen(true)}
-              hasAltText={shortAlt.trim().length > 0}
-              diagramType={diagramType}
-              onDiagramTypeChange={(next) => {
-                setDiagramType(next);
-                setIsDirty(true);
-              }}
               onSave={saveToDatabase}
               isSaving={isLoading}
               disableSave={!flowchartData}
-              onExport={() => {
-                logResearchEvent({
-                  event_type: "Export_Clicked",
-                  editor_mode: editorMode,
-                  flowchart_id: activeFlowchartId ?? undefined,
-                  success: true,
-                  event_data: {
-                    source_page: "DiagramEditorPage",
-                    is_dirty: isDirty,
-                    has_short_alt: !!shortAlt,
-                    has_long_description: !!summary,
-                    node_count: flowchartData?.nodes?.length ?? 0,
-                    edge_count: flowchartData?.edges?.length ?? 0,
-                  },
-                });
-
-                setShowPermalink(true);
-              }}
               flowchartId={activeFlowchartId}
               isPublished={isPublished}
               sharing={sharing}
@@ -998,12 +963,47 @@ const DiagramEditorPage = () => {
             )}
 
             <AccessibilityPanel
-  title={title}
-  shortAlt={shortAlt}
-  longDescriptionSections={longDescriptionSections}
-  summaryStale={summaryStale}
-  onOpenAccessibilityEditor={() => setIsAccessibilityEditorOpen(true)}
-/>
+              title={title}
+              shortAlt={shortAlt}
+              longDescriptionSections={longDescriptionSections}
+              summaryStale={summaryStale}
+              expanded={isAccessibilityEditorOpen}
+              onToggle={setIsAccessibilityEditorOpen}
+            >
+              <ImageTypeSelect
+                value={diagramType}
+                onChange={(next) => {
+                  setDiagramType(next);
+                  setIsDirty(true);
+                }}
+              />
+              <AccessibilityEditorModal
+                inline
+                isOpen={isAccessibilityEditorOpen}
+                onClose={() => setIsAccessibilityEditorOpen(false)}
+                title={title}
+                onTitleChange={(next: string) => {
+                  setTitle(next);
+                  localStorage.setItem("latestTitle", next);
+                  setIsDirty(true);
+                }}
+                shortAlt={shortAlt}
+                onShortAltChange={(next: string) => {
+                  setShortAlt(next);
+                  localStorage.setItem("latestShortAlt", next);
+                  setIsDirty(true);
+                }}
+                longDescriptionSections={longDescriptionSections}
+                onLongDescriptionSectionChange={handleLongDescriptionSectionChange}
+                onLongDescriptionSectionToggle={handleLongDescriptionSectionToggle}
+                summaryStale={summaryStale}
+                onRegenerate={() => flowchartData && generateSummary(flowchartData)}
+                onAutoDescribe={describeWithoutAI}
+                isGenerating={isGeneratingSummary}
+                imageDataUrl={imgContent}
+                flowchartData={flowchartData}
+              />
+            </AccessibilityPanel>
 
             <div
   className="react-flow-wrapper"
@@ -1078,53 +1078,6 @@ const DiagramEditorPage = () => {
         />
 
        
-       <AccessibilityEditorModal
-  isOpen={isAccessibilityEditorOpen}
-  onClose={() => setIsAccessibilityEditorOpen(false)}
-  title={title}
-  onTitleChange={(next: string) => {
-    setTitle(next);
-    localStorage.setItem("latestTitle", next);
-    setIsDirty(true);
-  }}
-  shortAlt={shortAlt}
-  onShortAltChange={(next: string) => {
-    setShortAlt(next);
-    localStorage.setItem("latestShortAlt", next);
-    setIsDirty(true);
-  }}
-  longDescriptionSections={longDescriptionSections}
-  onLongDescriptionSectionChange={handleLongDescriptionSectionChange}
-  onLongDescriptionSectionToggle={handleLongDescriptionSectionToggle}
-  summaryStale={summaryStale}
-  onRegenerate={() => flowchartData && generateSummary(flowchartData)}
-  onAutoDescribe={describeWithoutAI}
-  isGenerating={isGeneratingSummary}
-  imageDataUrl={imgContent}
-  flowchartData={flowchartData}
-/>
-
-        {showPermalink && flowchartData && (
-          <ExportAccessibleRepsModal
-            isOpen={showPermalink}
-            onClose={() => setShowPermalink(false)}
-            flowchartId={activeFlowchartId}
-            json={flowchartData}
-            shortAlt={shortAlt}
-            summary={summary}
-            isPublished={isPublished}
-            publicSlug={publicSlug}
-            isDirty={isDirty}
-            onRequestSave={saveToDatabase}
-            onPublishedChange={(next) => {
-              setIsPublished(next.is_published);
-              setPublicSlug(next.public_slug);
-              setPublishedAt(next.published_at ?? null);
-            }}
-           title={title}
-           imageUrl={null}
-          />
-        )}
 
         {showImage && imgContent && (
           <div
