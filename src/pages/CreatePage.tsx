@@ -55,6 +55,9 @@ export default function CreatePage() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState<DiagramType>("flowchart");
+  // "Chart" sits beside the image types in the menu but is not a DiagramType: a chart is data
+  // explored on the Charts page, not nodes and arrows, and it is not saved to the account yet.
+  const [isChart, setIsChart] = useState(false);
   const [sharing, setSharing] = useState<Sharing>(DEFAULT_SHARING);
 
   const [showUpload, setShowUpload] = useState(false);
@@ -111,6 +114,17 @@ export default function CreatePage() {
       event_data: { source_page: "CreatePage" },
     });
     navigate("/editor");
+  }
+
+  function openChart() {
+    logResearchEvent({
+      event_type: "Create_Chart",
+      editor_mode: "chart",
+      success: true,
+      event_data: { source_page: "CreatePage", has_name: hasName },
+    });
+    // The name becomes the chart's starting title; the Charts page reads it from router state.
+    navigate("/charts", { state: hasName ? { title: name.trim() } : undefined });
   }
 
   async function processImage() {
@@ -200,7 +214,9 @@ export default function CreatePage() {
       <div className="create-shell">
         <h1 className="create-title">Create a STEM image</h1>
         <p className="create-subtitle">
-          Name it, choose its type and who can see it, then upload an image or write it as text.
+          {isChart
+            ? "Name it, then explore data from a CSV file as a table, a navigable outline, and sound."
+            : "Name it, choose its type and who can see it, then upload an image or write it as text."}
         </p>
 
         <form
@@ -219,8 +235,8 @@ export default function CreatePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="off"
-              required
-              aria-describedby={hasName ? undefined : whyId}
+              required={!isChart}
+              aria-describedby={isChart || hasName ? undefined : whyId}
             />
           </div>
 
@@ -231,8 +247,14 @@ export default function CreatePage() {
             <select
               id={`${id}-type`}
               className="create-select"
-              value={type}
+              value={isChart ? "chart" : type}
               onChange={(e) => {
+                if (e.target.value === "chart") {
+                  setIsChart(true);
+                  setShowUpload(false);
+                  return;
+                }
+                setIsChart(false);
                 const next = normalizeDiagramType(e.target.value);
                 setType(next);
                 if (!supportsImageUpload(next)) setShowUpload(false);
@@ -244,12 +266,16 @@ export default function CreatePage() {
                   {t.label}
                 </option>
               ))}
+              <option value="chart">Chart from a CSV file</option>
             </select>
             <p id={`${id}-type-hint`} className="create-hint">
-              {DIAGRAM_TYPES.find((t) => t.value === type)?.hint}
+              {isChart
+                ? "Data in rows and columns, such as a time series or categories with values. Charts are not saved to your account yet."
+                : DIAGRAM_TYPES.find((t) => t.value === type)?.hint}
             </p>
           </div>
 
+          {!isChart && (
           <fieldset className="create-fieldset">
             <legend>Who can see it</legend>
             {SHARING_OPTIONS.map((o) => (
@@ -266,7 +292,17 @@ export default function CreatePage() {
               </label>
             ))}
           </fieldset>
+          )}
 
+          {isChart && (
+            <div className="create-actions" role="group" aria-label="How to start">
+              <button type="button" className="btn" onClick={openChart}>
+                Open chart tool
+              </button>
+            </div>
+          )}
+
+          {!isChart && (
           <div className="create-actions" role="group" aria-label="How to start">
             <button
               type="button"
@@ -299,12 +335,13 @@ export default function CreatePage() {
               </button>
             )}
           </div>
-          {!hasName && (
+          )}
+          {!isChart && !hasName && (
             <p id={whyId} className="create-why">
               Enter a name to enable these buttons.
             </p>
           )}
-          {!canUpload && (
+          {!isChart && !canUpload && (
             <p id={`${id}-noupload`} className="create-why">
               Uploading an image is available for flowcharts, trees, binary trees, and linked lists.
               {` ${DIAGRAM_TYPES.find((t) => t.value === type)?.label ?? "This type"}`} images are
@@ -312,7 +349,7 @@ export default function CreatePage() {
             </p>
           )}
 
-          {showUpload && canUpload && (
+          {!isChart && showUpload && canUpload && (
             <section className="create-panel" aria-label="Upload an image">
               <div className="create-field">
                 <label className="create-label" htmlFor={`${id}-file`}>

@@ -1,5 +1,6 @@
 // src/pages/Charts.tsx
 import React, { useState, useEffect, Suspense } from "react";
+import { useLocation } from "react-router-dom";
 import type { ParsedDataset, SonificationConfig, SonificationState, SonificationPresetId } from "../types/types";
 import { CsvUploadPanel } from "../components/charts/CsvUploadPanel";
 import { ColumnMappingPanel } from "../components/charts/ColumnMappingPanel";
@@ -30,8 +31,13 @@ const DEFAULT_CONFIG: SonificationConfig = {
 };
 
 export default function Charts() {
+  // /create passes the name the author chose; it becomes the chart's starting title.
+  const location = useLocation();
+  const stateTitle = (location.state as { title?: unknown } | null)?.title;
+  const startingTitle = typeof stateTitle === "string" && stateTitle.trim() ? stateTitle.trim() : null;
+
   const [dataset, setDataset] = useState<ParsedDataset | null>(null);
-  const [config, setConfig] = useState<SonificationConfig>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<SonificationConfig>({ ...DEFAULT_CONFIG, title: startingTitle });
   const [sonificationState, setSonificationState] = useState<SonificationState | null>(null);
   const [isSavingPermalink, setIsSavingPermalink] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +61,7 @@ const [selectedPreset, setSelectedPreset] =
     setConfig((prev) => ({
       ...prev,
       ...autoMapColumnsForPreset(data, prev.preset),
-      title: null,
+      title: startingTitle,
       xLabel: null,
       yLabel: null,
       categoryOrder: "data",
@@ -72,7 +78,7 @@ const [selectedPreset, setSelectedPreset] =
       setConfig((prev) => ({
         ...prev,
         ...autoMapColumnsForPreset(data, prev.preset),
-        title: null,
+        title: startingTitle,
         xLabel: null,
         yLabel: null,
         categoryOrder: "data",
