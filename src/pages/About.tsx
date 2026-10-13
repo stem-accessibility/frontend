@@ -28,13 +28,11 @@ const About: React.FC = () => {
             What STEM-Accessibility is
           </h2>
           <p className="about__p">
-            STEM images—such as flowcharts, decision trees, process maps, and organizational charts—play a central role in
-            how people learn, reason, and communicate. Yet they are still largely treated as static images, leaving many
+            STEM images—such as flowcharts, decision trees, process maps, and organizational charts—play a central role in how people learn, reason, and communicate. Yet they are still largely treated as static images, leaving many
             people without access to the information they convey.
           </p>
           <p className="about__p">
-            STEM-Accessibility is built on the idea that accessibility improves when STEM image structure is made explicit. Instead
-            of asking people to describe images after the fact, we treat STEM images as structured systems made up of
+            STEM-Accessibility is built on the idea that accessibility improves when STEM image structure is made explicit. Instead of asking people to describe images after the fact, we treat STEM images as structured systems made up of
             nodes, relationships, and meaning. This allows a single STEM image to be expressed in multiple accessible
             forms, including long descriptions, keyboard-navigable views, and tactile or auditory outputs—without losing
             the underlying logic.
@@ -76,29 +74,15 @@ const About: React.FC = () => {
             navigation, and representations that align with how people reason about STEM images—not just how they look.
           </p>
           <p className="about__p">
-            The accessible representations produced by STEM-Accessibility are grounded in accessibility research and were
-            iteratively designed and evaluated with blind and visually impaired users. These same representations were
-            studied and validated in a related research system,{" "}
-            <a className="about__link" href={ARBORETUM_URL} target="_blank" rel="noopener noreferrer">
-              Arboretum<span className="sr-only"> (opens in a new tab)</span>
-            </a>
-            , whose open-source code STEM-Accessibility now uses for tree, list and array
-            STEM images—ensuring continuity between research findings and real-world use.
+            The accessible representations produced by STEM-Accessibility are grounded in accessibility research. We are collecting solutions from multiple papers that address these issues.
           </p>
-
-          <div className="about__callout" role="note" aria-label="Related publication">
-            <div className="about__calloutTitle">Publication</div>
-            <a className="about__link" href={PAPER_URL} target="_blank" rel="noopener noreferrer">
-              Read the published paper
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          </div>
+         
         </section>
 
         {/* Arboretum */}
         <section className="about__section" aria-labelledby="arboretum-title">
           <h2 id="arboretum-title" className="about__h2">
-            Built on Arboretum
+             Arboretum
           </h2>
           <p className="about__p">
             Support for trees, binary trees, linked lists, and arrays uses code and output designs from{" "}
@@ -116,6 +100,8 @@ const About: React.FC = () => {
             </a>
           </div>
         </section>
+        {/* Olli (to be added) */}
+        {/* ALT text (to be added) */}
 
         {/* Who it's for */}
         <section className="about__section" aria-labelledby="for-title">
