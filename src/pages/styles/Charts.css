@@ -218,3 +218,39 @@
   transform: translateY(-1px);
 }
 
+
+/* Chart data table */
+.chart-table-scroll {
+  max-height: 24rem;
+  overflow: auto;
+  border: 1px solid #767676;
+  border-radius: 6px;
+}
+.chart-table-scroll:focus-visible {
+  outline: 3px solid #0b4f9e;
+  outline-offset: 2px;
+}
+.chart-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.chart-table caption {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+}
+.chart-table th,
+.chart-table td {
+  border: 1px solid #c4c4c4;
+  padding: 0.4rem 0.75rem;
+  text-align: left;
+}
+.chart-table th {
+  position: sticky;
+  top: 0;
+  background: #f1f1f1;
+}
+.chart-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

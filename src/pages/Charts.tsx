@@ -1,5 +1,5 @@
 // src/pages/Charts.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import type { ParsedDataset, SonificationConfig, SonificationState, SonificationPresetId } from "../types/types";
 import { CsvUploadPanel } from "../components/charts/CsvUploadPanel";
 import { ColumnMappingPanel } from "../components/charts/ColumnMappingPanel";
@@ -7,12 +7,17 @@ import { SonificationPlayer } from "../components/charts/SonificationPlayer";
 import { PermalinkBar } from "../components/charts/PermalinkBar";
 // import { useErieSonification } from "../hooks/useErieSonification"; // you'll create this
 import VisualChart from "../components/charts/VisualChart";
+import ChartDataTable from "../components/charts/ChartDataTable";
 import {
   SONIFICATION_PRESETS,
   getChartTypeForPreset,
 } from "../sonification/sonificationPresets";
 import './styles/Charts.css';
 import { autoMapColumnsForPreset } from "../sonification/autoMap";
+import { toOlliSpec } from "../olli/toOlliSpec";
+
+// Olli (and its styles) load only when a chart is shown, so they stay out of the main bundle.
+const OlliView = React.lazy(() => import("../olli/OlliView"));
 const DEFAULT_CONFIG: SonificationConfig = {
   timeColumn: "time",
   valueColumn: "value",
@@ -90,6 +95,20 @@ const [selectedPreset, setSelectedPreset] =
       : [],
   [dataset]
 );
+
+  const olliSpec = React.useMemo(
+    () =>
+      dataset
+        ? toOlliSpec({
+            rows: dataset.rows,
+            // Category presets (bar, histogram, pie) keep their labels in categoryColumn.
+            xField: config.categoryColumn || config.timeColumn,
+            yField: config.valueColumn,
+            preset: config.preset,
+          })
+        : null,
+    [dataset, config.categoryColumn, config.timeColumn, config.valueColumn, config.preset]
+  );
 
   const handlePresetSelect = (id: SonificationPresetId) => {
     setSelectedPreset(id);
@@ -220,6 +239,34 @@ const [selectedPreset, setSelectedPreset] =
           
         </section>
       )}
+
+          {dataset && dataset.rows.length > 0 && (
+            <section className="card" aria-labelledby="chart-data-heading">
+              <div className="charts-card-header">
+                <h2 id="chart-data-heading">Data table</h2>
+              </div>
+              <ChartDataTable
+                dataset={dataset}
+                caption={dataset.name ? `Data from ${dataset.name}` : "Chart data"}
+              />
+            </section>
+          )}
+
+          {olliSpec && (
+            <section className="card" aria-labelledby="navigable-chart-heading">
+              <div className="charts-card-header">
+                <h2 id="navigable-chart-heading">Navigable chart</h2>
+              </div>
+              <p className="hint">
+                Explore the chart as a structured outline. Use the arrow keys to move: Up and
+                Down change level, Left and Right move between items. Press ? for all keys and
+                t to open the data as a table.
+              </p>
+              <Suspense fallback={<p role="status">Loading navigable chart…</p>}>
+                <OlliView spec={olliSpec} label="Navigable chart" />
+              </Suspense>
+            </section>
+          )}
 
           <PermalinkBar
             permalinkUrl={permalinkUrl}

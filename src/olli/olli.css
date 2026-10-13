@@ -1,0 +1,8 @@
+/* Olli's default focus cue is a pale grey fill (#eee), which is too faint to see (WCAG 2.4.7,
+   2.4.11). Give the focused item a solid outline that has at least 3:1 contrast on white. */
+.olli-vis .olli-tree-item.olli-focused > .olli-node-label,
+.olli-vis .olli-tree-item:focus-visible > .olli-node-label {
+  outline: 3px solid #0b4f9e;
+  outline-offset: 2px;
+  background: #eaf2fb;
+}
