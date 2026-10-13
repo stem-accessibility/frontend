@@ -14,6 +14,7 @@ const API_BASE_URL =
   alt_text: string;
   long_markdown: string;
   image_data_url?: string | null;
+  image_public?: boolean;
   title: string;
 }
 
@@ -27,6 +28,8 @@ const LD: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null); // 🔹 NEW
   const [title, setTitle] = useState<string>('');
+  // Whether people who open the shared link also see the image. Off unless the author chooses.
+  const [imagePublic, setImagePublic] = useState<boolean>(false);
 
   const [imageType, setImageType] = useState<ImageType>('diagram'); // 🔹 NEW
 
@@ -126,6 +129,7 @@ const LD: React.FC = () => {
 
       if (imageDataUrl) {
         payload.image_data_url = imageDataUrl;
+        payload.image_public = imagePublic;
       }
 
       // A signed-in request carries the session token, which is what lets an image be saved.
@@ -257,6 +261,26 @@ const LD: React.FC = () => {
           onChange={setLongDescription}
         />
       </div>
+
+      {/* Who sees the image on the shared link. Only relevant when an image will be saved. */}
+      {imageDataUrl && user && (
+        <div className="ld-section">
+          <label className="ld-checkbox">
+            <input
+              type="checkbox"
+              checked={imagePublic}
+              onChange={(e) => setImagePublic(e.target.checked)}
+              aria-describedby="ld-image-public-help"
+            />{' '}
+            Show the image on the shared page
+          </label>
+          <p id="ld-image-public-help" className="ld-hint">
+            {imagePublic
+              ? 'Anyone with the link will see this image next to the description.'
+              : 'Only you will see the image. Anyone with the link will see the description without it.'}
+          </p>
+        </div>
+      )}
 
       {/* ERROR MESSAGE */}
       {imageDataUrl && !user && (
