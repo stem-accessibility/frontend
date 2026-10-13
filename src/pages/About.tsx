@@ -2,7 +2,6 @@
 import React from "react";
 import "./styles/AboutPage.css";
 
-const PAPER_URL = "https://www.briannawimer.com/publications/2026-01-01-CHI-26";
 const ARBORETUM_URL = "https://github.com/ritesh-kanchi/Arboretum";
 const ARBORETUM_PAPER_URL = "https://dl.acm.org/doi/10.1145/3772318.3791656";
 const OLLI_URL = "https://github.com/umwelt-data/olli";
