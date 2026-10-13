@@ -1,12 +1,11 @@
 // src/pages/Charts.tsx
 import React, { useState, useEffect, Suspense } from "react";
 import { useLocation } from "react-router-dom";
-import type { ParsedDataset, SonificationConfig, SonificationState, SonificationPresetId } from "../types/types";
+import type { ParsedDataset, SonificationConfig, SonificationPresetId } from "../types/types";
 import { CsvUploadPanel } from "../components/charts/CsvUploadPanel";
 import { ColumnMappingPanel } from "../components/charts/ColumnMappingPanel";
 import { SonificationPlayer } from "../components/charts/SonificationPlayer";
 import { PermalinkBar } from "../components/charts/PermalinkBar";
-// import { useErieSonification } from "../hooks/useErieSonification"; // you'll create this
 import VisualChart from "../components/charts/VisualChart";
 import ChartDataTable from "../components/charts/ChartDataTable";
 import {
@@ -15,11 +14,12 @@ import {
 } from "../sonification/sonificationPresets";
 import './styles/Charts.css';
 import { autoMapColumnsForPreset } from "../sonification/autoMap";
-import { toOlliSpec } from "../olli/toOlliSpec";
+import { buildChartView } from "../services/chartView";
+import { useAuth } from "../auth/AuthProvider";
+import { apiFetch } from "../lib/api";
 import type { LoadedSpec } from "../olli/vegaLiteSpec";
 import { ChartSpecPanel } from "../components/charts/ChartSpecPanel";
 import { ChartOptionsPanel } from "../components/charts/ChartOptionsPanel";
-import { orderRowsByCategory, cleanLabel } from "../services/chartOptions";
 import { PRESET_COLUMN_REQUIREMENTS } from "../sonification/presets";
 
 // Olli (and its styles) load only when a chart is shown, so they stay out of the main bundle.
@@ -38,7 +38,9 @@ export default function Charts() {
 
   const [dataset, setDataset] = useState<ParsedDataset | null>(null);
   const [config, setConfig] = useState<SonificationConfig>({ ...DEFAULT_CONFIG, title: startingTitle });
-  const [sonificationState, setSonificationState] = useState<SonificationState | null>(null);
+  const { user } = useAuth();
+  // The shared link for the chart as it was when the author pressed "Create permalink".
+  const [permalinkUrl, setPermalinkUrl] = useState<string | null>(null);
   const [isSavingPermalink, setIsSavingPermalink] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // A Vega-Lite specification the author uploaded; when set it describes the chart instead of the mapping.
@@ -46,7 +48,10 @@ export default function Charts() {
 const [selectedPreset, setSelectedPreset] =
     useState<SonificationPresetId>("line");
    
-  // TODO: if you support loading from an existing permalink, read it from route params here
+  // A link describes the chart as it was saved, so editing anything makes the old one stale.
+  useEffect(() => {
+    setPermalinkUrl(null);
+  }, [dataset, config, spec]);
 
   useEffect(() => {
   console.log("[Charts] Mounted");
@@ -91,6 +96,10 @@ const [selectedPreset, setSelectedPreset] =
   };
 
   const handlePermalinkCreate = async () => {
+    if (!user) {
+      setError("Sign in to save a link to this chart.");
+      return;
+    }
     if (!dataset || !config.valueColumn) {
       setError("Upload a CSV and choose a value column before creating a permalink.");
       return;
@@ -100,71 +109,42 @@ const [selectedPreset, setSelectedPreset] =
       setIsSavingPermalink(true);
       setError(null);
 
-      // Build your Erie spec from dataset + config
-      const erieSpec = buildErieSpecFromConfig(dataset, config);
-
-      // Save to backend; backend returns an ID + createdAt etc.
-      const res = await fetch("/api/sonifications", {
+      const saved = await apiFetch<{ public_url: string | null }>("/charts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dataset, config, erieSpec }),
+        json: {
+          dataset,
+          config,
+          // The uploaded specification travels with the link so a visitor gets the same description.
+          ...(spec ? { spec: spec.source } : {}),
+          // Name it after the author's own title, else the specification's, else the file's.
+          title: chartTitle || spec?.title || undefined,
+          sharing: "link",
+        },
       });
-
-      if (!res.ok) throw new Error("Failed to save permalink");
-
-      const saved: SonificationState = await res.json();
-      setSonificationState(saved);
-    } catch (e: any) {
-      setError(e.message ?? "Something went wrong creating the permalink.");
+      if (!saved.public_url) throw new Error("The chart was saved but no link was returned.");
+      setPermalinkUrl(`${window.location.origin}${saved.public_url}`);
+    } catch (e) {
+      // apiFetch errors look like "400 BAD REQUEST: <server message>"; show only the message.
+      const raw = e instanceof Error ? e.message : "";
+      setError(raw.replace(/^\d{3}[^:]*:\s*/, "") || "Something went wrong creating the permalink.");
     } finally {
       setIsSavingPermalink(false);
     }
   };
 
-  const permalinkUrl = sonificationState
-    ? `${window.location.origin}/charts/${sonificationState.id}`
-    : null;
+  const view = React.useMemo(
+    () => (dataset ? buildChartView(dataset, config) : null),
+    [dataset, config]
+  );
 
   const req = PRESET_COLUMN_REQUIREMENTS[config.preset];
-  // Category order only applies where the chart has category labels.
-  const categoryField = config.categoryColumn || config.timeColumn;
-  const categoryOrder = req.needsCategory ? config.categoryOrder : "data";
-
-  const orderedRows = React.useMemo(
-    () =>
-      dataset
-        ? orderRowsByCategory(dataset.rows, categoryField, config.valueColumn, categoryOrder)
-        : [],
-    [dataset, categoryField, config.valueColumn, categoryOrder]
-  );
-
-  const chartRows = React.useMemo(
-    () => orderedRows.map((row, index) => ({ __index: index, ...row })),
-    [orderedRows]
-  );
-
-  const chartTitle = cleanLabel(config.title);
-  const xLabel = cleanLabel(config.xLabel);
-  const yLabel = cleanLabel(config.yLabel);
-
-  const olliSpec = React.useMemo(
-    () =>
-      spec
-        ? spec.olli
-        : dataset
-          ? toOlliSpec({
-              rows: orderedRows,
-              // Category presets (bar, histogram, pie) keep their labels in categoryColumn.
-              xField: categoryField,
-              yField: config.valueColumn,
-              preset: config.preset,
-              title: chartTitle,
-              xLabel,
-              yLabel,
-            })
-          : null,
-    [spec, dataset, orderedRows, categoryField, config.valueColumn, config.preset, chartTitle, xLabel, yLabel]
-  );
+  const categoryField = view?.categoryField ?? null;
+  const chartRows = view?.chartRows ?? [];
+  const chartTitle = view?.title;
+  const xLabel = view?.xLabel;
+  const yLabel = view?.yLabel;
+  // An uploaded specification describes the chart instead of the column mapping.
+  const olliSpec = spec ? spec.olli : (view?.olliSpec ?? null);
 
   const handlePresetSelect = (id: SonificationPresetId) => {
     setSelectedPreset(id);
@@ -368,16 +348,22 @@ const [selectedPreset, setSelectedPreset] =
             permalinkUrl={permalinkUrl}
             onCreatePermalink={handlePermalinkCreate}
             isSaving={isSavingPermalink}
-            disabled={!dataset || !config.valueColumn}
+            disabled={!dataset || !config.valueColumn || !user}
+            note={
+              !user ? (
+                <p>
+                  Sign in to save a link.{" "}
+                  {/* A new tab, so the data and settings on this page are not lost. */}
+                  <a href="/login?next=%2Fcharts" target="_blank" rel="noopener noreferrer">
+                    Sign in<span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                  , then come back here and create the link.
+                </p>
+              ) : undefined
+            }
           />
         </div>
       </section>
     </main>
   );
-}
-
-// Placeholder – you'll replace with real Erie spec construction
-function buildErieSpecFromConfig(dataset: ParsedDataset, config: SonificationConfig) {
-  // TODO: construct Erie grammar object here
-  return { datasetName: dataset.name ?? "uploaded", config };
 }

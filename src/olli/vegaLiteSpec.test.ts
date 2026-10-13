@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inlineRows, parseSpecText, planData, rowsToDataset, specTitle } from "./vegaLiteSpec";
+import { inlineRows, parseSpecText, planData, rowsToDataset, specForStorage, specTitle } from "./vegaLiteSpec";
 
 const ok = (o: unknown) => parseSpecText(JSON.stringify(o));
 
@@ -62,5 +62,16 @@ describe("specTitle", () => {
     expect(specTitle({ title: { text: ["Sales", "by region"] } })).toBe("Sales by region");
     expect(specTitle({ title: "  " })).toBeUndefined();
     expect(specTitle({})).toBeUndefined();
+  });
+});
+
+describe("specForStorage", () => {
+  it("drops a top-level data url, because the rows come from the chart's own table", () => {
+    const stored = specForStorage({ mark: "bar", data: { url: "https://example.com/x.csv" }, encoding: {} });
+    expect(stored).toEqual({ mark: "bar", encoding: {} });
+  });
+  it("leaves specs with their own values alone", () => {
+    const spec = { mark: "bar", data: { values: [{ a: 1 }] } };
+    expect(specForStorage(spec)).toBe(spec);
   });
 });

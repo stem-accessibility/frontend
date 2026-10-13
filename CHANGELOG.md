@@ -15,6 +15,11 @@ API contract name the matching backend release.
 - Charts: upload a **Vega-Lite specification** (`.json`) to describe the chart through Olli. Its data comes
   from the file or from the uploaded CSV; web addresses in a specification are never fetched. Loaded on demand.
 - Credits for Olli in the footer, README, LICENSE and About page.
+- Charts: **Create permalink** now works. It saves the data, settings and any uploaded specification to your
+  account (sign-in required; needs backend migrations 0005 and 0006) and gives a link that anyone can open at
+  `/charts/<slug>`: the table, navigable outline, visual chart and sound, built the same way as on the
+  Charts page. Editing the chart afterwards clears the old link from the page.
+- Create: a **Chart from a CSV file** type that opens the Charts page with the name as its title.
 
 ### Changed
 - CSV upload reads ordinary CSV files: a header row, any column names, blank cells, quoted commas, and

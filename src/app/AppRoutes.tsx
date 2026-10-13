@@ -7,6 +7,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import Home from "../pages/Home";
 import About from "../pages/About";
 import Charts from "../pages/Charts";
+import ChartPermalinkPage from "../pages/ChartPermalinkPage";
 import AltTextGuidancePage from "../pages/Guidance";
 import AuthPage from "../pages/AuthPage";
 import AuthCallback from "../pages/AuthCallback";
@@ -43,6 +44,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/charts" element={<Charts />} />
+      <Route path="/charts/:slug" element={<ChartPermalinkPage />} />
       <Route path="/guidance" element={<AltTextGuidancePage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

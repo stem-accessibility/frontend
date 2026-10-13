@@ -270,7 +270,7 @@ export default function CreatePage() {
             </select>
             <p id={`${id}-type-hint`} className="create-hint">
               {isChart
-                ? "Data in rows and columns, such as a time series or categories with values. Charts are not saved to your account yet."
+                ? "Data in rows and columns, such as a time series or categories with values. When you are signed in you can save a shareable link from the chart tool."
                 : DIAGRAM_TYPES.find((t) => t.value === type)?.hint}
             </p>
           </div>

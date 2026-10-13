@@ -121,8 +121,27 @@ export function specTitle(spec: Json): string | undefined {
   return undefined;
 }
 
+/**
+ * The copy of a specification that is saved with a shared chart. A top-level `data.url` is dropped:
+ * the rows come from the chart's own table, and the server refuses any `url` it is sent. Nested
+ * urls never get here because planData already rejects them.
+ */
+export function specForStorage(spec: Json): Json {
+  const data = spec.data;
+  if (isObject(data) && typeof data.url === "string") {
+    const rest = { ...spec };
+    delete rest.data;
+    return rest;
+  }
+  return spec;
+}
+
 export type LoadedSpec = {
   olli: OlliVisSpec;
+  /** The specification to save with a shared chart (see specForStorage). */
+  source: Record<string, unknown>;
+  /** The specification's own title, used to name the saved chart. */
+  title?: string;
   /** Data for the table and sonification: the spec's own, or the uploaded CSV it was applied to. */
   dataset: ParsedDataset | null;
   /** True when the spec had no usable data of its own and the uploaded CSV was applied to it. */
@@ -168,7 +187,7 @@ export async function loadVegaLiteSpec(
     // with "A bar chart, with axes…" and never names what the chart is about.
     const title = specTitle(spec);
     if (title && !("operator" in olli) && !olli.title) olli.title = title;
-    return { olli, dataset, usedUploadedData };
+    return { olli, source: specForStorage(spec), title, dataset, usedUploadedData };
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     return { error: `This specification could not be read: ${detail}` };
