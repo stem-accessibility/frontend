@@ -57,7 +57,8 @@ export function buildErieSpecFromConfig(
 ) {
   const { name } = dataset;
  const valueField = config.valueColumn ?? "value";
-const timeField = config.timeColumn ?? "time";
+// No time column means "use row order"; buildCleanRows then fills __time from the row index.
+const timeField = config.timeColumn || null;
 
 
   if (!valueField) {
@@ -105,7 +106,7 @@ console.log("[CleanRows]", cleanRows);
     // https://see-mike-out.github.io/erie-documentation/docs/encoding/encoding.html
     encoding: {
       time: {
-        field: timeField ,
+        field: timeField ?? "__time",
         type: "quantitative",
         scale: {
           length: 5,      // total sonification length in seconds

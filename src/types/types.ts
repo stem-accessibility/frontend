@@ -86,6 +86,11 @@ export interface SonificationConfig {
   valueColumn: string | null;
   preset: SonificationPresetId;  // or whatever you define
    categoryColumn?: string | null;
+  // Chart options chosen by the author. All optional; blank means "use the column names".
+  title?: string | null;
+  xLabel?: string | null;
+  yLabel?: string | null;
+  categoryOrder?: "data" | "alpha" | "value-asc" | "value-desc";
 }
 
 // What you store for permalinks

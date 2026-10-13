@@ -6,6 +6,26 @@ API contract name the matching backend release.
 
 ## [Unreleased]
 
+### Added
+- Charts: a **Navigable chart** view built with [Olli](https://github.com/umwelt-data/olli) (BSD 3-Clause)
+  that lets screen reader users explore a chart as an outline and open its data as a table. Loaded on demand.
+- Charts: a **Data table** with the uploaded values as a real HTML table.
+- Charts: **Chart options** (title, axis labels, and for category charts the category order) used by the
+  chart, the table and the navigable chart. The chart drawing now has a text alternative.
+- Charts: upload a **Vega-Lite specification** (`.json`) to describe the chart through Olli. Its data comes
+  from the file or from the uploaded CSV; web addresses in a specification are never fetched. Loaded on demand.
+- Credits for Olli in the footer, README, LICENSE and About page.
+
+### Changed
+- CSV upload reads ordinary CSV files: a header row, any column names, blank cells, quoted commas, and
+  title lines above the table. It reports how many rows and columns it loaded, or why it found none.
+  Previously only one fixed layout worked and everything else produced an empty dataset.
+
+### Fixed
+- Column auto-mapping: the line preset no longer takes the time column as the value (which also drove the
+  sonification's pitch), category presets no longer keep a stale time column, and columns chosen for an
+  earlier file or preset are cleared. Sonification with no time column now uses row order.
+
 ## [0.3.0] — 2026-10-11
 
 Requires backend 0.3.0 (sharing endpoint, `image_public`, guest images, reports; migrations 0003 and 0004).

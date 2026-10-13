@@ -15,6 +15,11 @@ import {
 import './styles/Charts.css';
 import { autoMapColumnsForPreset } from "../sonification/autoMap";
 import { toOlliSpec } from "../olli/toOlliSpec";
+import type { LoadedSpec } from "../olli/vegaLiteSpec";
+import { ChartSpecPanel } from "../components/charts/ChartSpecPanel";
+import { ChartOptionsPanel } from "../components/charts/ChartOptionsPanel";
+import { orderRowsByCategory, cleanLabel } from "../services/chartOptions";
+import { PRESET_COLUMN_REQUIREMENTS } from "../sonification/presets";
 
 // Olli (and its styles) load only when a chart is shown, so they stay out of the main bundle.
 const OlliView = React.lazy(() => import("../olli/OlliView"));
@@ -30,6 +35,8 @@ export default function Charts() {
   const [sonificationState, setSonificationState] = useState<SonificationState | null>(null);
   const [isSavingPermalink, setIsSavingPermalink] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A Vega-Lite specification the author uploaded; when set it describes the chart instead of the mapping.
+  const [spec, setSpec] = useState<(LoadedSpec & { fileName: string }) | null>(null);
 const [selectedPreset, setSelectedPreset] =
     useState<SonificationPresetId>("line");
    
@@ -42,11 +49,35 @@ const [selectedPreset, setSelectedPreset] =
   const handleDatasetLoaded = (data: ParsedDataset) => {
     setDataset(data);
     setError(null);
+    setSpec(null); // a specification was applied to the previous data
+    // Map columns for the current preset; the defaults name columns the file may not have.
+    // Titles and labels described the previous data, so they are cleared too.
     setConfig((prev) => ({
       ...prev,
-      // Auto-pick the first numeric column as valueColumn if you want
-      valueColumn: prev.valueColumn ?? guessFirstNumericColumn(data),
+      ...autoMapColumnsForPreset(data, prev.preset),
+      title: null,
+      xLabel: null,
+      yLabel: null,
+      categoryOrder: "data",
     }));
+  };
+
+  const handleSpecLoaded = (loaded: LoadedSpec, fileName: string) => {
+    setSpec({ ...loaded, fileName });
+    setError(null);
+    // A specification that carries its own data replaces the table and sonification data.
+    if (loaded.dataset && !loaded.usedUploadedData) {
+      const data = loaded.dataset;
+      setDataset(data);
+      setConfig((prev) => ({
+        ...prev,
+        ...autoMapColumnsForPreset(data, prev.preset),
+        title: null,
+        xLabel: null,
+        yLabel: null,
+        categoryOrder: "data",
+      }));
+    }
   };
 
   const handleConfigChange = (next: SonificationConfig) => {
@@ -88,26 +119,45 @@ const [selectedPreset, setSelectedPreset] =
     ? `${window.location.origin}/charts/${sonificationState.id}`
     : null;
 
-    const chartRows = React.useMemo(
-  () =>
-    dataset
-      ? dataset.rows.map((row, index) => ({ __index: index, ...row }))
-      : [],
-  [dataset]
-);
+  const req = PRESET_COLUMN_REQUIREMENTS[config.preset];
+  // Category order only applies where the chart has category labels.
+  const categoryField = config.categoryColumn || config.timeColumn;
+  const categoryOrder = req.needsCategory ? config.categoryOrder : "data";
+
+  const orderedRows = React.useMemo(
+    () =>
+      dataset
+        ? orderRowsByCategory(dataset.rows, categoryField, config.valueColumn, categoryOrder)
+        : [],
+    [dataset, categoryField, config.valueColumn, categoryOrder]
+  );
+
+  const chartRows = React.useMemo(
+    () => orderedRows.map((row, index) => ({ __index: index, ...row })),
+    [orderedRows]
+  );
+
+  const chartTitle = cleanLabel(config.title);
+  const xLabel = cleanLabel(config.xLabel);
+  const yLabel = cleanLabel(config.yLabel);
 
   const olliSpec = React.useMemo(
     () =>
-      dataset
-        ? toOlliSpec({
-            rows: dataset.rows,
-            // Category presets (bar, histogram, pie) keep their labels in categoryColumn.
-            xField: config.categoryColumn || config.timeColumn,
-            yField: config.valueColumn,
-            preset: config.preset,
-          })
-        : null,
-    [dataset, config.categoryColumn, config.timeColumn, config.valueColumn, config.preset]
+      spec
+        ? spec.olli
+        : dataset
+          ? toOlliSpec({
+              rows: orderedRows,
+              // Category presets (bar, histogram, pie) keep their labels in categoryColumn.
+              xField: categoryField,
+              yField: config.valueColumn,
+              preset: config.preset,
+              title: chartTitle,
+              xLabel,
+              yLabel,
+            })
+          : null,
+    [spec, dataset, orderedRows, categoryField, config.valueColumn, config.preset, chartTitle, xLabel, yLabel]
   );
 
   const handlePresetSelect = (id: SonificationPresetId) => {
@@ -206,11 +256,28 @@ const [selectedPreset, setSelectedPreset] =
         <div className="charts-left">
           <CsvUploadPanel onDatasetLoaded={handleDatasetLoaded} />
 
+          <ChartSpecPanel
+            dataset={dataset}
+            activeName={spec?.fileName ?? null}
+            onLoaded={handleSpecLoaded}
+            onCleared={() => setSpec(null)}
+          />
+
           {dataset && (
             <ColumnMappingPanel
               dataset={dataset}
               config={config}
               onChange={handleConfigChange}
+            />
+          )}
+
+          {dataset && !spec && (
+            <ChartOptionsPanel
+              config={config}
+              onChange={handleConfigChange}
+              showCategoryOrder={req.needsCategory}
+              xDefault={categoryField && dataset.columns.includes(categoryField) ? categoryField : "Row"}
+              yDefault={config.valueColumn ?? "Value"}
             />
           )}
         </div>
@@ -222,7 +289,16 @@ const [selectedPreset, setSelectedPreset] =
             config={config}
             disabled={!dataset || !config.valueColumn}
           />
-          {dataset && config.valueColumn && (
+          {spec && (
+            <section className="card" aria-labelledby="visual-chart-spec-heading">
+              <h2 id="visual-chart-spec-heading">Visual chart</h2>
+              <p className="hint">
+                The chart is described from <strong>{spec.fileName}</strong>. A drawing of an uploaded
+                specification is not shown here; use the data table and navigable chart below.
+              </p>
+            </section>
+          )}
+          {!spec && dataset && config.valueColumn && (
         <section className="card">
             <div className="charts-card-header">
           <h2>Visual chart</h2>
@@ -232,9 +308,12 @@ const [selectedPreset, setSelectedPreset] =
 
           <VisualChart
             rows={chartRows}
-            xField={config.timeColumn || "__index"}
+            xField={config.categoryColumn || config.timeColumn || "__index"}
             yField={config.valueColumn} // now guaranteed non-null
             chartType={getChartTypeForPreset(config.preset)}
+            title={chartTitle}
+            xLabel={xLabel}
+            yLabel={yLabel}
           />
           
         </section>
@@ -247,7 +326,13 @@ const [selectedPreset, setSelectedPreset] =
               </div>
               <ChartDataTable
                 dataset={dataset}
-                caption={dataset.name ? `Data from ${dataset.name}` : "Chart data"}
+                caption={
+                  chartTitle
+                    ? `Data for ${chartTitle}`
+                    : dataset.name
+                      ? `Data from ${dataset.name}`
+                      : "Chart data"
+                }
               />
             </section>
           )}
@@ -257,6 +342,11 @@ const [selectedPreset, setSelectedPreset] =
               <div className="charts-card-header">
                 <h2 id="navigable-chart-heading">Navigable chart</h2>
               </div>
+              {spec && (
+                <p className="hint">
+                  Described from the uploaded specification <strong>{spec.fileName}</strong>.
+                </p>
+              )}
               <p className="hint">
                 Explore the chart as a structured outline. Use the arrow keys to move: Up and
                 Down change level, Left and Right move between items. Press ? for all keys and
@@ -278,23 +368,6 @@ const [selectedPreset, setSelectedPreset] =
       </section>
     </main>
   );
-}
-
-// Simple helper to pick a default numeric column
-function guessFirstNumericColumn(dataset: ParsedDataset): string | null {
-  const { columns, rows } = dataset;
-  if (!rows.length) return null;
-
-  for (const col of columns) {
-    for (const row of rows.slice(0, 10)) {
-      const value = row[col];
-      if (typeof value === "number") return col;
-      if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) {
-        return col;
-      }
-    }
-  }
-  return null;
 }
 
 // Placeholder – you'll replace with real Erie spec construction

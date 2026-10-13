@@ -57,4 +57,14 @@ describe("toOlliSpec", () => {
     expect(spec.data).toEqual([{ Row: 1, v: 4 }, { Row: 3, v: 8 }]);
     expect(spec.mark).toBe("point");
   });
+
+  it("uses author-chosen axis titles and a title built from them", () => {
+    const spec = toOlliSpec({
+      rows: months, xField: "month", yField: "temp", preset: "bar",
+      xLabel: "Month of 2025", yLabel: "Temperature (°C)",
+    });
+    if (!spec || "operator" in spec) throw new Error("expected a unit spec");
+    expect(spec.title).toBe("Temperature (°C) by Month of 2025");
+    expect(spec.axes?.map((a) => a.title)).toEqual(["Month of 2025", "Temperature (°C)"]);
+  });
 });

@@ -107,6 +107,10 @@ See [LICENSE](LICENSE) for the notice.
 
 After cloning, fetch it with `git submodule update --init`.
 
+Navigable charts on the Charts page use [Olli](https://github.com/umwelt-data/olli) from the
+MIT Visualization Group (BSD 3-Clause), installed from npm as `olli`.
+`src/olli/OlliView.tsx` is the only file that imports it. See [LICENSE](LICENSE) for the notice.
+
 ## Accessibility
 
 We aim for WCAG 2.2 AA and treat accessibility reports as expertise. See

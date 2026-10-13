@@ -14,7 +14,8 @@ export const PRESET_COLUMN_REQUIREMENTS: Record<
 > = {
   line:           { needsTime: true,  needsValue: true,  needsX: false, needsY: false, needsCategory: false },
   bar:            { needsTime: false, needsValue: true,  needsX: false, needsY: false, needsCategory: true },
-  histogram:      { needsTime: false, needsValue: true,  needsX: false, needsY: false, needsCategory: false },
+  // A histogram's bars are labelled by its bins, which sit in a category column.
+  histogram:      { needsTime: false, needsValue: true,  needsX: false, needsY: false, needsCategory: true },
   scatter_spatial:{ needsTime: false, needsValue: false, needsX: true,  needsY: true,  needsCategory: false },
   scatter_temporal:{needsTime: true, needsValue: true,  needsX: false, needsY: false, needsCategory: false },
   pie:            { needsTime: false, needsValue: true,  needsX: false, needsY: false, needsCategory: true },

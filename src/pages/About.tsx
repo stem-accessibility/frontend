@@ -5,6 +5,8 @@ import "./styles/AboutPage.css";
 const PAPER_URL = "https://www.briannawimer.com/publications/2026-01-01-CHI-26";
 const ARBORETUM_URL = "https://github.com/ritesh-kanchi/Arboretum";
 const ARBORETUM_PAPER_URL = "https://dl.acm.org/doi/10.1145/3772318.3791656";
+const OLLI_URL = "https://github.com/umwelt-data/olli";
+const OLLI_DOCS_URL = "https://umwelt-data.github.io/olli/";
 //const BRIANNA_URL = "https://www.briannawimer.com/";
 
 const About: React.FC = () => {
@@ -100,7 +102,29 @@ const About: React.FC = () => {
             </a>
           </div>
         </section>
-        {/* Olli (to be added) */}
+        {/* Olli */}
+        <section className="about__section" aria-labelledby="olli-title">
+          <h2 id="olli-title" className="about__h2">
+            Olli
+          </h2>
+          <p className="about__p">
+            The navigable chart on the Charts page is built with{" "}
+            <a className="about__link" href={OLLI_URL} target="_blank" rel="noopener noreferrer">
+              Olli<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+            , an open-source library from the MIT Visualization Group that turns a visualization into a structured
+            outline that screen reader users can explore by keyboard, released under the BSD 3-Clause license. Olli
+            lets you move from the whole chart down to individual values, jump to an axis, and open the underlying
+            data as a table.
+          </p>
+          <div className="about__callout" role="note" aria-label="Olli documentation">
+            <div className="about__calloutTitle">Olli documentation</div>
+            <a className="about__link" href={OLLI_DOCS_URL} target="_blank" rel="noopener noreferrer">
+              Read the Olli documentation
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </div>
+        </section>
         {/* ALT text (to be added) */}
 
         {/* Who it's for */}

@@ -13,6 +13,9 @@ export type ToOlliSpecInput = {
   yField: string | null | undefined;
   preset: SonificationPresetId;
   title?: string;
+  /** Axis titles chosen by the author; the column names are used when these are blank. */
+  xLabel?: string;
+  yLabel?: string;
 };
 
 const MARK_FOR_PRESET: Record<SonificationPresetId, OlliMarkType> = {
@@ -40,7 +43,7 @@ function asNumber(v: unknown): number | null {
 }
 
 /** Returns null when there is nothing meaningful to describe yet. */
-export function toOlliSpec({ rows, xField, yField, preset, title }: ToOlliSpecInput): OlliVisSpec | null {
+export function toOlliSpec({ rows, xField, yField, preset, title, xLabel, yLabel }: ToOlliSpecInput): OlliVisSpec | null {
   if (!yField || rows.length === 0) return null;
 
   // A stale or missing x column (for example a leftover "time" after loading category data)
@@ -85,7 +88,7 @@ export function toOlliSpec({ rows, xField, yField, preset, title }: ToOlliSpecIn
       : distinctX.map(String);
 
   return {
-    title: title ?? `${yField} by ${xName}`,
+    title: title ?? `${yLabel ?? yField} by ${xLabel ?? xName}`,
     mark,
     data,
     fields: [
@@ -93,8 +96,8 @@ export function toOlliSpec({ rows, xField, yField, preset, title }: ToOlliSpecIn
       { field: yField, type: "quantitative" },
     ],
     axes: [
-      { axisType: "x", field: xName, title: xName, ...(ticks ? { ticks } : {}) },
-      { axisType: "y", field: yField, title: yField },
+      { axisType: "x", field: xName, title: xLabel ?? xName, ...(ticks ? { ticks } : {}) },
+      { axisType: "y", field: yField, title: yLabel ?? yField },
     ],
   };
 }
