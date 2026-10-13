@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
+import { apiFetch, publicFetch } from '../lib/api';
 import MarkdownSummaryEditor from '../components/MarkdownSummaryEditor';
 import QRCodeGenerator from '../components/access-reps/QRCode';
 import HtmlSnippet from '../components/longdesc/HtmlSnippet';
@@ -18,6 +20,9 @@ const API_BASE_URL =
 type ImageType = 'diagram' | 'data_viz';
 
 const LD: React.FC = () => {
+  // Text-only descriptions can be saved by anyone; one with an image needs an account (the server
+  // enforces this), so say so up front instead of failing after the person has done the work.
+  const { user } = useAuth();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null); // 🔹 NEW
@@ -108,36 +113,32 @@ const LD: React.FC = () => {
         return;
       }
 
-      const payload: LongDescPayload = {
-      alt_text: altText,
-      long_markdown: longDescription,
-      title: title
-    };
-
-    if (imageDataUrl) {
-      payload.image_data_url = imageDataUrl; // ✅ now allowed
-    }
-
-      const response = await fetch(`${API_BASE_URL}/longdesc`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error('Longdesc error:', data);
-        setError(data.error || 'Failed to save long description.');
+      if (imageDataUrl && !user) {
+        setError('Sign in to save a long description with an image.');
         return;
       }
 
+      const payload: LongDescPayload = {
+        alt_text: altText,
+        long_markdown: longDescription,
+        title: title,
+      };
+
+      if (imageDataUrl) {
+        payload.image_data_url = imageDataUrl;
+      }
+
+      // A signed-in request carries the session token, which is what lets an image be saved.
+      const data = user
+        ? await apiFetch<{ id: string }>('/longdesc', { method: 'POST', json: payload as unknown as Record<string, unknown> })
+        : await publicFetch<{ id: string }>('/longdesc', { method: 'POST', json: payload as unknown as Record<string, unknown> });
+
       setPermalinkId(data.id);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError('Unexpected error while saving long description.');
+      // The helpers throw "400 BAD REQUEST: <server message>"; show only the message.
+      const raw = err instanceof Error ? err.message : '';
+      setError(raw.replace(/^\d{3}[^:]*:\s*/, '') || 'Unexpected error while saving long description.');
     } finally {
       setIsSavingLink(false);
     }
@@ -258,7 +259,18 @@ const LD: React.FC = () => {
       </div>
 
       {/* ERROR MESSAGE */}
-      {error && <p className="ld-error">{error}</p>}
+      {imageDataUrl && !user && (
+        <p className="ld-hint">
+          Saving a link with an image needs an account.{' '}
+          {/* A new tab, so the text written on this page is not lost. */}
+          <a href="/login?next=%2Fld" target="_blank" rel="noopener noreferrer">
+            Sign in<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          , then come back here and generate the link. Without an image you can save without signing in.
+        </p>
+      )}
+
+      {error && <p className="ld-error" role="alert">{error}</p>}
 
       {/* GENERATE LINK BUTTON */}
       <button

@@ -20,6 +20,9 @@ API contract name the matching backend release.
   `/charts/<slug>`: the table, navigable outline, visual chart and sound, built the same way as on the
   Charts page. Editing the chart afterwards clears the old link from the page.
 - Create: a **Chart from a CSV file** type that opens the Charts page with the name as its title.
+- Long description builder (`/ld`): saving a link with an image now needs an account (text-only saves do
+  not). The page says so before you finish, with a sign-in link that opens in a new tab so your text is not
+  lost, and sends your session token so the image is saved under your account.
 
 ### Changed
 - CSV upload reads ordinary CSV files: a header row, any column names, blank cells, quoted commas, and
