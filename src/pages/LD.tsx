@@ -30,6 +30,9 @@ const LD: React.FC = () => {
   const [title, setTitle] = useState<string>('');
   // Whether people who open the shared link also see the image. Off unless the author chooses.
   const [imagePublic, setImagePublic] = useState<boolean>(false);
+  // "Generate from Image" sends the picture to an AI model, so it needs the person's agreement for
+  // each image. Choosing a different file clears it.
+  const [aiAgreed, setAiAgreed] = useState<boolean>(false);
 
   const [imageType, setImageType] = useState<ImageType>('diagram'); // 🔹 NEW
 
@@ -44,6 +47,7 @@ const LD: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setImageFile(file);
+    setAiAgreed(false);
     setPermalinkId(null); // reset old link when new image is uploaded
     setError(null);
 
@@ -71,6 +75,10 @@ const LD: React.FC = () => {
         setError('Please upload an image first.');
         return;
       }
+      if (!aiAgreed) {
+        setError('Agree to send the image to the AI model first, or write the description yourself.');
+        return;
+      }
 
       setIsGeneratingDesc(true);
 
@@ -95,7 +103,7 @@ const LD: React.FC = () => {
 
       setAltText(data.alt_text || '');
       setLongDescription(data.long_markdown || '');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setError('Unexpected error while generating description.');
     } finally {
@@ -191,10 +199,11 @@ const LD: React.FC = () => {
 
       {/* IMAGE UPLOAD */}
       <div className="ld-section">
-        <label className="ld-label">
+        <label className="ld-label" htmlFor="ld-image-file">
           Upload Image
         </label>
         <input
+          id="ld-image-file"
           type="file"
           accept="image/*"
           onChange={handleImageUpload}
@@ -210,14 +219,33 @@ const LD: React.FC = () => {
       )}
 
       {/* BUTTON: GENERATE FROM IMAGE (LLM) */}
+      {imageFile && (
+        <div className="ld-section">
+          <label className="ld-checkbox">
+            <input
+              type="checkbox"
+              checked={aiAgreed}
+              onChange={(e) => setAiAgreed(e.target.checked)}
+              aria-describedby="ld-ai-notice"
+            />{' '}
+            Send this image to the AI model to draft a description
+          </label>
+          <p id="ld-ai-notice" className="ld-hint">
+            The AI model is Google&rsquo;s Gemini, reached through OpenRouter. The image leaves our
+            servers and may be logged or kept by those services, so it may not be private. Do not use it
+            for an image with personal or confidential information. You can write the description
+            yourself instead.
+          </p>
+        </div>
+      )}
       <div className="ld-section">
         <button
           type="button"
           onClick={handleGenerateFromImage}
-          disabled={!imageFile || isGeneratingDesc}
+          disabled={!imageFile || !aiAgreed || isGeneratingDesc}
           className={
             'ld-secondary-button' +
-            (!imageFile || isGeneratingDesc ? ' disabled' : '')
+            (!imageFile || !aiAgreed || isGeneratingDesc ? ' disabled' : '')
           }
         >
           {isGeneratingDesc ? 'Generating from Image…' : 'Generate from Image (LLM)'}
@@ -226,10 +254,11 @@ const LD: React.FC = () => {
 
       {/* Mandatory title INPUT */}
       <div className="ld-section">
-        <label className="ld-label">
+        <label className="ld-label" htmlFor="ld-title">
           Title
         </label>
         <input
+          id="ld-title"
           type="text"
           onChange={(e) => setTitle(e.target.value)}
           placeholder="You must insert a title to generate link"
@@ -239,10 +268,11 @@ const LD: React.FC = () => {
 
       {/* ALT TEXT INPUT */}
       <div className="ld-section">
-        <label className="ld-label">
+        <label className="ld-label" htmlFor="ld-alt-text">
           Short Description (Alt Text)
         </label>
         <input
+          id="ld-alt-text"
           type="text"
           value={altText}
           onChange={(e) => setAltText(e.target.value)}
@@ -253,10 +283,11 @@ const LD: React.FC = () => {
 
       {/* MARKDOWN LONG DESCRIPTION */}
       <div className="ld-section">
-        <label className="ld-label">
+        <label className="ld-label" htmlFor="ld-long-description">
           Long Description (Markdown)
         </label>
         <MarkdownSummaryEditor
+          textareaId="ld-long-description"
           summary={longDescription}
           onChange={setLongDescription}
         />

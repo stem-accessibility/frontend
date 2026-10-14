@@ -80,18 +80,19 @@
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
   border: none;
-  background: var(--deep-orange, #f58025);
+  /* White text on the brand orange (#f58025) is 2.7:1; this darker orange is 5.5:1 (WCAG AA). */
+  background: #b34700;
   color: var(--white, #fff);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
-  box-shadow: 0 4px 10px rgba(245, 128, 37, 0.25);
+  box-shadow: 0 4px 10px rgba(179, 71, 0, 0.25);
 }
 
 .charts-page button:hover {
-  background: var(--orange, #ffa726);
+  background: #8a3700;
   transform: translateY(-1px);
 }
 
@@ -177,8 +178,8 @@
 }
 
 .chip--active {
-  background: var(--deep-orange, #f58025);
-  border-color: var(--deep-orange, #f58025);
+  background: #b34700;
+  border-color: #b34700;
   color: var(--white, #fff);
 }
 .preset-grid {
@@ -188,18 +189,25 @@
   margin-top: 0.5rem;
 }
 
-.preset-card {
+/* `.charts-page button` (higher specificity than a lone class) paints every button solid orange;
+   a preset card is a white tile with dark text, so it restates its own colours. */
+.charts-page .preset-card {
   text-align: left;
   border-radius: 0.75rem;
   padding: 0.6rem 0.75rem;
   background: var(--white, #fff);
-  border: 1px solid rgba(24, 76, 69, 0.14);
+  color: var(--teal, #184c45);
+  border: 1px solid #767676;
+  box-shadow: none;
   cursor: pointer;
   transition: border 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
 }
 
-.preset-card h3 {
-  margin: 0 0 0.25rem;
+.charts-page .preset-card:hover {
+  background: #f4f1e8;
+}
+
+.preset-card__label {
   font-size: 0.98rem;
   font-weight: 600;
   color: var(--teal, #184c45);
@@ -211,10 +219,11 @@
   color: rgba(27, 27, 27, 0.7);
 }
 
-.preset-card--active {
-  border-color: var(--deep-orange, #f58025);
-  box-shadow: 0 0 0 1px rgba(245, 128, 37, 0.4),
-    0 8px 18px rgba(0, 0, 0, 0.05);
+/* The selected card is also exposed as aria-pressed; the thicker border keeps it visible
+   without relying on colour alone. */
+.charts-page .preset-card--active {
+  border: 3px solid #b34700;
+  padding: calc(0.6rem - 2px) calc(0.75rem - 2px);
   transform: translateY(-1px);
 }
 

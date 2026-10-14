@@ -3,6 +3,10 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import type { ParsedDataset, SonificationConfig, SonificationPresetId } from "../types/types";
 import { CsvUploadPanel } from "../components/charts/CsvUploadPanel";
+import {
+  ChartImageUploadPanel,
+  type ChartExtractionResult,
+} from "../components/charts/ChartImageUploadPanel";
 import { ColumnMappingPanel } from "../components/charts/ColumnMappingPanel";
 import { SonificationPlayer } from "../components/charts/SonificationPlayer";
 import { PermalinkBar } from "../components/charts/PermalinkBar";
@@ -57,7 +61,36 @@ const [selectedPreset, setSelectedPreset] =
   console.log("[Charts] Mounted");
 }, []);
 
+  // Set when the table came from a picture of a chart, so the page can say its values may be
+  // approximate. A CSV or an example replaces it.
+  const [imageNote, setImageNote] = useState<string | null>(null);
+
+  const handleChartImageRead = (data: ParsedDataset, result: ChartExtractionResult) => {
+    setDataset(data);
+    setError(null);
+    setSpec(null);
+    const preset = result.config.preset as SonificationPresetId | null | undefined;
+    const known = preset && preset in SONIFICATION_PRESETS ? preset : null;
+    if (known) setSelectedPreset(known);
+    const use = known ?? config.preset;
+    setConfig((prev) => ({
+      ...prev,
+      ...autoMapColumnsForPreset(data, use),
+      preset: use,
+      title: result.config.title ?? startingTitle,
+      xLabel: result.config.xLabel ?? null,
+      yLabel: result.config.yLabel ?? null,
+      categoryOrder: "data",
+    }));
+    setImageNote(
+      result.values_are_estimated
+        ? "These values were read from a picture of a chart and may be approximate. Check them against the original before relying on them."
+        : "These values were read from a picture of a chart. Check them against the original."
+    );
+  };
+
   const handleDatasetLoaded = (data: ParsedDataset) => {
+    setImageNote(null);
     setDataset(data);
     setError(null);
     setSpec(null); // a specification was applied to the previous data
@@ -80,6 +113,7 @@ const [selectedPreset, setSelectedPreset] =
     if (loaded.dataset && !loaded.usedUploadedData) {
       const data = loaded.dataset;
       setDataset(data);
+      setImageNote(null);
       setConfig((prev) => ({
         ...prev,
         ...autoMapColumnsForPreset(data, prev.preset),
@@ -153,6 +187,7 @@ const [selectedPreset, setSelectedPreset] =
     // If there's no uploaded dataset yet, load the example for this preset
    if (!dataset) {
     setDataset(exampleDataset);
+    setImageNote(null);
 
     const autoConfig = autoMapColumnsForPreset(exampleDataset, id);
     setConfig((prev) => ({
@@ -172,7 +207,8 @@ const [selectedPreset, setSelectedPreset] =
 
 
   return (
-    <main className="charts-page">
+    // The app shell already provides the page's one <main>; a second one is a duplicate landmark.
+    <div className="charts-page">
       <div className="charts-header">
         <h1>Audio Charts with <a href="https://see-mike-out.github.io/erie-editor/paper/">Erie</a></h1>
         <p>
@@ -204,9 +240,10 @@ const [selectedPreset, setSelectedPreset] =
                 key={id}
                 type="button"
                 className={isActive ? "preset-card preset-card--active" : "preset-card"}
+                aria-pressed={isActive}
                 onClick={() => handlePresetSelect(id)}
               >
-                <h3>{preset.label}</h3>
+                <span className="preset-card__label">{preset.label}</span>
               </button>
             );
           })}
@@ -221,6 +258,7 @@ const [selectedPreset, setSelectedPreset] =
         const exampleDataset = preset.exampleDataset;
 
         setDataset(exampleDataset);
+        setImageNote(null);
 
         const autoConfig = autoMapColumnsForPreset(exampleDataset, selectedPreset);
         setConfig((prev) => ({
@@ -240,6 +278,8 @@ const [selectedPreset, setSelectedPreset] =
       <section className="charts-layout">
         {/* Left side: Upload + mapping */}
         <div className="charts-left">
+          <ChartImageUploadPanel signedIn={!!user} onExtracted={handleChartImageRead} />
+
           <CsvUploadPanel onDatasetLoaded={handleDatasetLoaded} />
 
           <ChartSpecPanel
@@ -310,6 +350,7 @@ const [selectedPreset, setSelectedPreset] =
               <div className="charts-card-header">
                 <h2 id="chart-data-heading">Data table</h2>
               </div>
+              {imageNote && <p className="hint">{imageNote}</p>}
               <ChartDataTable
                 dataset={dataset}
                 caption={
@@ -364,6 +405,6 @@ const [selectedPreset, setSelectedPreset] =
           />
         </div>
       </section>
-    </main>
+    </div>
   );
 }
