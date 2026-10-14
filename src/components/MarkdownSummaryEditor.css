@@ -1,0 +1,13 @@
+/* WCAG 2.2 target size (2.5.8): the library's toolbar buttons are about 20px tall. Give each a
+   24px minimum target with a little room between them. */
+.md-editor-wrap .w-md-editor-toolbar li > button {
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-editor-wrap .w-md-editor-toolbar li {
+  margin: 0 2px;
+}

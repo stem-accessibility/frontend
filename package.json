@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "node e2e/smoke.mjs",
+    "test:a11y": "node e2e/a11y.mjs",
     "test:e2e:try": "node e2e/try.mjs"
   },
   "dependencies": {
@@ -40,18 +41,22 @@
     "vega-lite": "^6.5.0"
   },
   "devDependencies": {
+    "@axe-core/puppeteer": "^4.13.0",
     "@eslint/js": "^9.39.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/dagre": "^0.7.53",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.5.2",
+    "axe-core": "^4.14.0",
     "depcheck": "^1.4.7",
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
+    "jsdom": "^29.1.1",
     "puppeteer-core": "^23.11.1",
     "ts-prune": "^0.10.3",
     "typescript": "~5.8.3",

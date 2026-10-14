@@ -63,6 +63,9 @@ export default function CreatePage() {
   const [showUpload, setShowUpload] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [imagePublic, setImagePublic] = useState(false);
+  // Keep the original next to the STEM image so it can be compared while editing. On by default
+  // for the person's own work; unchecking it means the image is not stored at all.
+  const [keepImage, setKeepImage] = useState(true);
 
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -157,17 +160,19 @@ export default function CreatePage() {
       if (!result?.mermaid_json) throw new Error("Failed to process STEM image.");
 
       setStatus("Saving…");
-      const imageDataUrl = result.image_data_url || (await readAsDataUrl(file));
+      // When the person chose not to keep the original, it is not sent to be saved at all.
+      const imageDataUrl = keepImage ? result.image_data_url || (await readAsDataUrl(file)) : null;
       const created = await apiFetch<{ flowchart_id: string }>("/flowcharts", {
         method: "POST",
         json: {
           json_data: result.mermaid_json,
-          image_data_url: imageDataUrl,
-          image_mime: result.image_mime || file.type || "image/png",
+          ...(imageDataUrl
+            ? { image_data_url: imageDataUrl, image_mime: result.image_mime || file.type || "image/png" }
+            : {}),
           title: name.trim(),
           flowchart_type: type,
           sharing,
-          image_public: imagePublic,
+          image_public: keepImage && imagePublic,
         },
       });
       logResearchEvent({
@@ -369,7 +374,26 @@ export default function CreatePage() {
                 )}
               </div>
 
-              {sharesImage && (
+              <label className="create-check">
+                <input
+                  type="checkbox"
+                  checked={keepImage}
+                  onChange={(e) => setKeepImage(e.target.checked)}
+                  disabled={busy}
+                  aria-describedby={`${id}-keep-help`}
+                />
+                <span>
+                  <strong>Keep the original image with this STEM image.</strong>
+                  <span id={`${id}-keep-help`} className="create-hint">
+                    {" "}
+                    So you can compare it while editing. Only you can see it unless you choose to show it
+                    on the shared page, and it is deleted when you delete the STEM image. If you leave
+                    this unchecked the image is not saved after it has been read.
+                  </span>
+                </span>
+              </label>
+
+              {sharesImage && keepImage && (
                 <label className="create-check">
                   <input
                     type="checkbox"
@@ -384,11 +408,20 @@ export default function CreatePage() {
                 </label>
               )}
 
+              <p className="create-hint" id={`${id}-dataflow`}>
+                <strong>Where your image goes.</strong> To turn it into a diagram we send it to Google
+                Cloud Vision, to read the text, and to an AI model (Google&rsquo;s Gemini, through
+                OpenRouter), to work out the arrows. Those services may log or keep it, so it may not
+                be private. Do not upload an image with personal or confidential information. To avoid
+                this, write the diagram as text with the Markdown editor.
+              </p>
+
               <div className="create-actions">
                 <button
                   type="button"
                   className="btn"
                   disabled={!file || busy}
+                  aria-describedby={`${id}-dataflow`}
                   onClick={processImage}
                 >
                   {busy ? "Processing…" : "Create from image"}
