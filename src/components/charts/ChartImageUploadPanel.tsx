@@ -1,7 +1,7 @@
 // src/components/charts/ChartImageUploadPanel.tsx
 // Read a chart image into a table. The AI model (Gemini, through OpenRouter) is used only when
 // the person has chosen it; the built-in reader keeps the image on our servers.
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ParsedDataset } from "../../types/types";
 import { apiFetch, apiUpload, publicFetch } from "../../lib/api";
 import { guestFetch } from "../../lib/guest";
@@ -30,6 +30,12 @@ export interface ChartExtractionResult {
 interface Props {
   signedIn: boolean;
   onExtracted: (data: ParsedDataset, result: ChartExtractionResult) => void;
+  /** A picture chosen on the previous page (/create). It is only selected, never read: the person
+   *  still chooses how it is read (and agrees to the AI model, if on offer) before "Read chart". */
+  initialFile?: File | null;
+  /** How the person said, on /create, that the picture may be read. Set only by their pressing a
+   *  button there. Without it a person with the AI model on offer is asked here, as before. */
+  initialChoice?: "local" | "ai";
 }
 
 type Options = ExtractionOptions;
@@ -58,18 +64,21 @@ function messageOf(e: unknown, fallback: string) {
   return raw.replace(/^\d{3}[^:]*:\s*/, "") || fallback;
 }
 
-export function ChartImageUploadPanel({ signedIn, onExtracted }: Props) {
+export function ChartImageUploadPanel({ signedIn, onExtracted, initialFile = null, initialChoice }: Props) {
   const id = useId();
   const [options, setOptions] = useState<Options | "unavailable" | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [choice, setChoice] = useState<Choice>("");
+  const [file, setFile] = useState<File | null>(initialFile);
+  // A choice only counts together with the picture it was made for.
+  const [choice, setChoice] = useState<Choice>(initialFile && initialChoice ? initialChoice : "");
+  // True while `choice` is the one made on /create for the handed-over picture.
+  const [choiceIsFromCreate, setChoiceIsFromCreate] = useState(!!(initialFile && initialChoice));
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<Status>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    publicFetch<Options>("/chart-extraction/options")
+    publicFetch<Options>("/chart-extraction/options", { timeoutMs: 20000 })
       .then((o) => !cancelled && setOptions(o))
       .catch(() => !cancelled && setOptions("unavailable"));
     return () => {
@@ -130,12 +139,39 @@ export function ChartImageUploadPanel({ signedIn, onExtracted }: Props) {
     }
   }
 
+  // A picture handed over from /create is acted on once, as soon as it is known what this person
+  // may use. When nothing needs deciding (a guest, or no AI model on offer) it is read with the
+  // built-in reader, which keeps the image on our servers. When the AI model is on offer the person
+  // must choose first, so they are told and taken to that choice instead of left on a quiet page.
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const handedOverActedOn = useRef(false);
+  useEffect(() => {
+    if (!initialFile || handedOverActedOn.current || options === null || nothing) return;
+    handedOverActedOn.current = true;
+    if (canRead) {
+      void read();
+    } else if (needsChoice && !choiceMade) {
+      setStatus({
+        kind: "info",
+        text: "Your picture is ready. Choose how it may be read, then press Read chart.",
+      });
+      sectionRef.current?.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options, nothing, canRead, needsChoice, choiceMade]);
+
+  // Choosing here replaces whatever was chosen on /create.
+  function pickChoice(c: Choice) {
+    setChoice(c);
+    setChoiceIsFromCreate(false);
+  }
+
   const fileId = `${id}-file`;
   const noticeId = `${id}-notice`;
   const choiceName = `${id}-choice`;
 
   return (
-    <section className="card" aria-labelledby={`${id}-heading`} aria-busy={busy}>
+    <section ref={sectionRef} className="card" aria-labelledby={`${id}-heading`} aria-busy={busy}>
       <h2 id={`${id}-heading`}>Read a chart image</h2>
 
       {options === null && <p role="status">Checking what is available…</p>}
@@ -159,8 +195,20 @@ export function ChartImageUploadPanel({ signedIn, onExtracted }: Props) {
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null);
               setStatus(null);
+              // The agreement given on /create was for the earlier picture, not this one.
+              if (choiceIsFromCreate) {
+                setChoice("");
+                setChoiceIsFromCreate(false);
+              }
             }}
           />
+          {/* The file field cannot show a file that came from the previous page, so say so. */}
+          {initialFile && file === initialFile && (
+            <p className="hint">
+              Picture chosen on the previous page: <strong>{initialFile.name}</strong>. Choose a
+              different file above to replace it.
+            </p>
+          )}
 
           {offerAi ? (
             <fieldset disabled={busy}>
@@ -177,7 +225,7 @@ export function ChartImageUploadPanel({ signedIn, onExtracted }: Props) {
                     name={choiceName}
                     value="local"
                     checked={choice === "local"}
-                    onChange={() => setChoice("local")}
+                    onChange={() => pickChoice("local")}
                     aria-describedby={noticeId}
                   />{" "}
                   Built-in reader only. The image stays on our servers. Charts with several series may be
@@ -190,7 +238,7 @@ export function ChartImageUploadPanel({ signedIn, onExtracted }: Props) {
                   name={choiceName}
                   value="ai"
                   checked={choice === "ai"}
-                  onChange={() => setChoice("ai")}
+                  onChange={() => pickChoice("ai")}
                   aria-describedby={noticeId}
                 />{" "}
                 {useLocal
@@ -204,7 +252,7 @@ export function ChartImageUploadPanel({ signedIn, onExtracted }: Props) {
                     name={choiceName}
                     value="none"
                     checked={choice === "none"}
-                    onChange={() => setChoice("none")}
+                    onChange={() => pickChoice("none")}
                     aria-describedby={noticeId}
                   />{" "}
                   Do not use the AI model. I will enter the data as a CSV instead.

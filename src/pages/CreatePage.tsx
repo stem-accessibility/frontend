@@ -1,6 +1,7 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch, apiUpload } from "../lib/api";
+import { useAuth } from "../auth/AuthProvider";
+import { apiFetch, apiUpload, publicFetch } from "../lib/api";
 import type { FlowchartData } from "../types/types";
 import UploadJobStatus from "../components/upload/UploadJobStatus";
 import { logResearchEvent } from "../lib/logResearchEvent";
@@ -18,6 +19,8 @@ import {
 } from "../lib/sharing";
 import { clearLatestDiagramCache } from "../lib/editorCache";
 import { MARKDOWN_EXAMPLES } from "../lib/mermaidText";
+import { CHART_FILE_ACCEPT, chartFileKind } from "../components/charts/chartFileKind";
+import { extractionPolicy, type ExtractionOptions } from "../components/charts/chartExtractionPolicy";
 import "./styles/CreatePage.css";
 
 type JobResult = {
@@ -58,6 +61,25 @@ export default function CreatePage() {
   // "Chart" sits beside the image types in the menu but is not a DiagramType: a chart is data
   // explored on the Charts page, not nodes and arrows, and it is not saved to the account yet.
   const [isChart, setIsChart] = useState(false);
+  // A chart starts from a CSV or from a picture of a chart. The file is only chosen here; the chart
+  // tool reads it (and asks how a picture may be read) so that choice is made in one place.
+  const [showChartUpload, setShowChartUpload] = useState(false);
+  const [chartFile, setChartFile] = useState<File | null>(null);
+  const [chartFileError, setChartFileError] = useState("");
+  // What this deployment can read a picture with; asked once, when the Upload panel first opens.
+  // "unavailable" (the request failed) falls back to a plain Continue, and the chart tool explains.
+  const { user } = useAuth();
+  const [readers, setReaders] = useState<ExtractionOptions | "unavailable" | null>(null);
+  useEffect(() => {
+    if (!showChartUpload || readers !== null) return;
+    let cancelled = false;
+    publicFetch<ExtractionOptions>("/chart-extraction/options", { timeoutMs: 20000 })
+      .then((o) => !cancelled && setReaders(o))
+      .catch(() => !cancelled && setReaders("unavailable"));
+    return () => {
+      cancelled = true;
+    };
+  }, [showChartUpload, readers]);
   const [sharing, setSharing] = useState<Sharing>(DEFAULT_SHARING);
 
   const [showUpload, setShowUpload] = useState(false);
@@ -119,15 +141,35 @@ export default function CreatePage() {
     navigate("/editor");
   }
 
-  function openChart() {
+  function openChart(file: File | null = null, choice?: "local" | "ai") {
     logResearchEvent({
       event_type: "Create_Chart",
       editor_mode: "chart",
       success: true,
       event_data: { source_page: "CreatePage", has_name: hasName },
     });
-    // The name becomes the chart's starting title; the Charts page reads it from router state.
-    navigate("/charts", { state: hasName ? { title: name.trim() } : undefined });
+    // The name becomes the chart's starting title and the chosen file is read there; the Charts
+    // page takes them from router state. `choice` is how the person said a picture may be read:
+    // it is set only by pressing one of the two buttons below, never assumed.
+    const state = {
+      ...(hasName ? { title: name.trim() } : {}),
+      ...(file ? { file } : {}),
+      ...(file && choice ? { choice } : {}),
+    };
+    navigate("/charts", { state: Object.keys(state).length ? state : undefined });
+  }
+
+  function chooseChartFile(file: File | null) {
+    setChartFile(null);
+    setChartFileError("");
+    if (!file) return;
+    if (!chartFileKind(file)) {
+      setChartFileError(
+        `${file.name} is not a CSV file or a PNG, JPEG or WebP picture. Choose one of those.`
+      );
+      return;
+    }
+    setChartFile(file);
   }
 
   async function processImage() {
@@ -214,13 +256,27 @@ export default function CreatePage() {
 
   const sharesImage = sharing !== "private";
 
+  // How a chosen chart picture can be read. The same rules as the chart tool: the AI model is on
+  // offer only to someone signed in, and only when the server has one configured.
+  const pictureChosen = !!chartFile && chartFileKind(chartFile) === "image";
+  const readerPolicy = extractionPolicy({
+    signedIn: !!user,
+    options: readers && readers !== "unavailable" ? readers : null,
+    choice: "",
+    hasFile: !!chartFile,
+    busy: false,
+  });
+  const offerAiChoice = pictureChosen && readerPolicy.offerAi;
+  // Signed in with a picture: wait for the answer so the buttons do not change under the person.
+  const checkingReaders = pictureChosen && !!user && readers === null;
+
   return (
     <div className="create-page">
       <div className="create-shell">
         <h1 className="create-title">Create a STEM image</h1>
         <p className="create-subtitle">
           {isChart
-            ? "Name it, then explore data from a CSV file as a table, a navigable outline, and sound."
+            ? "Name it, then explore data from a CSV file or a chart picture as a table, a navigable outline, and sound."
             : "Name it, choose its type and who can see it, then upload an image or write it as text."}
         </p>
 
@@ -241,7 +297,7 @@ export default function CreatePage() {
               onChange={(e) => setName(e.target.value)}
               autoComplete="off"
               required={!isChart}
-              aria-describedby={isChart || hasName ? undefined : whyId}
+              aria-describedby={hasName ? undefined : whyId}
             />
           </div>
 
@@ -260,6 +316,8 @@ export default function CreatePage() {
                   return;
                 }
                 setIsChart(false);
+                setShowChartUpload(false);
+                chooseChartFile(null);
                 const next = normalizeDiagramType(e.target.value);
                 setType(next);
                 if (!supportsImageUpload(next)) setShowUpload(false);
@@ -271,11 +329,11 @@ export default function CreatePage() {
                   {t.label}
                 </option>
               ))}
-              <option value="chart">Chart from a CSV file</option>
+              <option value="chart">Chart</option>
             </select>
             <p id={`${id}-type-hint`} className="create-hint">
               {isChart
-                ? "Data in rows and columns, such as a time series or categories with values. When you are signed in you can save a shareable link from the chart tool."
+                ? "Data in rows and columns, such as a time series or categories with values. Upload a CSV file, or a picture of a chart (PNG, JPEG or WebP) to read it into a table. When you are signed in you can save a shareable link from the chart tool."
                 : DIAGRAM_TYPES.find((t) => t.value === type)?.hint}
             </p>
           </div>
@@ -301,7 +359,17 @@ export default function CreatePage() {
 
           {isChart && (
             <div className="create-actions" role="group" aria-label="How to start">
-              <button type="button" className="btn" onClick={openChart}>
+              <button
+                type="button"
+                className="btn"
+                disabled={!hasName}
+                aria-describedby={hasName ? undefined : whyId}
+                aria-expanded={showChartUpload}
+                onClick={() => setShowChartUpload((v) => !v)}
+              >
+                Upload
+              </button>
+              <button type="button" className="btn btn--outline" onClick={() => openChart()}>
                 Open chart tool
               </button>
             </div>
@@ -341,9 +409,11 @@ export default function CreatePage() {
             )}
           </div>
           )}
-          {!isChart && !hasName && (
+          {!hasName && (
             <p id={whyId} className="create-why">
-              Enter a name to enable these buttons.
+              {isChart
+                ? "Enter a name to enable Upload. You can open the chart tool without one."
+                : "Enter a name to enable these buttons."}
             </p>
           )}
           {!isChart && !canUpload && (
@@ -352,6 +422,108 @@ export default function CreatePage() {
               {` ${DIAGRAM_TYPES.find((t) => t.value === type)?.label ?? "This type"}`} images are
               written as text: use the Markdown editor.
             </p>
+          )}
+
+          {isChart && showChartUpload && hasName && (
+            <section className="create-panel" aria-label="Upload a CSV or a chart picture">
+              <div className="create-field">
+                <label className="create-label" htmlFor={`${id}-chart-file`}>
+                  CSV file or picture of a chart
+                </label>
+                <input
+                  id={`${id}-chart-file`}
+                  type="file"
+                  accept={CHART_FILE_ACCEPT}
+                  aria-describedby={`${id}-chart-file-help`}
+                  onChange={(e) => chooseChartFile(e.target.files?.[0] ?? null)}
+                />
+                {chartFile && (
+                  <p className="create-hint" aria-live="polite">
+                    Selected: <strong>{chartFile.name}</strong>
+                  </p>
+                )}
+              </div>
+
+              <p className="create-hint" id={`${id}-chart-file-help`}>
+                <strong>What happens next.</strong> A CSV file (data in rows and columns, with column
+                names in the first row) opens in the chart tool as a table. A picture of a chart (PNG,
+                JPEG or WebP) opens there too and is read into a table. The built-in reader keeps the
+                picture on our servers. If you are signed in you may be asked whether an AI model
+                (Google&rsquo;s Gemini, through OpenRouter) may read it instead, which sends the picture
+                to those services. That only happens if you choose it, with a button below, after you
+                pick a picture.
+              </p>
+
+              {chartFileError && (
+                <p role="alert" className="create-why">
+                  {chartFileError}
+                </p>
+              )}
+
+              {/* A picture is read with "Extract" (the built-in reader, which keeps it on our servers) or,
+                  for a signed-in person when the server has an AI model, "Extract with AI support".
+                  Pressing the second is the only way the AI model is asked for. A CSV has nothing to
+                  extract, so it is Continue. */}
+              {pictureChosen && !checkingReaders && (
+                <p className="create-hint" id={`${id}-reader-notice`}>
+                  {offerAiChoice ? (
+                    <>
+                      <strong>How should this picture be read?</strong>{" "}
+                      {readerPolicy.useLocal
+                        ? "“Extract” uses the built-in reader, which keeps the picture on our servers. “Extract with AI support” tries the built-in reader first and sends the picture to Google’s Gemini, through OpenRouter, only when the built-in reader is not sure. "
+                        : "“Extract with AI support” sends the picture to Google’s Gemini, through OpenRouter. "}
+                      Those services may log or keep it, so it may not be private. Do not use it for a picture
+                      with personal or confidential information. You can enter the data as a CSV file instead.
+                    </>
+                  ) : (
+                    "The built-in reader keeps the picture on our servers. It is not sent to a third party."
+                  )}
+                </p>
+              )}
+              {checkingReaders && <p role="status">Checking how this picture can be read…</p>}
+
+              <div className="create-actions">
+                {pictureChosen ? (
+                  <>
+                    {(readerPolicy.useLocal || !offerAiChoice) && (
+                      <button
+                        type="button"
+                        className={offerAiChoice ? "btn btn--outline" : "btn"}
+                        disabled={checkingReaders}
+                        aria-describedby={checkingReaders ? undefined : `${id}-reader-notice`}
+                        // Built-in only. When the AI model is on offer this is the person's explicit
+                        // answer to "no"; otherwise there is nothing to decide and no choice is sent.
+                        onClick={() => openChart(chartFile, offerAiChoice ? "local" : undefined)}
+                      >
+                        Extract
+                      </button>
+                    )}
+                    {offerAiChoice && (
+                      <button
+                        type="button"
+                        className="btn"
+                        aria-describedby={`${id}-reader-notice`}
+                        onClick={() => openChart(chartFile, "ai")}
+                      >
+                        Extract with AI support
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!chartFile}
+                    onClick={() => openChart(chartFile)}
+                  >
+                    Continue to the chart tool
+                  </button>
+                )}
+              </div>
+              {!chartFile && !chartFileError && (
+                <p className="create-why">Choose a CSV file or a picture to continue.</p>
+              )}
+            </section>
           )}
 
           {!isChart && showUpload && canUpload && (

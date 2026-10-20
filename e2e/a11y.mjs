@@ -44,6 +44,31 @@ const SCANS = [
     act: (page) => choosePicture(page, 'input[type="file"][accept*="image/png"]'),
   },
   { name: "/create", path: "/create", ready: "input[type=text]" },
+  {
+    name: "/create (Chart chosen, Upload panel open)",
+    path: "/create",
+    ready: "input[type=text]",
+    act: async (page) => {
+      await page.select("select", "chart");
+      await page.type("input[type=text]", "Scan chart");
+      const [upload] = await page.$$("xpath/.//button[normalize-space()='Upload']");
+      await upload.click();
+      await page.waitForSelector('input[type="file"][accept*="text/csv"]', { timeout: 5000 });
+    },
+  },
+  {
+    name: "/create (Chart, picture chosen, AI choice shown)",
+    path: "/create",
+    ready: "input[type=text]",
+    act: async (page) => {
+      await page.select("select", "chart");
+      await page.type("input[type=text]", "Scan chart");
+      const [upload] = await page.$$("xpath/.//button[normalize-space()='Upload']");
+      await upload.click();
+      await choosePicture(page, 'input[type="file"][accept*="text/csv"]');
+      await page.waitForSelector("xpath/.//button[normalize-space()='Extract with AI support']", { timeout: 6000 });
+    },
+  },
   { name: "/ld (before choosing a picture)", path: "/ld", ready: ".ld-container" },
   {
     name: "/ld (picture chosen, AI agreement shown)",

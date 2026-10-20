@@ -1,24 +1,24 @@
 // src/components/charts/CsvUploadPanel.tsx
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import Papa from "papaparse";
 import type { ParsedDataset } from "../../types/types";
 import { datasetFromGrid, MAX_CSV_ROWS } from "../../services/csvParse";
 
 interface Props {
   onDatasetLoaded: (data: ParsedDataset) => void;
+  /** A CSV chosen on the previous page (/create); it is read once when this panel first shows. */
+  initialFile?: File | null;
 }
 
 type Status = { kind: "ok" | "error"; text: string } | null;
 
-export function CsvUploadPanel({ onDatasetLoaded }: Props) {
+export function CsvUploadPanel({ onDatasetLoaded, initialFile = null }: Props) {
   const inputId = useId();
   const [status, setStatus] = useState<Status>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    const file = input.files?.[0];
-    if (!file) return;
-
+  // `input` is the file field to clear afterwards so the same file can be chosen again; a file
+  // handed over from another page has no field here.
+  const loadFile = (file: File, input: HTMLInputElement | null) => {
     Papa.parse<unknown[]>(file, {
       header: false,
       dynamicTyping: true,
@@ -51,14 +51,31 @@ export function CsvUploadPanel({ onDatasetLoaded }: Props) {
           onDatasetLoaded(dataset);
         }
         // Allow choosing the same file again after fixing it.
-        input.value = "";
+        if (input) input.value = "";
       },
       error: (err) => {
         setStatus({ kind: "error", text: `Could not read ${file.name}: ${err.message}` });
-        input.value = "";
+        if (input) input.value = "";
       },
     });
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    loadFile(file, input);
+  };
+
+  // Read the handed-over file once. The ref keeps React's development double-run of effects from
+  // loading it twice.
+  const readInitial = useRef(false);
+  useEffect(() => {
+    if (!initialFile || readInitial.current) return;
+    readInitial.current = true;
+    loadFile(initialFile, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section className="card">

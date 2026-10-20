@@ -10,6 +10,8 @@
 // Then:  npm run test:e2e:chart
 // Env: FRONTEND_URL (default http://localhost:5173), CHROME_PATH (default: macOS Chrome),
 //      CHART_TIMEOUT_MS (default 180000: the first read after the reader starts loads the model).
+// For the /create case the backend also needs an AI key set (any value, e.g. ACCESSFLOW_OPENROUTER_API_KEY=x)
+// so that the two choices appear; the key is never used.
 // It never chooses the AI model, so nothing is sent to a third party. It creates jobs in whatever
 // database the backend uses, so point the backend at a throwaway SQLite file.
 import path from "node:path";
@@ -25,6 +27,15 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 // Pictures with known answers (the project's evaluation set and the first test picture).
 const CASES = [
   { name: "single-series bar", file: "barchart.png", rows: 8, cols: 2, warning: false },
+  {
+    // The same picture, but chosen on /create (name, Chart, Upload) and handed to /charts.
+    name: "single-series bar, started from /create",
+    file: "barchart.png",
+    rows: 8,
+    cols: 2,
+    warning: false,
+    via: "create",
+  },
   {
     name: "two-series grouped bar",
     file: "tmp/chart-eval/data/synth/grouped_0.png",
@@ -58,34 +69,89 @@ try {
       req.continue();
     });
 
-    await page.goto(FRONTEND + "/charts", { waitUntil: "networkidle0" });
-    const input = await page.waitForSelector('input[type="file"][accept*="image/png"]', { timeout: 10000 }).catch(() => null);
+    let input;
+    if (c.via === "create") {
+      // The flow a person follows: name it, choose Chart, Upload, pick the picture, Continue.
+      await page.goto(FRONTEND + "/create", { waitUntil: "networkidle0" });
+      await page.select("select", "chart");
+      await page.type("input[type=text]", "E2E chart");
+      const [uploadBtn] = await page.$$("xpath/.//button[normalize-space()='Upload']");
+      check(`${c.name}: Upload is on once the chart has a name`, uploadBtn && !(await uploadBtn.evaluate((b) => b.disabled)));
+      if (!uploadBtn) {
+        await page.close();
+        continue;
+      }
+      await uploadBtn.click();
+      const chooser = await page.waitForSelector('input[type="file"][accept*="text/csv"]', { timeout: 5000 }).catch(() => null);
+      check(`${c.name}: the file chooser opens`, !!chooser);
+      if (!chooser) {
+        await page.close();
+        continue;
+      }
+      await chooser.uploadFile(path.join(ROOT, c.file));
+      // With the AI model on offer a picture gets two buttons. The test only ever presses Extract
+      // (the built-in reader), so nothing is sent to a third party and no credits are spent.
+      const builtIn = await page
+        .waitForSelector("xpath/.//button[normalize-space()='Extract']", { timeout: 6000 })
+        .catch(() => null);
+      const [aiButton] = await page.$$("xpath/.//button[normalize-space()='Extract with AI support']");
+      check(
+        `${c.name}: a signed-in picture offers Extract and Extract with AI support as separate buttons`,
+        !!builtIn && !!aiButton,
+        "start the backend with ACCESSFLOW_OPENROUTER_API_KEY set (any value) and UNICHART_URL"
+      );
+      if (!builtIn) {
+        await page.close();
+        continue;
+      }
+      await builtIn.click();
+      await page.waitForFunction(() => location.pathname === "/charts", { timeout: 8000 }).catch(() => {});
+      check(`${c.name}: the chart tool opens`, new URL(page.url()).pathname === "/charts", page.url());
+      input = await page.waitForSelector('input[type="file"][accept*="image/png"]', { timeout: 10000 }).catch(() => null);
+      const noted = await page.evaluate(() => document.body.innerText.includes("Picture chosen on the previous page"));
+      check(`${c.name}: the picture arrives already selected`, noted);
+    } else {
+      await page.goto(FRONTEND + "/charts", { waitUntil: "networkidle0" });
+      input = await page.waitForSelector('input[type="file"][accept*="image/png"]', { timeout: 10000 }).catch(() => null);
+    }
     check(`${c.name}: the chart image panel is offered`, !!input, "no file input; is the backend reachable and CORS set for this port?");
     if (!input) {
       await page.close();
       continue;
     }
 
-    await input.uploadFile(path.join(ROOT, c.file));
+    if (c.via === "create") {
+      // The choice was made on /create, so the chart tool starts reading by itself.
+      const chosen = await page
+        .waitForFunction(
+          () => document.querySelector('input[type="radio"][value="local"]')?.checked === true,
+          { timeout: 8000 }
+        )
+        .then(() => true)
+        .catch(() => false);
+      check(`${c.name}: the chart tool shows the built-in reader as chosen`, chosen);
+    } else {
+      await input.uploadFile(path.join(ROOT, c.file));
 
-    // With the AI model on offer the page needs a choice. Pick the built-in reader only.
-    const local = await page.$('input[type="radio"][value="local"]');
-    if (await page.$('input[type="radio"]')) {
-      check(`${c.name}: the built-in reader is offered`, !!local, "start the backend with UNICHART_URL");
-      if (!local) {
+      // With the AI model on offer the page needs a choice. Pick the built-in reader only.
+      const local = await page.$('input[type="radio"][value="local"]');
+      if (await page.$('input[type="radio"]')) {
+        check(`${c.name}: the built-in reader is offered`, !!local, "start the backend with UNICHART_URL");
+        if (!local) {
+          await page.close();
+          continue;
+        }
+        await local.click();
+      }
+
+      const [read] = await page.$$("xpath/.//button[normalize-space()='Read chart']");
+      check(`${c.name}: Read chart is enabled`, read && !(await read.evaluate((b) => b.disabled)));
+      if (!read) {
         await page.close();
         continue;
       }
-      await local.click();
+      await read.click();
     }
-
-    const [read] = await page.$$("xpath/.//button[normalize-space()='Read chart']");
-    check(`${c.name}: Read chart is enabled`, read && !(await read.evaluate((b) => b.disabled)));
-    if (!read) {
-      await page.close();
-      continue;
-    }
-    await read.click();
 
     const outcome = await page
       .waitForFunction(

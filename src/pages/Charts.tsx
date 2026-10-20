@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import type { ParsedDataset, SonificationConfig, SonificationPresetId } from "../types/types";
 import { CsvUploadPanel } from "../components/charts/CsvUploadPanel";
+import { chartFileKind } from "../components/charts/chartFileKind";
 import {
   ChartImageUploadPanel,
   type ChartExtractionResult,
@@ -37,8 +38,15 @@ const DEFAULT_CONFIG: SonificationConfig = {
 export default function Charts() {
   // /create passes the name the author chose; it becomes the chart's starting title.
   const location = useLocation();
-  const stateTitle = (location.state as { title?: unknown } | null)?.title;
+  const navState = location.state as { title?: unknown; file?: unknown; choice?: unknown } | null;
+  const stateTitle = navState?.title;
   const startingTitle = typeof stateTitle === "string" && stateTitle.trim() ? stateTitle.trim() : null;
+  // /create also hands over the CSV or chart picture the author chose. After a reload the browser
+  // may not keep it, in which case this is simply empty and the panels start blank.
+  const startFile = navState?.file instanceof File ? navState.file : null;
+  const startKind = startFile ? chartFileKind(startFile) : null;
+  // How the author said a picture may be read, from a button on /create. Anything else is ignored.
+  const startChoice = navState?.choice === "local" || navState?.choice === "ai" ? navState.choice : undefined;
 
   const [dataset, setDataset] = useState<ParsedDataset | null>(null);
   const [config, setConfig] = useState<SonificationConfig>({ ...DEFAULT_CONFIG, title: startingTitle });
@@ -212,8 +220,8 @@ const [selectedPreset, setSelectedPreset] =
       <div className="charts-header">
         <h1>Audio Charts with <a href="https://see-mike-out.github.io/erie-editor/paper/">Erie</a></h1>
         <p>
-          Upload a CSV, map your columns, and generate an Erie-based sonification
-          with a shareable permalink.
+          Upload a CSV or a picture of a chart, map your columns, and generate an Erie-based
+          sonification with a shareable permalink.
         </p>
       </div>
 
@@ -278,9 +286,17 @@ const [selectedPreset, setSelectedPreset] =
       <section className="charts-layout">
         {/* Left side: Upload + mapping */}
         <div className="charts-left">
-          <ChartImageUploadPanel signedIn={!!user} onExtracted={handleChartImageRead} />
+          <ChartImageUploadPanel
+            signedIn={!!user}
+            onExtracted={handleChartImageRead}
+            initialFile={startKind === "image" ? startFile : null}
+            initialChoice={startKind === "image" ? startChoice : undefined}
+          />
 
-          <CsvUploadPanel onDatasetLoaded={handleDatasetLoaded} />
+          <CsvUploadPanel
+            onDatasetLoaded={handleDatasetLoaded}
+            initialFile={startKind === "csv" ? startFile : null}
+          />
 
           <ChartSpecPanel
             dataset={dataset}
