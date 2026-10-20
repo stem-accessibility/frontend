@@ -149,6 +149,107 @@ describe("ChartImageUploadPanel", () => {
     expect((screen.getByRole("button", { name: "Read chart" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it("a picture handed over from /create is selected and named, and still waits for the choice", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    render(<ChartImageUploadPanel signedIn onExtracted={vi.fn()} initialFile={png()} />);
+
+    expect(await screen.findByText(/Picture chosen on the previous page/)).toBeTruthy();
+    expect(screen.getByText("chart.png")).toBeTruthy();
+    expect(await screen.findByRole("group", { name: "How should this chart be read?" })).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Read chart" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("Choose how to read the chart to continue.")).toBeTruthy();
+    // Having the file is not agreement: nothing is sent until the person reads it.
+    expect(apiUpload).not.toHaveBeenCalled();
+    expect(guestFetch).not.toHaveBeenCalled();
+  });
+
+  it("with the AI model on offer, a handed-over picture tells the person to choose and focuses the choice", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    render(<ChartImageUploadPanel signedIn onExtracted={vi.fn()} initialFile={png()} />);
+
+    expect(await screen.findByText(/Your picture is ready\. Choose how it may be read/)).toBeTruthy();
+    const first = screen.getAllByRole("radio")[0];
+    await waitFor(() => expect(document.activeElement).toBe(first));
+    expect(apiUpload).not.toHaveBeenCalled();
+  });
+
+  it("a guest's handed-over picture is read straight away with the built-in reader", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    const onExtracted = vi.fn();
+    render(<ChartImageUploadPanel signedIn={false} onExtracted={onExtracted} initialFile={png()} />);
+
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+    expect(guestFetch).toHaveBeenCalledTimes(1);
+    expect(apiUpload).not.toHaveBeenCalled();
+  });
+
+  it("signed in with no AI model configured, a handed-over picture is read at once and never allows the AI model", async () => {
+    optionsAre({ local: true, llm: false, mode: "unichart" });
+    const onExtracted = vi.fn();
+    render(<ChartImageUploadPanel signedIn onExtracted={onExtracted} initialFile={png()} />);
+
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+    const [, form] = vi.mocked(apiUpload).mock.calls[0];
+    expect((form as FormData).get("allow_llm")).toBe("false");
+  });
+
+  it("a choice made on /create starts the read at once: built-in only sends allow_llm=false", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    const onExtracted = vi.fn();
+    render(<ChartImageUploadPanel signedIn onExtracted={onExtracted} initialFile={png()} initialChoice="local" />);
+
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+    const [, form] = vi.mocked(apiUpload).mock.calls[0];
+    expect((form as FormData).get("allow_llm")).toBe("false");
+    // The choice is shown, so the person can see what they chose.
+    expect((screen.getByRole("radio", { name: /Built-in reader only/ }) as HTMLInputElement).checked).toBe(true);
+  });
+
+  it("a choice of the AI model made on /create sends allow_llm=true", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    const onExtracted = vi.fn();
+    render(<ChartImageUploadPanel signedIn onExtracted={onExtracted} initialFile={png()} initialChoice="ai" />);
+
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+    const [, form] = vi.mocked(apiUpload).mock.calls[0];
+    expect((form as FormData).get("allow_llm")).toBe("true");
+  });
+
+  it("a guest can never reach the AI model, even if the choice says ai", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    const onExtracted = vi.fn();
+    render(<ChartImageUploadPanel signedIn={false} onExtracted={onExtracted} initialFile={png()} initialChoice="ai" />);
+
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+    const [path, init] = vi.mocked(guestFetch).mock.calls[0];
+    expect(path).toBe("/guest/extract-chart");
+    expect(((init as RequestInit).body as FormData).has("allow_llm")).toBe(false);
+    expect(apiUpload).not.toHaveBeenCalled();
+  });
+
+  it("the agreement given on /create is for that picture: choosing another file asks again", async () => {
+    optionsAre({ local: true, llm: true, mode: "unichart" });
+    const onExtracted = vi.fn();
+    const user = userEvent.setup();
+    render(<ChartImageUploadPanel signedIn onExtracted={onExtracted} initialFile={png()} initialChoice="ai" />);
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+
+    await choosePicture(user);
+    const radios = await screen.findAllByRole("radio");
+    expect(radios.every((r) => !(r as HTMLInputElement).checked)).toBe(true);
+    expect((screen.getByRole("button", { name: "Read chart" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(apiUpload).toHaveBeenCalledTimes(1);
+  });
+
+  it("a handed-over picture is read only once", async () => {
+    optionsAre({ local: true, llm: false, mode: "unichart" });
+    const onExtracted = vi.fn();
+    const { rerender } = render(<ChartImageUploadPanel signedIn={false} onExtracted={onExtracted} initialFile={png()} />);
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledTimes(1));
+    rerender(<ChartImageUploadPanel signedIn={false} onExtracted={onExtracted} initialFile={png()} />);
+    expect(guestFetch).toHaveBeenCalledTimes(1);
+  });
+
   it("has no axe violations with the choice shown (colour contrast is checked in the browser)", async () => {
     optionsAre({ local: true, llm: true, mode: "unichart" });
     const user = userEvent.setup();

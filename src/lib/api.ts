@@ -34,11 +34,12 @@ async function parseResponse<T>(res: Response): Promise<T> {
 }
 
 /**
- * Public JSON fetch (no auth).
+ * Public JSON fetch (no auth). With `timeoutMs`, a request that has not answered by then is
+ * aborted and the promise rejects, so a stalled server cannot leave the page waiting forever.
  */
 export async function publicFetch<T = any>(
   path: string,
-  options: RequestInit & { json?: Json } = {}
+  { timeoutMs, ...options }: RequestInit & { json?: Json; timeoutMs?: number } = {}
 ): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> | undefined),
@@ -51,13 +52,19 @@ export async function publicFetch<T = any>(
     body = JSON.stringify(options.json);
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-    body,
-  });
-
-  return parseResponse<T>(res);
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      body,
+      signal: controller?.signal ?? options.signal,
+    });
+    return await parseResponse<T>(res);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /**
