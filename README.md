@@ -111,6 +111,34 @@ Navigable charts on the Charts page use [Olli](https://github.com/umwelt-data/ol
 MIT Visualization Group (BSD 3-Clause), installed from npm as `olli`.
 `src/olli/OlliView.tsx` is the only file that imports it. See [LICENSE](LICENSE) for the notice.
 
+## Braille
+
+Every STEM image has a **Braille (.brf)** view, on shared pages and in Export: a Braille Ready Format
+file (40 cells by 25 lines, North American ASCII braille) for braille displays, notetakers and
+embossers, with the title, alt text, long description and the tactile graphic's key. It is
+uncontracted Unified English Braille, translated in the browser by `src/braille/ueb.ts`.
+
+The translator is tested against [liblouis](https://liblouis.io/) (`en-ueb-g1.ctb`): the expected
+outputs in `src/braille/fixtures/liblouis-ueb-g1.json` come from it. To add a case, add a line to
+`src/braille/fixtures/corpus.txt` and run `node scripts/braille-fixtures.mjs` (needs `lou_translate`;
+`apt install liblouis-bin` or `brew install liblouis`). With liblouis installed, `npm test` also
+compares against it live.
+
+The output has not yet been reviewed by a certified braille transcriber.
+
+## Math
+
+Long descriptions can contain math in LaTeX between dollar signs: `$x^2$` inline, `$$…$$` on its
+own line (Pandoc's rules, so "$5 and $10" is not math). On the Summary view,
+[MathJax](https://www.mathjax.org/) 4 draws each formula with spoken text, keyboard exploration and
+Nemeth braille for braille displays. In the braille file, `src/math/engine.ts` writes math in
+Nemeth Code using the [Speech Rule Engine](https://github.com/Speech-Rule-Engine/speech-rule-engine)
+that MathJax itself uses.
+
+MathJax is served by the site itself: in development the `mathjaxAssets` plugin in
+`vite.config.ts` serves it from `node_modules`, and `npm run build` copies it to `dist/mathjax/`.
+The speech engine version is pinned to the one MathJax depends on.
+
 ## Accessibility
 
 We aim for WCAG 2.2 AA and treat accessibility reports as expertise. See
@@ -124,7 +152,8 @@ See [LICENSE](LICENSE). Copyright (c) 2025 University of Washington.
 ## Tests
 
 ```bash
-npm test            # unit tests (vitest): Mermaid reader, change detection, types, descriptions
+npm run lint        # eslint (CI runs this, the unit tests and the build on every push)
+npm test            # unit tests (vitest): Mermaid reader, change detection, types, descriptions, braille
 npm run test:e2e:try # Try-it (guest) test; the frontend must run without dev auth (see e2e/try.mjs)
 npm run test:e2e    # browser smoke test of the main flows; needs the local dev stack (see e2e/smoke.mjs)
 ```
