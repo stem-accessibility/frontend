@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { diagramTypeLabel, normalizeDiagramType, DIAGRAM_TYPES } from "../arboretum/diagramTypes";
 import RepoFlowchartCard, { type RepoFlowchartRow } from "../components/dashboard/RepoFlowchartCard";
@@ -7,7 +7,17 @@ import "./styles/PublicRepoPage.css";
 
 type StatusKind = "idle" | "info" | "error";
 
+/**
+ * How long to wait for the list before giving up and offering "Try again". The backend can take
+ * a while to answer the first request after it has been idle, so this is generous; without it a
+ * stalled request left the page on "Loading…" forever.
+ */
+const REPO_LOAD_TIMEOUT_MS = 20_000;
+
 function getErrorMessage(e: unknown) {
+  if (e instanceof DOMException && e.name === "AbortError") {
+    return "The server did not answer in time.";
+  }
   if (e instanceof Error) return e.message;
   return String(e);
 }
@@ -16,6 +26,10 @@ export default function PublicRepoPage() {
   const [rows, setRows] = useState<RepoFlowchartRow[]>([]);
   const [status, setStatus] = useState("Loading…");
   const [statusKind, setStatusKind] = useState<StatusKind>("info");
+  // Bumped by "Try again" to run the request once more.
+  const [attempt, setAttempt] = useState(0);
+  // "Try again" disappears while the list reloads, so focus moves to the list instead of the page top.
+  const gridRef = useRef<HTMLElement>(null);
 
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -29,7 +43,10 @@ export default function PublicRepoPage() {
         setStatus("Loading…");
 
         // Public endpoint; should NOT require auth
-        const data = await publicFetch<RepoFlowchartRow[]>("/repo", { method: "GET" });
+        const data = await publicFetch<RepoFlowchartRow[]>("/repo", {
+          method: "GET",
+          timeoutMs: REPO_LOAD_TIMEOUT_MS,
+        });
 
         if (cancelled) return;
         setRows(data);
@@ -38,7 +55,7 @@ export default function PublicRepoPage() {
       } catch (e) {
         if (cancelled) return;
         setStatusKind("error");
-        setStatus(getErrorMessage(e));
+        setStatus(`Could not load public STEM images. ${getErrorMessage(e)}`);
       }
     }
 
@@ -46,7 +63,7 @@ export default function PublicRepoPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
   const types = useMemo(() => {
     const present = new Set(rows.map((r) => normalizeDiagramType(r.flowchart_type)));
@@ -113,8 +130,36 @@ export default function PublicRepoPage() {
         </div>
       </header>
 
-      <section className="repo-grid" aria-label="Public STEM images">
-        {filtered.length === 0 ? (
+      <section
+        ref={gridRef}
+        tabIndex={-1}
+        className="repo-grid"
+        aria-label="Public STEM images"
+        aria-busy={statusKind === "info"}
+      >
+        {statusKind === "info" ? (
+          // The live region above already announces "Loading…"; this is only the visible placeholder.
+          <div className="repo-empty">
+            <div className="repo-empty__title">Loading public STEM images…</div>
+          </div>
+        ) : statusKind === "error" ? (
+          // The live region above announces the error; this offers a way forward.
+          <div className="repo-empty">
+            <div className="repo-empty__title">Public STEM images could not be loaded</div>
+            <div className="repo-empty__body">
+              <button
+                type="button"
+                className="action action--ghost"
+                onClick={() => {
+                  gridRef.current?.focus();
+                  setAttempt((n) => n + 1);
+                }}
+              >
+                Try again
+              </button>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
           loaded && rows.length === 0 ? (
             <div className="repo-empty">
               <div className="repo-empty__title">Nobody has shared a STEM image yet</div>
