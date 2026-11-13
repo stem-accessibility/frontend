@@ -30,6 +30,9 @@ API contract name the matching backend release.
   Previously only one fixed layout worked and everything else produced an empty dataset.
 
 ### Fixed
+- Browse (`/browse`): while the list loads it says "Loading public STEM images…" instead of "No matches",
+  the request gives up after 20 seconds instead of loading forever, and a failed load says why and offers
+  **Try again** (focus moves to the list while it reloads).
 - Column auto-mapping: the line preset no longer takes the time column as the value (which also drove the
   sonification's pitch), category presets no longer keep a stale time column, and columns chosen for an
   earlier file or preset are cleared. Sonification with no time column now uses row order.
