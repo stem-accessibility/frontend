@@ -1,8 +1,8 @@
 import React from "react";
+import { EXAMPLE_REPRESENTATIONS_PATH } from "../lib/exampleLinks";
 import "../pages/styles/HomeLanding.css";
 
-const FLOWCHART_REPS_URL =
-  "https://www.access-flows.com/p/66c886fb4eb5";
+const FLOWCHART_REPS_URL = EXAMPLE_REPRESENTATIONS_PATH;
 
 const HowItWorks: React.FC = () => (
   <section className="home-section" aria-labelledby="how-title">

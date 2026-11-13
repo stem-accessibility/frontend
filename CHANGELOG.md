@@ -33,6 +33,10 @@ API contract name the matching backend release.
 - Column auto-mapping: the line preset no longer takes the time column as the value (which also drove the
   sonification's pitch), category presets no longer keep a stale time column, and columns chosen for an
   earlier file or preset are cleared. Sonification with no time column now uses row order.
+- Home page: the three example links ("See what you get", "One STEM image. Multiple accessible
+  representations" and "View example representations") opened the old AccessFlow permalink, which only shows
+  "Error: Failed to fetch" since the AccessFlow backend was suspended. They now open a STEM image published
+  on this site; the link is set in `src/lib/exampleLinks.ts`.
 
 ## [0.3.0] — 2026-10-11
 

@@ -1,10 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { EXAMPLE_REPRESENTATIONS_PATH } from "../lib/exampleLinks";
 import "../pages/styles/HomeLanding.css";
 
 
-  const REPS_HUB_URL = "https://www.access-flows.com/p/66c886fb4eb5"
+const REPS_HUB_URL = EXAMPLE_REPRESENTATIONS_PATH;
 
 
 const Hero: React.FC = () => {
