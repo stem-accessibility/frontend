@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import RepresentationBrowser from "../components/access-reps/RepresentationBrowser";
+import { formatPageTitle } from "../app/pageTitles";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 
 interface PublicFlowchartResponse {
@@ -38,6 +40,9 @@ const PublicFlowchart: React.FC = () => {
   const [data, setData] = useState<PublicFlowchartResponse | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Once loaded, the tab and screen readers name the STEM image itself.
+  useDocumentTitle(data?.title ? formatPageTitle(data.title) : null);
 
 
   const API_URL = import.meta.env.VITE_API_URL;

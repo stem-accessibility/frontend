@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "../components/ProtectedRoute";
+import RouteTitle from "./RouteTitle";
 
 // Public pages
 import Home from "../pages/Home";
@@ -39,6 +40,8 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => (
 
 export default function AppRoutes() {
   return (
+    <>
+    <RouteTitle />
     <Routes>
       {/* Public */}
       <Route path="/" element={<Home />} />
@@ -127,6 +130,7 @@ export default function AppRoutes() {
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   );
 }
 
