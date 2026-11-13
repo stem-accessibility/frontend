@@ -29,7 +29,7 @@ const AccessibleMarkdown: React.FC<Props> = ({
           aria-labelledby="flowchart-caption"
         >
           <div aria-hidden="true">
-            <FlowchartViewer flowchartData={flowchartData} />
+            <FlowchartViewer flowchartData={flowchartData} decorative />
           </div>
           <figcaption id="flowchart-caption" style={{ marginTop: 8 }}>
   {figureDescription} 
