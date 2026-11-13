@@ -30,6 +30,10 @@ API contract name the matching backend release.
   Previously only one fixed layout worked and everything else produced an empty dataset.
 
 ### Fixed
+- Shared STEM image pages: the visual flowchart is hidden from screen readers (the text representations
+  describe it), but its nodes, arrows and zoom buttons were still in the Tab order, so keyboard users landed
+  on stops that screen readers could not name (axe `aria-hidden-focus`). Tab now skips them; mouse and touch
+  panning, zooming and the zoom buttons still work. The editor's preview is unchanged.
 - Column auto-mapping: the line preset no longer takes the time column as the value (which also drove the
   sonification's pitch), category presets no longer keep a stale time column, and columns chosen for an
   earlier file or preset are cleared. Sonification with no time column now uses row order.
