@@ -33,6 +33,9 @@ API contract name the matching backend release.
 - Column auto-mapping: the line preset no longer takes the time column as the value (which also drove the
   sonification's pitch), category presets no longer keep a stale time column, and columns chosen for an
   earlier file or preset are cleared. Sonification with no time column now uses row order.
+- Page titles (WCAG 2.4.2): every page now has its own title, for example "About | STEM-Accessibility" or
+  "Page not found | STEM-Accessibility", and a shared STEM image's page is titled with the image's name.
+  Previously every page kept the home page's title, so screen reader users heard the same title everywhere.
 
 ## [0.3.0] — 2026-10-11
 
