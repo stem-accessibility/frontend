@@ -1,0 +1,78 @@
+import { describe, expect, it } from "vitest";
+import { buildBrailleDocument, markdownLines, stripInlineMarkdown } from "./document";
+import { mathInStemImage, stemImageBrailleWithMath } from "./stemImage";
+import { toUeb } from "./ueb";
+
+const text = (pages: string[][]) => pages.flat().join(" ").replace(/ +/g, " ");
+
+describe("math in the braille file", () => {
+  it("keeps TeX intact when stripping Markdown", () => {
+    expect(stripInlineMarkdown("**Sum** $a_1 + b_2$ and _x_")).toBe("Sum $a_1 + b_2$ and x");
+    expect(markdownLines("- Area: $\\pi r^2$")[0]).toEqual({ kind: "item", level: 1, text: "Area: $\\pi r^2$" });
+  });
+
+  it("keeps a $ in code as a dollar sign, not math", () => {
+    expect(stripInlineMarkdown("Run `echo $z$` now")).toBe("Run echo \\$z\\$ now");
+    const doc = buildBrailleDocument({ title: "Shell", longDescription: "Run `echo $z$` now" });
+    const t = text(doc.pages);
+    expect(t).toContain(toUeb("echo $z$"));
+    expect(t).not.toContain(toUeb("LaTeX"));
+  });
+
+  it("removes emphasis and links around math whole", () => {
+    expect(stripInlineMarkdown("**bold $y^2$** and [see $x$](https://example.com)")).toBe(
+      "bold $y^2$ and see $x$"
+    );
+  });
+
+  it("keeps a multi-line displayed formula as one expression that matches its Nemeth", () => {
+    const md = "Before\n\n$$x\n- 1$$\n\nAfter";
+    expect(markdownLines(md)).toEqual([
+      { kind: "paragraph", text: "Before" },
+      { kind: "paragraph", text: "$$x\n- 1$$" },
+      { kind: "paragraph", text: "After" },
+    ]);
+    const doc = buildBrailleDocument({ title: "T", longDescription: md, math: new Map([["x\n- 1", "⠭⠤⠂"]]) });
+    expect(text(doc.pages)).toContain("⠸⠩ ⠭⠤⠂ ⠸⠱");
+  });
+
+  it("writes an escaped dollar as a dollar sign", () => {
+    const doc = buildBrailleDocument({ title: "T", longDescription: "Price \\$5 and more" });
+    expect(text(doc.pages)).toContain(toUeb("$5"));
+    expect(text(doc.pages)).not.toContain(toUeb("\\"));
+  });
+
+  it("writes math in Nemeth between the switch indicators and explains them", () => {
+    const doc = buildBrailleDocument({
+      title: "Circle",
+      longDescription: "The area is $x^2$.",
+      math: new Map([["x^2", "⠭⠘⠆"]]),
+    });
+    const t = text(doc.pages);
+    expect(t).toContain("⠸⠩ ⠭⠘⠆ ⠸⠱⠲");
+    expect(t).toContain(toUeb("Nemeth"));
+  });
+
+  it("falls back to the LaTeX source, and says so, when there is no Nemeth", () => {
+    const doc = buildBrailleDocument({ title: "Circle", longDescription: "Area $x^2$" });
+    const t = text(doc.pages);
+    expect(t).toContain(toUeb("$x^2$"));
+    expect(t).toContain(toUeb("LaTeX"));
+    expect(t).not.toContain("⠸⠩");
+  });
+
+  it("finds the math to convert and converts it with the real engine", async () => {
+    const input = {
+      title: "Pythagoras",
+      shortAlt: "Right triangle",
+      summary: "## Formula\n\n$$x^2+y^2=r^2$$\n\nCosts $5 and $10.",
+      data: { nodes: [], edges: [] },
+      includeKey: false,
+    };
+    expect(mathInStemImage(input)).toEqual(["x^2+y^2=r^2"]);
+    const doc = await stemImageBrailleWithMath(input);
+    expect(text(doc.pages)).toContain("⠸⠩ ⠭⠘⠆⠐⠬⠽⠘⠆ ⠨⠅ ⠗⠘⠆ ⠸⠱");
+    // Money is not math.
+    expect(text(doc.pages)).toContain(toUeb("$5"));
+  }, 30000);
+});

@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeMath from '../../math/rehypeMath';
+import { maskMath } from '../../math/segments';
+import MathFormula from './MathFormula';
 import { FlowchartViewer } from '../ReactFlowViewer';
 import type { FlowchartData } from '../../types/types';
 
@@ -17,6 +20,9 @@ const AccessibleMarkdown: React.FC<Props> = ({
   imageAlt,
   flowchartData,
 }) => {
+
+  // Math is swapped for tokens before Markdown runs and drawn by rehypeMath afterwards.
+  const masked = useMemo(() => maskMath(content), [content]);
 
   const figureDescription =
     imageAlt ||
@@ -51,7 +57,18 @@ const AccessibleMarkdown: React.FC<Props> = ({
       ) : null}
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[[rehypeMath, { math: masked.math }]]}
         components={{
+          // Math ($…$, $$…$$) marked by rehypeMath, drawn by MathJax.
+          span: ({ node, ...props }) =>
+            node?.properties?.dataTex !== undefined ? (
+              <MathFormula
+                tex={String(node.properties.dataTex)}
+                display={node.properties.dataDisplay === 'true'}
+              />
+            ) : (
+              <span {...props} />
+            ),
           h1: ({ node, ...props }) => <h1 tabIndex={-1} id="summary-heading" {...props} />,
           h2: ({ node, ...props }) => <h2 tabIndex={-1} {...props} />,
           h3: ({ node, ...props }) => <h3 tabIndex={-1} {...props} />,
@@ -112,7 +129,7 @@ const AccessibleMarkdown: React.FC<Props> = ({
           ),
         }}
       >
-        {content}
+        {masked.text}
       </ReactMarkdown>
     </div>
   );
