@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../components/styles/Footer.css";
 
 const REPO_URL = "https://github.com/stem-accessibility/frontend";
@@ -18,6 +19,9 @@ const Footer: React.FC = () => {
           <span className="site-footer__label">Questions?</span>
 
           <div className="site-footer__links">
+            <Link to="/resources" className="site-footer__link">
+              Resources
+            </Link>
             <a href={`mailto:${CONTACT_EMAIL}`} className="site-footer__link">
               {CONTACT_EMAIL}
             </a>

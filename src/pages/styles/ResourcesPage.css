@@ -1,0 +1,22 @@
+/* Resources page: list of outside links, built on the Guidance page styles. */
+.resources-list {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 1rem 0 0;
+}
+
+.resources-list__item {
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+}
+
+.resources-list__item a {
+  font-weight: 600;
+  /* Underline so links are not identified by color alone. */
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.resources-list__description {
+  margin: 0.25rem 0 0;
+}
