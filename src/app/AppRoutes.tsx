@@ -9,6 +9,7 @@ import About from "../pages/About";
 import Charts from "../pages/Charts";
 import ChartPermalinkPage from "../pages/ChartPermalinkPage";
 import AltTextGuidancePage from "../pages/Guidance";
+import Resources from "../pages/Resources";
 import AuthPage from "../pages/AuthPage";
 import AuthCallback from "../pages/AuthCallback";
 import LD from "../pages/LD";
@@ -48,6 +49,7 @@ export default function AppRoutes() {
       <Route path="/charts" element={<Charts />} />
       <Route path="/charts/:slug" element={<ChartPermalinkPage />} />
       <Route path="/guidance" element={<AltTextGuidancePage />} />
+      <Route path="/resources" element={<Resources />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/browse" element={<PublicRepoPage />} />
