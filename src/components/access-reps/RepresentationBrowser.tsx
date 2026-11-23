@@ -8,7 +8,8 @@ import NavigableList from "./NavigableList";
 import AccessibleMarkdown from "./AccessibleMarkdown";
 import Tactile from "./TactileRenderer";
 import AltTextView from "./AltTextView";
-import { TypedNavigable, TypedTable, TypedTactile, canRenderBrailleLabels } from "./typed/TypedViews";
+import BrailleView from "./BrailleView";
+import { TypedNavigable, TypedTable, TypedTactile, tactileViewHasKey } from "./typed/TypedViews";
 
 type Props = {
   data: FlowchartData;
@@ -20,6 +21,8 @@ type Props = {
   imageDataUrl?: string | null;
   /** Editor route, so an empty Alt text view can link back to it. */
   editPath?: string;
+  /** Shared page address, written into the braille file. */
+  shareUrl?: string | null;
   /** View to start on, e.g. from `?view=` in the URL. Falls back to the type's default. */
   initialView?: string | null;
   onViewChange?: (view: ViewId) => void;
@@ -34,15 +37,15 @@ const RepresentationBrowser: React.FC<Props> = ({
   title,
   imageDataUrl,
   editPath,
+  shareUrl,
   initialView,
   onViewChange,
 }) => {
   const type = normalizeDiagramType(diagramType);
-  const braille = useMemo(
-    () => isDataStructure(type) && canRenderBrailleLabels(type, data),
-    [type, data]
-  );
-  const views = useMemo(() => viewsForType(type, braille), [type, braille]);
+  // Data structures with short values print them on the tactile graphic in braille; everything
+  // else gets the numbered graphic and a key, which the braille file then includes.
+  const hasKey = useMemo(() => tactileViewHasKey(type, data), [type, data]);
+  const views = useMemo(() => viewsForType(type, !hasKey), [type, hasKey]);
 
   const [picked, setPicked] = useState<ViewId | null>(null);
   const requested = (picked ?? initialView) as ViewId | null;
@@ -95,7 +98,21 @@ const RepresentationBrowser: React.FC<Props> = ({
             <NavigableList jsonData={data} />
           ))}
         {view === "tactile" &&
-          (braille ? <TypedTactile type={type} data={data} title={title} /> : <Tactile json={data} />)}
+          (hasKey ? (
+            <Tactile json={data} title={title} />
+          ) : (
+            <TypedTactile type={type} data={data} title={title} />
+          ))}
+        {view === "braille" && (
+          <BrailleView
+            data={data}
+            title={title}
+            shortAlt={shortAlt}
+            summary={summary}
+            includeKey={hasKey}
+            shareUrl={shareUrl}
+          />
+        )}
       </div>
     </div>
   );
