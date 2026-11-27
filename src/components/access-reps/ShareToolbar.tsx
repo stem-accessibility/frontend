@@ -3,6 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { QRCodeSVG } from "qrcode.react";
 import QRCodeGenerator from "./QRCode";
 import type { FlowchartData } from "../../types/types";
+import type { DiagramType } from "../../arboretum/diagramTypes";
+import { tactileViewHasKey } from "./typed/TypedViews";
+import { BRF_MIME, stemImageBraille } from "../../braille/stemImage";
+import { toUeb } from "../../braille/ueb";
 import { jsonToMermaid } from "../../services/utils";
 import {
   buildDiagramVisualForExport,
@@ -12,11 +16,12 @@ import {
   copyToClipboard,
   downloadHtmlFile,
   downloadTextFile,
+  fileNameBase,
   markdownToBasicHtml,
 } from "../exports/export-utils";
 import "./styles/ShareToolbar.css";
 
-type Format = "html" | "markdown" | "text";
+type Format = "html" | "markdown" | "text" | "braille";
 
 type Props = {
   title: string;
@@ -24,6 +29,8 @@ type Props = {
   /** Long description as Markdown. */
   summary: string;
   json: FlowchartData;
+  /** Image type; decides whether the braille file includes the tactile graphic's key. */
+  diagramType?: DiagramType;
   /** Absolute address of the shared page; enables the embed code and QR code. */
   publicUrl?: string | null;
 };
@@ -32,42 +39,55 @@ const FORMATS: { value: Format; label: string; hint: string }[] = [
   { value: "html", label: "HTML", hint: "Alt text and long description as HTML paragraphs and headings." },
   { value: "markdown", label: "Markdown", hint: "Plain alt text; long description with headings." },
   { value: "text", label: "Text", hint: "Plain text, no markup." },
+  {
+    value: "braille",
+    label: "Braille (.brf)",
+    hint: "Uncontracted Unified English Braille for braille displays, notetakers and embossers. Copy gives Unicode braille; Download gives a .brf file with the title, alt text, long description and tactile key.",
+  },
 ];
 
 const escapeHtmlText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const fileBase = (title: string) =>
-  (title || "stem-image").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") ||
-  "stem-image";
-
 /**
  * Export: copy and download the accessible text of a STEM image in HTML, Markdown, or text, plus
  * embed code and a QR code for the shared page. Lives in the editor, under Accessibility.
  */
-export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl }: Props) {
+export default function ShareToolbar({ title, shortAlt, summary, json, diagramType, publicUrl }: Props) {
   const id = useId();
   const [format, setFormat] = useState<Format>("text");
   const [status, setStatus] = useState("");
+  // Failures go to an alert so screen readers announce them at once; successes are polite.
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const say = (msg: string) => setStatus(msg);
+  const say = (msg: string) => {
+    setError("");
+    setStatus(msg);
+  };
+  const fail = (msg: string) => {
+    setStatus("");
+    setError(msg);
+  };
 
-  const altFor = (f: Format) => (f === "html" ? `<p>${escapeHtmlText(shortAlt)}</p>` : shortAlt);
+  const altFor = (f: Format) =>
+    f === "html" ? `<p>${escapeHtmlText(shortAlt)}</p>` : f === "braille" ? toUeb(shortAlt) : shortAlt;
   const descriptionFor = (f: Format) =>
     f === "html"
       ? markdownToBasicHtml(summary)
       : f === "markdown"
         ? summary
-        : buildPlainTextFromMarkdown(summary);
+        : f === "braille"
+          ? toUeb(buildPlainTextFromMarkdown(summary))
+          : buildPlainTextFromMarkdown(summary);
 
   async function copy(text: string, what: string) {
     try {
       await copyToClipboard(text);
       say(`Copied ${what}.`);
     } catch {
-      say(`Could not copy ${what}. Select the text on the page and copy it instead.`);
+      fail(`Could not copy ${what}. Select the text on the page and copy it instead.`);
     }
   }
 
@@ -97,38 +117,56 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
       } else {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `${fileBase(title)}-qr.png`;
+        a.download = `${fileNameBase(title)}-qr.png`;
         a.click();
         say("Your browser can't copy images, so the QR code was downloaded.");
       }
     } catch {
-      say("Could not copy the QR code. Open Export and use Download QR Code.");
+      fail("Could not copy the QR code. Open Export and use Download QR Code.");
     }
   }
 
   async function download() {
-    const base = fileBase(title);
-    if (format === "text") {
-      downloadTextFile(`${base}-long-description.txt`, descriptionFor("text"));
-    } else if (format === "markdown") {
-      downloadTextFile(`${base}-long-description.md`, summary, "text/markdown;charset=utf-8");
-    } else {
-      // A full page, with the diagram drawn into it so it stands on its own.
-      setBusy(true);
-      try {
-        const visual = await buildDiagramVisualForExport({ mermaidCode: jsonToMermaid(json) });
-        const html = buildSelfHostedLongDescriptionPageHtml({
+    const base = fileNameBase(title);
+    const label = FORMATS.find((f) => f.value === format)?.label;
+    try {
+      if (format === "braille") {
+        // Same key as the Braille view: the numbered tactile graphic has one; data structures
+        // with short values print the values themselves and have none.
+        const doc = stemImageBraille({
           title,
           shortAlt,
-          longDescriptionMarkdown: summary,
-          svgMarkup: visual.kind === "svg" ? visual.svgMarkup : null,
+          summary,
+          data: json,
+          includeKey: tactileViewHasKey(diagramType ?? "flowchart", json),
+          source: publicUrl,
         });
-        downloadHtmlFile(`${base}-long-description.html`, html);
-      } finally {
-        setBusy(false);
+        downloadTextFile(`${base}.brf`, doc.brf, BRF_MIME);
+      } else if (format === "text") {
+        downloadTextFile(`${base}-long-description.txt`, descriptionFor("text"));
+      } else if (format === "markdown") {
+        downloadTextFile(`${base}-long-description.md`, summary, "text/markdown;charset=utf-8");
+      } else {
+        // A full page, with the diagram drawn into it so it stands on its own.
+        setBusy(true);
+        try {
+          const visual = await buildDiagramVisualForExport({ mermaidCode: jsonToMermaid(json) });
+          const html = buildSelfHostedLongDescriptionPageHtml({
+            title,
+            shortAlt,
+            longDescriptionMarkdown: summary,
+            svgMarkup: visual.kind === "svg" ? visual.svgMarkup : null,
+          });
+          downloadHtmlFile(`${base}-long-description.html`, html);
+        } finally {
+          setBusy(false);
+        }
       }
+    } catch {
+      fail(`Could not download the long description as ${label}. Try again, or use Copy instead.`);
+      return;
     }
-    say(`Downloaded the long description as ${FORMATS.find((f) => f.value === format)?.label}.`);
+    say(`Downloaded the long description as ${label}.`);
   }
 
   const hint = FORMATS.find((f) => f.value === format)?.hint;
@@ -181,6 +219,9 @@ export default function ShareToolbar({ title, shortAlt, summary, json, publicUrl
           </button>
           <span className="share-toolbar__status" role="status" aria-live="polite">
             {status}
+          </span>
+          <span className="share-toolbar__status share-toolbar__status--error" role="alert">
+            {error}
           </span>
         </div>
       </div>
